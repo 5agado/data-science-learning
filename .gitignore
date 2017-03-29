@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+#PYCHARM
+.idea/
+
+#IPYNB
+*.ipynb_checkpoints
+src/test/devTesting.ipynb
