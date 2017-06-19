@@ -1,5 +1,11 @@
 # Books
 
+## Mathematics TOCHECK
+* [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025)
+* [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/)
+* https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192
+* https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877
+
 ## Statistics
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python)
 * [Think Bayes](http://greenteapress.com/wp/think-bayes/) (Python)
