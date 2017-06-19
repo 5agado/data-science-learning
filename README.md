@@ -8,13 +8,13 @@ Notebook can be in different states and have different purposes, some are polish
 A third type of content is about notebooks where I simply play around with code for testing/practicing personal ideas **[DEV]**. While I often try to comment code snippets, these notebooks might have a more chaotic structure and miss properly cured discussions about the topic and techniques used.
 
 ### [FINAL]
-* [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](Pandas and Seaborn.ipynb)
+* [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](Pandas%20and%20Seaborn.ipynb)
 
 ### [WIP]
-* [Statistics - Basic Theorems](statistics/Statistics - Basic Theorems.ipynb)
+* [Statistics - Basic Theorems](statistics/Statistics%20-%20Basic%20Theorems.ipynb)
 
 ### [DEV]
-* [Image Processing - Basics](image processing/Image Processing - Basics.ipynb)
+* [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)
 
 ## TODO
 	
