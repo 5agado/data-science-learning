@@ -39,6 +39,7 @@
 * [CS231n Convolutional Neural Networks for Visual Recognition](https://cs231n.github.io/)
 * [Practical Deep Learning For Coders, Part 1](http://course.fast.ai/index.html) (entertaining, great view of SOA results, notebooks and great tips on code)
 * [Deep Learning Udacity from Google](https://classroom.udacity.com/courses/ud730)
+* [Creative Applications of Deep Learning with Tensorflow](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
 
 ## NLP
 * [“Introduction to Natural Language Processing” @ coursera]()
