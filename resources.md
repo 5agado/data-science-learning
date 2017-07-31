@@ -4,6 +4,8 @@
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (gear generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
 * [Calculus Made Easy - Silvanus P. Thompson]()
+* [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617)
+* [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229)
 * https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192 TOCHECK
 * https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877 TOCHECK
 
@@ -28,22 +30,26 @@
 
 # Courses
 
+## Mathematics
+* [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (always lovely to have explanation in sync with good python code on Jupyter)
+
 ## Statistics
-* [“Statistics” - @ udacity]()
+* [Statistics @ udacity]()
 
 ## Machine Learning
-* [“Machine Learning” - by Andrew Ng @ coursera](https://www.coursera.org/learn/machine-learning)
+* [Machine Learning by Andrew Ng @ coursera](https://www.coursera.org/learn/machine-learning)
 * [Machine Learning by Georgia Tech](https://www.udacity.com/course/machine-learning--ud262)
 
 ## Deep Learning
-* [Deep Learning for NLP](http://cs224d.stanford.edu/syllabus.html](http://cs224d.stanford.edu/syllabus.html) TODO
+* [Deep Learning for NLP](http://cs224d.stanford.edu/syllabus.html) TODO
 * [CS231n Convolutional Neural Networks for Visual Recognition](https://cs231n.github.io/)
 * [Practical Deep Learning For Coders, Part 1](http://course.fast.ai/index.html) (entertaining, great view of SOA results, notebooks and great tips on code)
-* [Deep Learning Udacity from Google](https://classroom.udacity.com/courses/ud730)
+* [Deep Learning by Google @ udacity](https://classroom.udacity.com/courses/ud730)
 * [Creative Applications of Deep Learning with Tensorflow](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
+* [Generative Art and Computational Creativity](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
 
 ## NLP
-* [“Introduction to Natural Language Processing” @ coursera]()
+* [Introduction to Natural Language Processing @ coursera]()
 
 ## Big Data
 * [Hadoop Platform and Application Framework @ coursera](https://www.coursera.org/learn/hadoop)
