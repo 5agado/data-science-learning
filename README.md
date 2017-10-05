@@ -7,17 +7,26 @@ Many of the resources entries are personal Jupyter notebooks that contain a mix 
 Notebook can be in different states and have different purposes, some are polished in content **[FINAL]**, with complete explanations, proper structure and -hopefully- working code. These I consider to have the potential to be useful to others for learning. Some have been started and worked on with the same goal, but are not yet finished **[WIP]**.
 A third type of content is about notebooks where I simply play around with code for testing/practicing personal ideas **[DEV]**. While I often try to comment code snippets, these notebooks might have a more chaotic structure and miss properly cured discussions about the topic and techniques used.
 
-### [FINAL]
+## [FINAL]
 * [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](data%20analysis/Pandas%20and%20Seaborn.ipynb)
+* [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/src/RNN%20with%20Keras%20-%20Text%20Generation.ipynb)
 
-### [WIP]
-* [Deep Learning - Autoencoders](deep%20learning/Autoencoders.ipynb)
-* [NLP - Text Clustering](nlp/Text%20Clustering.ipynb)
-* [Statistics - Basic Theorems](statistics/Statistics%20-%20Basic%20Theorems.ipynb)
+## [WIP]
+### Statistics
+* [Basic Theorems](statistics/Statistics%20-%20Basic%20Theorems.ipynb)
+### Machine Learning
+* [Linear Regression - Basics](machine%20learning/Linear%20Regression%20-%20Basics.ipynb)
+* [Logistic Regression](machine%20learning/Logistic%20Regression.ipynb)
+* [Evaluation Metrics](machine%20learning/Evaluation%20Metrics.ipynb)
+### Deep Learning
+* [Autoencoders](deep%20learning/Autoencoders.ipynb)
+### NLP
+* [Text Clustering](nlp/Text%20Clustering.ipynb)
 
-### [DEV]
+## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)
-* [Cellular Automata](miscellaneous\Cellular%20Automata.ipynb")
+* [Cellular Automata](miscellaneous/Cellular%20Automata.ipynb")
+* [Words Embedding](nlp/Words%20Embeddings.ipynb)
 
 ## TODO
 	

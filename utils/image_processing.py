@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from skimage.transform import resize
+from PIL import Image
 import os
 import cv2
 
@@ -61,7 +62,7 @@ def image_generator(imgs_info, img_shape, num_classes, target_column, batch_size
             if not os.path.isfile(img_path):
                 print("{} not present".format(img_path))
             else:
-                batch_data[i] = load_image(img_path, img_size)
+                batch_data[i] = load_image(img_path, img_size).reshape(img_shape)
                 # if no label lookup consider valid value in target column
                 if not label_lookup:
                     batch_labels[i] = row[target_column]
@@ -82,9 +83,6 @@ def image_generator(imgs_info, img_shape, num_classes, target_column, batch_size
 
         yield batch_data, batch_labels
 
-# plot image
-#plt.imshow(img)
-
 def normalizeRGB(batch):
     total = np.sum(batch, axis=(1,2))
     batch /= total[:,np.newaxis,np.newaxis,:]*255
@@ -97,3 +95,18 @@ def normalize(batch):
     batch /= np.std(batch, axis=0)
     #return batch / 255
     return batch
+
+def rotate_90(img):
+    img = np.rot90(np.asarray(img))
+    return Image.fromarray(np.uint8(img))
+
+def crop(img, side=300):
+    center_x = img.size[0]//2
+    center_y = img.size[1]//2
+    half_side = side//2
+    c_img = img.crop((
+            center_x - half_side,
+            center_y - half_side,
+            center_x + half_side,
+            center_y + half_side))
+    return c_img
