@@ -4,6 +4,27 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import numpy as np
 
+def plot_sample_imgs(get_imgs_fun, img_shape, plot_side=5, savepath=None):
+    """
+    Generate visual samples and plot on a grid
+    :param get_imgs_fun: function that given a int return a corresponding number of generated samples
+    :param img_shape: shape of image to plot
+    :param plot_side: samples per row (and column). Generated plot_side x plot_side samples.
+    :param savepath: if given, save plot to such filepath, otherwise show plot
+    """
+    f, axarr = plt.subplots(plot_side, plot_side)
+    samples = get_imgs_fun(plot_side*plot_side)
+    for row in range(plot_side):
+        for col in range(plot_side):
+            axarr[row, col].imshow(samples[plot_side*row+col].reshape(img_shape))
+            axarr[row, col].set_title('')
+            axarr[row, col].axis('off')
+    if savepath:
+        f.savefig(savepath)
+        plt.close()
+    else:
+        plt.show()
+
 def plot_correlation(df):
     # Correlation
     corr = df.corr()

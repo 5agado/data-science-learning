@@ -12,6 +12,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/src/RNN%20with%20Keras%20-%20Text%20Generation.ipynb)
 
 ## [WIP]
+
 ### Statistics
 * [Basic Theorems](statistics/Statistics%20-%20Basic%20Theorems.ipynb)
 ### Machine Learning
@@ -20,13 +21,19 @@ A third type of content is about notebooks where I simply play around with code 
 * [Evaluation Metrics](machine%20learning/Evaluation%20Metrics.ipynb)
 ### Deep Learning
 * [Autoencoders](deep%20learning/Autoencoders.ipynb)
+* [GANs - Intro](deep%20learning/GANs%20Intro.ipynb)
+* [Style Transfer](deep%20learning/Style%20Transfer.ipynb)
 ### NLP
 * [Text Clustering](nlp/Text%20Clustering.ipynb)
+### Miscellaneous
+* [Sorting](miscellaneous/Sorting.ipynb)
 
 ## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)
-* [Cellular Automata](miscellaneous/Cellular%20Automata.ipynb")
+* [Cellular Automata](miscellaneous/Cellular%20Automata.ipynb)
 * [Words Embedding](nlp/Words%20Embeddings.ipynb)
+* [Sketch Cleanup](deep%20learning/Sketch%20Cleanup.ipynb)
+* [Advanced Python](miscellaneous/Advanced%20Python.ipynb)
 
 ## TODO
 	

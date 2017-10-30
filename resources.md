@@ -40,6 +40,8 @@
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
 
+## Programming
+* [The Pragmatic Programmer: From Journeyman to Master](https://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X) (fantastic overview of best practices and mindset to make life as a programmer as easy, fruitful and pain-free as possible)
 
 # Courses
 
@@ -76,8 +78,6 @@
 * [Spark Fundamentals 1](https://bigdatauniversity.com/courses/what-is-spark/) (poorly taught, monotonous reading of slides, non relevant quizzes)
 
 ## Data Science 
-
-## Programming
 
 ## Miscellaneous
 
