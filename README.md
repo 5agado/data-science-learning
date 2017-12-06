@@ -13,7 +13,7 @@ A third type of content is about notebooks where I simply play around with code 
 
 ## [FINAL]
 * [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](data%20analysis/Pandas%20and%20Seaborn.ipynb)
-* [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/src/RNN%20with%20Keras%20-%20Text%20Generation.ipynb)
+* [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%20with%20Keras%20-%20Text%20Generation.ipynb)
 
 ## [WIP]
 
@@ -23,6 +23,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [Linear Regression - Basics](machine%20learning/Linear%20Regression%20-%20Basics.ipynb)
 * [Logistic Regression](machine%20learning/Logistic%20Regression.ipynb)
 * [Evaluation Metrics](machine%20learning/Evaluation%20Metrics.ipynb)
+* [Tensorflow - Intro](machine%20learning/Tensorflow%20M-%20Intro.ipynb)
 ### Deep Learning
 * [Autoencoders](deep%20learning/Autoencoders.ipynb)
 * [GANs - Intro](deep%20learning/GANs%20Intro.ipynb)
