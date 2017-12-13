@@ -23,7 +23,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [Linear Regression - Basics](machine%20learning/Linear%20Regression%20-%20Basics.ipynb)
 * [Logistic Regression](machine%20learning/Logistic%20Regression.ipynb)
 * [Evaluation Metrics](machine%20learning/Evaluation%20Metrics.ipynb)
-* [Tensorflow - Intro](machine%20learning/Tensorflow%20M-%20Intro.ipynb)
+* [Tensorflow - Intro](machine%20learning/Tensorflow%20-%20Intro.ipynb)
 ### Deep Learning
 * [Autoencoders](deep%20learning/Autoencoders.ipynb)
 * [GANs - Intro](deep%20learning/GANs%20Intro.ipynb)
@@ -35,7 +35,7 @@ A third type of content is about notebooks where I simply play around with code 
 
 ## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)
-* [Cellular Automata](miscellaneous/Cellular%20Automata.ipynb)
+* [Cellular Automata](cellular%20automata/Cellular%20Automata.ipynb)
 * [Words Embedding](nlp/Words%20Embeddings.ipynb)
 * [Sketch Cleanup](deep%20learning/Sketch%20Cleanup.ipynb)
 * [Advanced Python](miscellaneous/Advanced%20Python.ipynb)
