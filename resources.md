@@ -1,7 +1,7 @@
 # Books
 
 ## Mathematics
-* [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (gear generic initial approach)
+* [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
 * [Calculus Made Easy - Silvanus P. Thompson]()
 * [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617)
@@ -29,6 +29,7 @@
 * [Pattern Recognition and Machine Learning by Christopher M. Bishop](http://www.springer.com/gp/book/9780387310732) TOREAD
 * [Applied Predictive Modeling](http://appliedpredictivemodeling.com/) TOREAD
 * [Model-Based Machine Learning](http://mbmlbook.com/index.html) TOCHECK
+* [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
@@ -36,6 +37,7 @@
 ## Deep Learning
 * [deeplearningbook](http://www.deeplearningbook.org/) (math, also overview and details about many technical prerequisites to machine learning, like linear algebra, probability and alike)
 * [neuralnetworksanddeeplearning](http://neuralnetworksanddeeplearning.com/) (great intuitive look into deep learning models and generic machine learning techniques)
+* [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) TOREAD
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
