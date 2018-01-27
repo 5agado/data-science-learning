@@ -1,8 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-import utils
-from __init__ import CONFIG_PATH
 
 class AbstractGOL(ABC):
     def __init__(self, N, config, seed=None):

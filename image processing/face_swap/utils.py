@@ -308,8 +308,8 @@ def main(_):
                     print("Skipping {}, same name".format(from_filename))
                     continue
                 print("## {} - From {} to {}".format(count, from_filename, to_filename))
-                results = swap_faces(join(fromPath, from_face),
-                                    join(toPath, to_face),
+                results = swap_faces(join(fromPath, from_filename),
+                                    join(toPath, to_filename),
                                     landmark_detector)
                 res_path = join(outputPath, '{}_{}.png'.format(from_filename.split('.')[0],
                                                                 to_filename.split('.')[0]))

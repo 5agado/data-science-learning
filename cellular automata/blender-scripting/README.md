@@ -9,8 +9,16 @@ The first idea is to adapt to any array size and allowing len(array)/3 bits per 
 
 It naturally follows as next idea to use instead of the number of true bits out of the allowed size, the binary code number divided by the max representable code number. We consider only even BPC, meaning that BPC is always the int part of len(array)/3, and that len(array)%3 bits at the end will be discarded.
 
+# Instructions
+To run from Blender, first run *\__init__.py* or manually add the *src* folder path to Python system path.
+
+Then run one of *conway_ND.py* file, which will instantiate your objects and frame change handlers. Next you should start the animation yourself from Blender, and stop it as desired. Finally remember to clean up all handlers if you want to play around more with the animation without having GOL updated reflected. This clean up can be obtained from the console via
+
+    bpy.app.handlers.frame_change_pre.clear()
+	
+
+
 # TODO
-* allow for seed when init GOL grid (reproduce results)
 * see how to animate a 3D and equivalent 2D projection aligned
 * color as index of cell age (epochs for which it stayed alive)
 * expand to 4D (possible of using color as encoder of the 4th dimension)

@@ -2,7 +2,7 @@ numpy
 pandas
 seaborn
 matplotlib
-opencv
+opencv-python
 scipy
 scikit-image
 dlib

@@ -3,21 +3,21 @@ import sys
 import numpy as np
 
 # Because Blender is stupid?
-from __init__ import CONFIG_PATH, SRC_PATH
-sys.path.append(SRC_PATH)
+from __init__ import CONFIG_PATH
 
 import gol_utils as utils
 from conway_3D import ConwayGOL_3D
 from abstract_GOL import AbstractGOL
 
+
 class ConwayGOL_2D(AbstractGOL):
-    def __init__(self, N, config='GOL_2D_standard'):
+    def __init__(self, N, config='GOL_2D_standard', seed=None):
         """
         2D Conway Game of Life
         :param N: grid side size (resulting grid will be a NxN matrix)
         :param config: config: configuration for this GOL instance (cell survival and generation settings)
         """
-        super().__init__(N, config)
+        super().__init__(N, config, seed)
         self.grid = np.random.choice(2, (N,N))
     
     def update(self):
@@ -41,6 +41,7 @@ class ConwayGOL_2D(AbstractGOL):
 #            UTIL METHODS             #
 #######################################
 
+
 # create grid of objects on current scene
 # The object generator is responsible for the creation of a single object instance
 def create_grid(gol, obj_generator):
@@ -53,6 +54,7 @@ def create_grid(gol, obj_generator):
         obj_grid.append(row)
     return obj_grid
 
+
 # update grid of Blender objects to reflect gol status, then update gol.
 def update_grid(obj_grid, gol, obj_updater):
     for i in range(gol.N):
@@ -60,12 +62,14 @@ def update_grid(obj_grid, gol, obj_updater):
             obj_updater(obj_grid[i][j], gol.grid, (i, j))
     gol.update()
 
+
 # handler called at every frame change
 def frame_handler(scene, grid, gol, obj_updater, num_frames_change):
     frame = scene.frame_current
     n = frame % num_frames_change
     if n == 0:
         update_grid(grid, gol, obj_updater)
+
 
 def main(_):
     # CONSTANTS
@@ -83,7 +87,9 @@ def main(_):
     obj_updater = lambda obj,grid,idx:utils.object_updater_color_vector(obj, grid[:, idx[0], idx[1]]) #check order
 
     utils.delete_all()
-    gol = ConwayGOL_3D(grid_side, utils.load_GOL_config(CONFIG_PATH, 'GOL_3D_standard'))
+    gol = ConwayGOL_3D(grid_side,
+                       utils.load_GOL_config(CONFIG_PATH, 'GOL_3D_standard'),
+                       seed=42)
     obj_grid = create_grid(gol, obj_generator)
     utils.init_materials(obj_grid, init_mat_color)
 
@@ -91,6 +97,7 @@ def main(_):
     bpy.app.handlers.frame_change_pre.append(lambda x : frame_handler(x, obj_grid, gol,
                                                                    obj_updater,
                                                                    num_frames_change))
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

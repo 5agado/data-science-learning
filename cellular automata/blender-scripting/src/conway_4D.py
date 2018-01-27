@@ -3,21 +3,21 @@ import sys
 import numpy as np
 
 # Because Blender is stupid?
-from __init__ import CONFIG_PATH, SRC_PATH
-sys.path.append(SRC_PATH)
+from __init__ import CONFIG_PATH
 
 from abstract_GOL import AbstractGOL
 import conway_3D
 import gol_utils as utils
 
+
 class ConwayGOL_4D(AbstractGOL):
-    def __init__(self, N, config='GOL_4D_standard'):
+    def __init__(self, N, config='GOL_4D_standard', seed=None):
         """
         4D Conway Game of Life
         :param N: 4D grid side size (resulting grid will be a NxNxNxN matrix)
         :param config: configuration for this GOL instance (cell survival and generation settings)
         """
-        super().__init__(N, config)
+        super().__init__(N, config, seed)
         self.grid = np.random.choice(2, (N,N,N,N))
     
     def update(self):
@@ -42,6 +42,7 @@ class ConwayGOL_4D(AbstractGOL):
         neighbours_count -= self.grid[k, z, y, x]
         return neighbours_count
 
+
 def main(_):
     # CONSTANTS
     num_frames_change = 2
@@ -62,6 +63,7 @@ def main(_):
     bpy.app.handlers.frame_change_pre.append(lambda x : conway_3D.frame_handler(x, obj_grid, gol,
                                                                    obj_updater,
                                                                    num_frames_change))
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

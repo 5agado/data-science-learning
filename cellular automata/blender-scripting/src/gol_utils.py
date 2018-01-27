@@ -88,12 +88,10 @@ def bin_to_color(v):
 
 # for all elements in the grid, create and set a new material
 def init_materials(obj_grid, init_color):
-    for i in range(len(obj_grid)):
-        for j in range(len(obj_grid[0])):
-            mat = bpy.data.materials.new("mat_{}_{}".format(i, j))
-            mat.diffuse_color = init_color
-            obj = obj_grid[i][j]
-            obj.active_material = mat
+    for index, obj in np.ndenumerate(obj_grid):
+        mat = bpy.data.materials.new("mat_{}".format(index))
+        mat.diffuse_color = init_color
+        obj.active_material = mat
 
 # delete all objects of current scene (un-hide all hidden ones first)
 def delete_all():
