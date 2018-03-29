@@ -30,8 +30,10 @@ A third type of content is about notebooks where I simply play around with code 
 * [Style Transfer](deep%20learning/Style%20Transfer.ipynb)
 ### NLP
 * [Text Clustering](nlp/Text%20Clustering.ipynb)
+* [RNN Text Generation - Advanced (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%Text%20Generation%20-%20Advanced.ipynb)
 ### Miscellaneous
 * [Sorting](miscellaneous/Sorting.ipynb)
+* [Face Swap](image%20processing/Face%20Swap.ipynb)
 
 ## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)

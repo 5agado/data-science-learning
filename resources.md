@@ -45,17 +45,21 @@
 ## Programming
 * [The Pragmatic Programmer: From Journeyman to Master](https://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X) (fantastic overview of best practices and mindset to make life as a programmer as easy, fruitful and pain-free as possible)
 
-# Courses
+
+# [Courses](https://www.class-central.com/)
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)
 
 ## Statistics
-* [Statistics @ udacity]()
+* Statistics @ Udacity
+* [Computational Probability and Inference @ edX](https://www.edx.org/course/computational-probability-inference-mitx-6-008-1x) (Python based) TODO
 
 ## Machine Learning
-* [Machine Learning by Andrew Ng @ coursera](https://www.coursera.org/learn/machine-learning)
+* [Machine Learning by Andrew Ng @ Coursera](https://www.coursera.org/learn/machine-learning) (de facto standard obligatory introductory course)
 * [Machine Learning by Georgia Tech](https://www.udacity.com/course/machine-learning--ud262)
+* [Neural Networks for Machine Learning @ Coursera](https://www.coursera.org/learn/neural-networks)
+* [Deep Learning A-Z™: Hands-On Artificial Neural Networks](https://www.udemy.com/deeplearning/) TODO
 
 ## Reinforcement Learning
 * [David Silver’s Reinforcement Learning Course](http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html) TOCHECK
@@ -64,19 +68,19 @@
 * [CS231n Convolutional Neural Networks for Visual Recognition](https://cs231n.github.io/)
 * [Practical Deep Learning For Coders, Part 1](http://course.fast.ai/index.html) (entertaining, great view of SOA results, notebooks and great tips on code)
 * [Practical Deep Learning For Coders, Part 2](http://www.fast.ai/2017/07/28/deep-learning-part-two-launch/) TODO
-* [Deep Learning by Google @ udacity](https://classroom.udacity.com/courses/ud730)
-* [Creative Applications of Deep Learning with Tensorflow](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
-* [Generative Art and Computational Creativity](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
+* [Deep Learning by Google @ Udacity](https://classroom.udacity.com/courses/ud730)
+* [Creative Applications of Deep Learning with Tensorflow @ Kadenze](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
+* [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO
 
 ## NLP
-* [Introduction to Natural Language Processing @ coursera]()
+* [Introduction to Natural Language Processing @ Coursera]()
 * [Deep Learning for NLP](http://cs224d.stanford.edu/syllabus.html) TODO
 
 ## Big Data
-* [Hadoop Platform and Application Framework @ coursera](https://www.coursera.org/learn/hadoop)
-* [Intro to Hadoop and MapReduce @ udacity](https://classroom.udacity.com/courses/ud617)
-* [Machine Learning With Big Data @ coursera](https://www.coursera.org/learn/big-data-machine-learning/home/welcome) (brief generic intro to machine learning, practical examples for Spark and KNIME)
+* [Hadoop Platform and Application Framework @ Coursera](https://www.coursera.org/learn/hadoop)
+* [Intro to Hadoop and MapReduce @ Udacity](https://classroom.udacity.com/courses/ud617)
+* [Machine Learning With Big Data @ Coursera](https://www.coursera.org/learn/big-data-machine-learning/home/welcome) (brief generic intro to machine learning, practical examples for Spark and KNIME)
 * [Spark Fundamentals 1](https://bigdatauniversity.com/courses/what-is-spark/) (poorly taught, monotonous reading of slides, non relevant quizzes)
 
 ## Data Science 
