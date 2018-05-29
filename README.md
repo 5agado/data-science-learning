@@ -1,6 +1,10 @@
 # Data Science Learning
 Repository of code, resources and utilities related to different data science and machine learning topics. For learning, practicing and teaching purposes.
 
+Utils can be installed via
+
+    python setup.py develop
+
 ## Data Science Resources
 [resources.md](resources.md) provides a list of suggested resources (e.g. books, courses) grouped by topic (e.g. mathematics, deep learning, NLP). This list is based on my informal research between online communities and practitioners for the various topics, and then supported by personal notes once I've manage to consume the resource and come up with my own opinion about its quality and content. Tags like *TOREAD* and *TOCHECK* express exactly that I still didn't have the time to properly check the related entry.
 

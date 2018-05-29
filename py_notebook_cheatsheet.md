@@ -131,8 +131,8 @@ pdb.set_trace()
 
     "kg.exe" submit submission.csv -u -p  -c challenge-name -m "message"
 
-# Jupyter Themes
-    jt -t grade3 -T -nfs 9 -cellw 90%
+# [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
+    jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 90%
 
 # Video Conversion
     ffmpeg -i in.WMV -filter:v "setpts=0.7*PTS" -c:v libx264 -crf 23 -c:a libfaac -q:a 100 -ss 00:00:35 out.mp4

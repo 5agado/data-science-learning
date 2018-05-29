@@ -13,9 +13,9 @@
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python, good intuitive explanation of basic concepts, often from a different POV compared to other more technical books about statistics)
 * [Think Bayes](http://greenteapress.com/wp/think-bayes/) (Python, many good concrete examples that can be easily implemented and solved from scratch, greatly helps to absorb Bayes's Theorem and related concepts at a more intuitive level. A bit of interdependency between chapters with code written/presented in previous ones)
 * [OpenIntro Statistics 3rd Edition](https://www.openintro.org/stat/textbook.php?stat_book=os) (exercises and inline questions with solutions)
+* [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
 * [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (math)
-* [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) TOREAD
 
 ### Time-Series TOCHECK
 * [Time Series Analysis - Hamilton](https://www.amazon.com/gp/product/0691042896)
@@ -37,7 +37,7 @@
 ## Deep Learning
 * [deeplearningbook](http://www.deeplearningbook.org/) (math, also overview and details about many technical prerequisites to machine learning, like linear algebra, probability and alike)
 * [neuralnetworksanddeeplearning](http://neuralnetworksanddeeplearning.com/) (great intuitive look into deep learning models and generic machine learning techniques)
-* [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) TOREAD
+* [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
@@ -58,7 +58,7 @@
 ## Machine Learning
 * [Machine Learning by Andrew Ng @ Coursera](https://www.coursera.org/learn/machine-learning) (de facto standard obligatory introductory course)
 * [Machine Learning by Georgia Tech](https://www.udacity.com/course/machine-learning--ud262)
-* [Neural Networks for Machine Learning @ Coursera](https://www.coursera.org/learn/neural-networks)
+* [Neural Networks for Machine Learning @ Coursera](https://www.coursera.org/learn/neural-networks) TODO
 * [Deep Learning A-Z™: Hands-On Artificial Neural Networks](https://www.udemy.com/deeplearning/) TODO
 
 ## Reinforcement Learning
