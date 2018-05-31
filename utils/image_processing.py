@@ -1,24 +1,38 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from skimage.transform import resize
-from PIL import Image
 import os
+from pathlib import Path
+
 import cv2
+import numpy as np
+from PIL import Image
+
+
+def get_imgs_paths(basepath: Path, img_types=('*.jpg', '*.jpeg', '*.png'), as_str=True):
+    imgs_paths = []
+    for img_type in img_types:
+        imgs_paths.extend(basepath.glob(img_type))
+    if as_str:
+        imgs_paths = list(map(str, imgs_paths))
+    if len(imgs_paths) == 0:
+        raise Exception("No images found")
+    return sorted(imgs_paths)
+
 
 # load image from filepath and optionally resize
-def load_image(filepath, img_size=None):
-    #img = cv2.imread(filepath)
-    img = plt.imread(filepath)
+def load_image(filepath, img_size=None, convert_fun=None):
+    img = cv2.imread(filepath)
+    #img = plt.imread(filepath)
     if img_size:
-        #img = cv2.resize(img, img_size, interpolation=cv2.INTER_CUBIC)
-        img = resize(img, img_size, mode='reflect', preserve_range=True)
+        img = cv2.resize(img, img_size, interpolation=cv2.INTER_CUBIC)
+    if convert_fun:
+        img = convert_fun(img)
     return img
 
+
 # load all images data from filepaths
-def load_data(imgs_filepaths, img_size=None):
-    data = np.array([load_image(img, img_size) for img in imgs_filepaths])
+def load_data(imgs_filepaths, img_size=None, convert_fun=None):
+    data = np.array([load_image(img, img_size, convert_fun) for img in imgs_filepaths])
     return data
+
 
 # load entirety of image data in batches
 def load_data_batches(imgs_filepaths, img_size=None, batch_size=64):
@@ -83,10 +97,20 @@ def image_generator(imgs_info, img_shape, num_classes, target_column, batch_size
 
         yield batch_data, batch_labels
 
+
+def BGR2RGB(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+
+def RGB2BGR(img):
+    return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+
 def normalizeRGB(batch):
     total = np.sum(batch, axis=(1,2))
     batch /= total[:,np.newaxis,np.newaxis,:]*255
     return batch
+
 
 def normalize(batch):
     # zero center
@@ -96,9 +120,11 @@ def normalize(batch):
     #return batch / 255
     return batch
 
+
 def rotate_90(img):
     img = np.rot90(np.asarray(img))
     return Image.fromarray(np.uint8(img))
+
 
 def crop(img, side=300):
     center_x = img.size[0]//2

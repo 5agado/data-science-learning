@@ -6,6 +6,8 @@ setup(
     author="Alex Martinelli",
     description="Utils library for Data-Science related projects",
     license="Apache 2.0",
+    # TODO define need of using a prefix like data_science_utils
+    # right now can be imported as utils
     packages=['utils'],
     install_requires=[
         'numpy',
