@@ -62,9 +62,10 @@ def upload_file(drive_client, filename, filepath):
     print('Uploaded file with ID {}'.format(uploaded.get('id')))
 
 
-def export_file(drive_service, filename, filepath):
+def export_file(drive_service, filename, filepath, folder_id=None):
     """
     Export a file to Drive
+    :param folder_id: ID of the Drive folder where to insert the file
     :param drive_service:
     :param filepath:
     :param filename:
@@ -73,6 +74,9 @@ def export_file(drive_service, filename, filepath):
     file_metadata = {
         'name': filename
     }
+    if folder_id:
+        file_metadata['parents'] = [folder_id]
+
     media = MediaFileUpload(filepath,
                             mimetype='text/plain',
                             resumable=True)
