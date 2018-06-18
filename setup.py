@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="data_science_utils",
+    name="data_science_learning",
     version="0.1.0",
     author="Alex Martinelli",
     description="Utils library for Data-Science related projects",
