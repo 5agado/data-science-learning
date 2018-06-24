@@ -64,7 +64,7 @@ def get_upsampling_model(input_shape, upscale_factor=2):
         # first res_input is just model_input
         # x = Add()([x, res_inputs[i+2]])
 
-    outp = Conv2D(3, 3, activation='linear', border_mode='same')(x)
+    outp = Conv2D(3, 3, activation='linear', padding='same')(x)
 
     return model_input, outp
 
