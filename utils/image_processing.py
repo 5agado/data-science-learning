@@ -44,6 +44,7 @@ def load_data_batches(imgs_filepaths, img_size=None, batch_size=64):
         data = load_data(imgs_filepaths[low:high], img_size)
         yield data
 
+
 def image_generator(imgs_info, img_shape, num_classes, target_column, batch_size=1, img_size=None,
                     processing_pipeline=None, label_lookup=None, image_gen=None):
     """
@@ -136,3 +137,17 @@ def crop(img, side=300):
             center_x + half_side,
             center_y + half_side))
     return c_img
+
+
+def zoom(img, zoom_factor=1.5):
+    h, w = img.shape[:2]
+    mat = cv2.getRotationMatrix2D((w//2, h//2), 0, zoom_factor)
+    result = cv2.warpAffine(img, mat, (w, h), borderMode=cv2.BORDER_REPLICATE)
+    return result
+
+
+def crop(img, crop_factor=0.2):
+    h, w = img.shape[:2]
+    h_crop = int((h * crop_factor)//2)
+    w_crop = int((w * crop_factor)//2)
+    return img[h_crop:h-h_crop, w_crop:w-w_crop]

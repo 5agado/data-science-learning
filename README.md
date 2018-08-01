@@ -18,6 +18,7 @@ A third type of content is about notebooks where I simply play around with code 
 ## [FINAL]
 * [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](data%20analysis/Pandas%20and%20Seaborn.ipynb)
 * [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%20with%20Keras%20-%20Text%20Generation.ipynb)
+* [Face Swap (Dedicated Repository)](https://github.com/5agado/face-swap)
 
 ## [WIP]
 
@@ -37,7 +38,6 @@ A third type of content is about notebooks where I simply play around with code 
 * [RNN Text Generation - Advanced (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%Text%20Generation%20-%20Advanced.ipynb)
 ### Miscellaneous
 * [Sorting](miscellaneous/Sorting.ipynb)
-* [Face Swap](image%20processing/Face%20Swap.ipynb)
 
 ## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)

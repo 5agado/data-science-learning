@@ -70,7 +70,6 @@
 * [Practical Deep Learning For Coders, Part 2](http://www.fast.ai/2017/07/28/deep-learning-part-two-launch/) TODO
 * [Deep Learning by Google @ Udacity](https://classroom.udacity.com/courses/ud730)
 * [Creative Applications of Deep Learning with Tensorflow @ Kadenze](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
-* [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO
 
 ## NLP
@@ -83,9 +82,8 @@
 * [Machine Learning With Big Data @ Coursera](https://www.coursera.org/learn/big-data-machine-learning/home/welcome) (brief generic intro to machine learning, practical examples for Spark and KNIME)
 * [Spark Fundamentals 1](https://bigdatauniversity.com/courses/what-is-spark/) (poorly taught, monotonous reading of slides, non relevant quizzes)
 
-## Data Science 
-
-## Miscellaneous
+## Art and Graphics
+* [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
 
 # Online Platforms
 * [Hackerrank](https://www.hackerrank.com/)

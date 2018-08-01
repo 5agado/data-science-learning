@@ -1,8 +1,0 @@
-numpy
-pandas
-seaborn
-matplotlib
-opencv-python
-scipy
-scikit-image
-dlib

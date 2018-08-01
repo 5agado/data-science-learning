@@ -5,6 +5,9 @@ pandas_profiling
 
 # Basic libraries import
 ```
+# Install required libraries
+#!pip install numpy pandas matplotlib seaborn
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -28,6 +31,14 @@ args = parser.parse_args()
 in_path = args.in_path
 ```
 
+# Config Parser
+```
+import configparser
+
+config = configparser.ConfigParser()
+config.read(config_path)
+config.get(section, key)
+```
 
 # Plotting
 ```
@@ -82,14 +93,14 @@ imp.reload(spam)
 ```
 from pathlib import Path
 path = Path("/path/to/folder")
-data_path = path / data_folder/ 'name'
+data_path = Path.home() / data_folder/ 'name'
 
 import sys
 import os
 from os.path import abspath, join, dirname
 
 sys.path.append(join(os.getcwd(), *[os.pardir]*3, 'data'))
-sys.path.append(join(dirname(__file__))
+sys.path.append(join(dirname(__file__)))
 
 sys.path.insert(0, abspath(dirname(__file__), 'src'))
 
