@@ -1,7 +1,45 @@
+<!-- MarkdownTOC autolink="true" -->
+
+- [TO_TRY](#to_try)
+- [Jupyter Notebook Setup](#jupyter-notebook-setup)
+- [Basic libraries import](#basic-libraries-import)
+- [Arguments Parser](#arguments-parser)
+- [Config Parser](#config-parser)
+- [Plotting](#plotting)
+    - [Animation](#animation)
+- [Reload modules](#reload-modules)
+- [Add path to system path](#add-path-to-system-path)
+- [Logging](#logging)
+- [Debug](#debug)
+- [Data-Science Training Utils](#data-science-training-utils)
+    - [Progress Meter](#progress-meter)
+    - [TensorBoard](#tensorboard)
+- [Kaggle-CLI](#kaggle-cli)
+- [Video Conversion](#video-conversion)
+
+<!-- /MarkdownTOC -->
+
 # TO_TRY
 pandas_profiling
 
 %config InlineBackend.figure_format = 'retina' # enable hi-res output
+
+# Jupyter Notebook Setup
+
+Install [extensions](https://github.com/ipython-contrib/jupyter_contrib_nbextensions)
+
+    conda install -c conda-forge jupyter_contrib_nbextensions
+    # Better via Conda, otherwise just use pip
+    #pip install jupyter_contrib_nbextensions
+
+Install [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
+
+    pip install jupyterthemes
+    pip install --upgrade jupyterthemes
+
+Current theme setup
+
+    jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 90%
 
 # Basic libraries import
 ```
@@ -112,18 +150,6 @@ import pkgutil
 data = pkgutil.get_data(__package__, 'somedata.dat')
 ```
 
-# Data-Science Training Utils
-## Progress Meter
-```
-# conda install tqdm
-from tqdm import tqdm
-for e in tqdm(range(nb_epochs))
-```
-
-## TensorBoard
-
-    $ tensorboard --logdir=/tmp/autoencoder
-
 # Logging
 ```
 import logging
@@ -138,12 +164,21 @@ import pdb
 pdb.set_trace()
 ```
 
+# Data-Science Training Utils
+## Progress Meter
+```
+# conda install tqdm
+from tqdm import tqdm
+for e in tqdm(range(nb_epochs))
+```
+
+## TensorBoard
+
+    $ tensorboard --logdir=/tmp/autoencoder
+
 # [Kaggle-CLI](https://github.com/floydwch/kaggle-cli)
 
     "kg.exe" submit submission.csv -u -p  -c challenge-name -m "message"
-
-# [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
-    jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 90%
 
 # Video Conversion
     ffmpeg -i in.WMV -filter:v "setpts=0.7*PTS" -c:v libx264 -crf 23 -c:a libfaac -q:a 100 -ss 00:00:35 out.mp4
