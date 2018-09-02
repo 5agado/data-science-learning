@@ -39,6 +39,9 @@ A third type of content is about notebooks where I simply play around with code 
 ### Miscellaneous
 * [Sorting](miscellaneous/Sorting.ipynb)
 
+### Graphics
+* [Generative Art Intro](graphics/Generative%20Art%20-%20Intro.ipynb)
+
 ## [DEV]
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb)
 * [Cellular Automata](cellular%20automata/Cellular%20Automata.ipynb)
