@@ -233,69 +233,6 @@ class Pyramid(Object):
 
         return sub_pyramids
 
-# Recursive Shrink Step
-#
-# This methods recursively apply a "sierpinski" step for the specific object
-# and once reached the given max depth proceed to create an instance of the current object
-# which includes info about location and size (radius)
-
-
-def cube_rec_shrink_step(cube: dict, depth: int = 0, max_depth=1):
-    if depth >= max_depth:
-        Cube(radius=cube['radius'], location=cube['location'])
-        return
-    else:
-        radius = cube['radius']
-        loc = cube['location']
-        # amount of shifting for the center of new object
-        center_shift = radius*(2/3)
-        # create three equally spaced sub-cubes for each dimension
-        for i, x in enumerate(np.linspace(loc[0] - center_shift, loc[0] + center_shift, 3)):
-            for j, y in enumerate(np.linspace(loc[1] - center_shift, loc[1] + center_shift, 3)):
-                for k, z in enumerate(np.linspace(loc[2] - center_shift, loc[2] + center_shift, 3)):
-                    if i == j == 1 or j == k == 1 or k == i == 1:
-                        continue
-                    else:
-                        new_cube = {
-                            'radius': radius/3,
-                            'location': (x, y, z)
-                        }
-                        cube_rec_shrink_step(new_cube, depth + 1, max_depth)
-
-
-def pyramid_rec_shrink_step(pyramid: dict, depth: int = 0, max_depth=1):
-    if depth >= max_depth:
-        Pyramid(radius=pyramid['radius'], location=pyramid['location'])
-        return
-    else:
-        radius = pyramid['radius']
-        loc = pyramid['location']
-        # amount of shifting for the center of new object
-        center_shift = radius/2
-        # define the five locations for the five new sub-pyramids
-        new_loc_top = (loc[0], loc[1], loc[2]+radius)
-        new_loc_1 = (loc[0]+center_shift, loc[1]+center_shift, loc[2])
-        new_loc_2 = (loc[0]-center_shift, loc[1]+center_shift, loc[2])
-        new_loc_3 = (loc[0]+center_shift, loc[1]-center_shift, loc[2])
-        new_loc_4 = (loc[0]-center_shift, loc[1]-center_shift, loc[2])
-        new_locs = [new_loc_top, new_loc_1, new_loc_2, new_loc_3, new_loc_4]
-        for new_loc in new_locs:
-            new_pyramid = {
-                'radius': radius/2,
-                'location': new_loc
-            }
-            pyramid_rec_shrink_step(new_pyramid, depth + 1, max_depth)
-
-
-# Entry point to call a Recursive-Shrink-Step for a target object
-def rec_shrink(max_depth: int):
-    obj = {
-        'radius': 10,
-        'location': (0, 0, 0)
-    }
-    #pyramid_rec_shrink_step(obj, max_depth=max_depth)
-    cube_rec_shrink_step(obj, max_depth=max_depth)
-
 
 def update_grid(objs, target):
     target_loc = target.location
