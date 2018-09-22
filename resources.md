@@ -1,3 +1,27 @@
+<!-- MarkdownTOC autolink="true" -->
+
+- [Books](#books)
+	- [Mathematics](#mathematics)
+	- [Statistics](#statistics)
+		- [Time-Series TOCHECK](#time-series-tocheck)
+	- [Machine Learning](#machine-learning)
+	- [Reinforcement Learning](#reinforcement-learning)
+	- [Deep Learning](#deep-learning)
+	- [Python](#python)
+	- [Programming](#programming)
+- [Courses](#courses)
+	- [Mathematics](#mathematics-1)
+	- [Statistics](#statistics-1)
+	- [Machine Learning](#machine-learning-1)
+	- [Reinforcement Learning](#reinforcement-learning-1)
+	- [Deep Learning](#deep-learning-1)
+	- [NLP](#nlp)
+	- [Big Data](#big-data)
+	- [Art and Graphics](#art-and-graphics)
+- [Online Platforms](#online-platforms)
+
+<!-- /MarkdownTOC -->
+
 # Books
 
 ## Mathematics
@@ -36,7 +60,7 @@
  
 ## Deep Learning
 * [deeplearningbook](http://www.deeplearningbook.org/) (math, also overview and details about many technical prerequisites to machine learning, like linear algebra, probability and alike)
-* [neuralnetworksanddeeplearning](http://neuralnetworksanddeeplearning.com/) (great intuitive look into deep learning models and generic machine learning techniques)
+* [neuralnetworksanddeeplearning - Michael Nielsen (online)](http://neuralnetworksanddeeplearning.com/) (great intuitive look into neural-networks properties and deep-learning models working mechanisms)
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
 
 ## Python
