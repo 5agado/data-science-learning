@@ -4,22 +4,23 @@ from typing import List
 
 
 class Flock:
-    """
-    Class holding a flock components and behavior
-    """
     NB_DIMENSIONS = 2  # defines world/vectors number of dimensions, typically 2 or 3
     VISIBILITY_RADIUS = 100  # unit visibility radius (capacity to identify neighbors)
     CLOSENESS = 20  # distance for which a unit is considered too close (separation rule)
-    CIRCLE_RADIUS = 2
+    ATTRACTOR_CONFINE = 300  # distance at which the attractor is enabled
 
+    # sub-behaviors influence factor
     COHESION_FACTOR = 1 / 50
     ALIGNMENT_FACTOR = 1 / 10
     SEPARATION_FACTOR = 1 / 2
+    ATTRACTOR_FACTOR = 1 / 5
     VELOCITY_FACTOR = 2
 
+    # whether to apply the given sub-behavior during flock update
     COHESION = True
     ALIGNMENT = True
     SEPARATION = True
+    ATTRACTOR = True
 
     class Unit:
         """Atomic unit of a flock"""
@@ -29,12 +30,27 @@ class Flock:
             self.vel = vel
             self.is_leader = is_leader
 
-    def __init__(self, size: int, canvas_size: int):
-        self.units = [Flock.Unit(
-            pos=np.random.randint(0, canvas_size, size=Flock.NB_DIMENSIONS),
-            vel=np.random.random(size=Flock.NB_DIMENSIONS),
-        ) for _ in range(size)]
-        #self.units[0].is_leader = True
+    def __init__(self, size: int, canvas_size: int, canvas_shift: tuple = None, seed: int = None):
+        """
+        Defines a flock components and behavior.
+        :param size: number of units in the flock
+        :param canvas_size: size of the space in which units are randomly generated (same size for each dimension)
+        :param canvas_shift: shift random positions by this amount (should be one value for each dimension)
+        :param seed: random generation seed
+        """
+
+        # Generate random position and velocity for flock units
+        # use seed for reproducible results if given
+        if seed:
+            np.random.seed(seed)
+        units_pos = np.random.randint(0, canvas_size, size=(size, Flock.NB_DIMENSIONS))
+        if canvas_shift:
+            units_pos += np.array(canvas_shift)
+        units_vel = np.random.random(size=(size, Flock.NB_DIMENSIONS)) - 0.5
+
+        # Instantiate flock units
+        self.units = [Flock.Unit(pos=units_pos[i], vel=units_vel[i]) for i in range(size)]
+        self.attractor_pos = np.zeros(Flock.NB_DIMENSIONS) + canvas_size//2
 
     def update(self):
         """Update flock state. For each unit compute and set new position"""
@@ -42,17 +58,22 @@ class Flock:
         for unit in self.units:
             neighbors = self.get_neighbors(unit.pos)
 
-            # Cohesion
+            # Cohesion/Center
             if Flock.COHESION:
                 Flock.apply_cohesion(unit, neighbors)
 
-            # Alignment
+            # Alignment/Imitation
             if Flock.ALIGNMENT:
                 Flock.apply_alignment(unit, neighbors)
 
-            # Separation
+            # Separation/Avoidance
             if Flock.SEPARATION:
                 Flock.apply_separation(unit, neighbors)
+
+            # Attractor
+            # Keep Flock close to an attractor/interest point
+            if Flock.ATTRACTOR:
+                self.apply_attractor(unit)
 
             # normalize velocity vector
             unit.vel /= np.linalg.norm(unit.vel)
@@ -96,6 +117,15 @@ class Flock:
                 avoid_vel = n.pos - unit.pos
                 # also should be stronger when really close, and weak otherwise
                 unit.vel -= avoid_vel * Flock.SEPARATION_FACTOR
+
+    # apply attractor rule to given unit
+    def apply_attractor(self, unit: Unit):
+        dist = distance.euclidean(self.attractor_pos, unit.pos)
+        # if attractor too far, steer unit towards it
+        if dist > Flock.ATTRACTOR_CONFINE:
+            converge_vel = self.attractor_pos - unit.pos
+            # also should be stronger when really far, and weak otherwise
+            unit.vel += converge_vel * Flock.ATTRACTOR_FACTOR
 
     # consider neighbors all those unit closer enough to the target
     # consequentially a unit is considered to have complete spherical visibility
