@@ -59,13 +59,17 @@ def convert_video(video_path: str, out_path: str, frame_edit_fun,
                   codec='mp4v'):
     # "Load" input video
     input_video = cv2.VideoCapture(video_path)
-
-    # Match source video features.
-    fps = input_video.get(cv2.CAP_PROP_FPS)
-    size = (
+    input_shape = (
         int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT)),
     )
+
+    # Get output video size
+    out_sample = frame_edit_fun(np.random.randint(0, 255, input_shape))
+
+    # Match source video features.
+    fps = input_video.get(cv2.CAP_PROP_FPS)
+    size = out_sample.shape
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*codec)
