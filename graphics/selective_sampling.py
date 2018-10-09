@@ -26,7 +26,7 @@ def selective_sampling(img: np.array, nb_width_cells: int,
     img_height, img_width = img.shape[:2]
 
     # Compute grid intersection point along image width
-    x_steps, x_step_size = np.linspace(0, img_width, nb_width_cells, retstep=True)
+    x_steps, x_step_size = np.linspace(0, img_width, nb_width_cells, retstep=True, endpoint=False)
     # same for image height
     # if forced square, just rely on the x_step_size
     if force_square_sample:
@@ -34,15 +34,15 @@ def selective_sampling(img: np.array, nb_width_cells: int,
         y_step_size = x_step_size
     # otherwise compute independently
     else:
-        y_steps, y_step_size = np.linspace(0, img_height, nb_width_cells, retstep=True)
+        y_steps, y_step_size = np.linspace(0, img_height, nb_width_cells, retstep=True, endpoint=False)
 
     samples = []
     sample_width = x_step_size * sampling_size_factor
     sample_height = y_step_size * sampling_size_factor
     # Consider all intersection which are not on the image border
-    for y in y_steps[1:-1]:
+    for y in y_steps[1:]:
         samples_row = []
-        for x in x_steps[1:-1]:
+        for x in x_steps[1:]:
             # Get sample square of size sample_side surrounding the intersection of of current x and y steps
             sample = img[int(y - sample_height):int(y + sample_height),
                          int(x - sample_width):int(x + sample_width)]
@@ -60,8 +60,8 @@ def convert_video(video_path: str, out_path: str, frame_edit_fun,
     # "Load" input video
     input_video = cv2.VideoCapture(video_path)
     input_shape = (
-        int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
     )
 
     # Get output video size
@@ -73,7 +73,7 @@ def convert_video(video_path: str, out_path: str, frame_edit_fun,
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*codec)
-    out = cv2.VideoWriter(out_path, fourcc, fps, size)
+    out = cv2.VideoWriter(out_path, fourcc, fps, size[::-1])
 
     # Process frame by frame
 
@@ -82,7 +82,6 @@ def convert_video(video_path: str, out_path: str, frame_edit_fun,
     if nb_frames and nb_frames > 0:
         for _ in tqdm(range(nb_frames)):
             _, frame = input_video.read()
-
             frame = frame_edit_fun(frame)
             out.write(frame)
     else:
@@ -126,6 +125,10 @@ def main(_=None):
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    if nb_width_cells < 3:
+        logging.error("Need grid width higher than 2. Exiting")
+        sys.exit(1)
 
     # process directly a video
     if not process_images:
