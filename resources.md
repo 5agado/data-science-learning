@@ -1,6 +1,7 @@
 <!-- MarkdownTOC autolink="true" -->
 
 - [Books](#books)
+	- [Artificial Intelligence](#artificial-intelligence)
 	- [Mathematics](#mathematics)
 	- [Statistics](#statistics)
 		- [Time-Series TOCHECK](#time-series-tocheck)
@@ -23,6 +24,9 @@
 <!-- /MarkdownTOC -->
 
 # Books
+
+## Artificial Intelligence
+* [Artificial Intelligence: A Modern Approach (3rd Edition)](https://www.amazon.com/Artificial-Intelligence-Modern-Approach-3rd/dp/0136042597)
 
 ## Mathematics
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
