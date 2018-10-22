@@ -1,6 +1,13 @@
 import sys
-from os.path import abspath, join, dirname, pardir
+from pathlib import Path
 
-SRC_PATH = join(abspath(dirname(__file__)))
-sys.path.append(SRC_PATH)
-CONFIG_PATH = join(SRC_PATH, pardir, 'GOL_config.ini')
+UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
+SRC_PATH = UTILS_PATH / "cellular automata/blender-scripting"
+sys.path.append(str(SRC_PATH))
+
+CONFIG_PATH = str(SRC_PATH / 'GOL_config.ini')
+
+sys.path.append(str(UTILS_PATH))
+import utils.blender_utils
+import importlib
+importlib.reload(utils.blender_utils)

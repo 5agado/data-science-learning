@@ -1,11 +1,112 @@
 import bpy
+import bmesh
+
+is_blender_28 = bpy.app.version[1] >= 80
 
 
 def delete_all(obj_type: str='MESH'):
     """Delete all objects of the given type from the current scene"""
 
     for obj in bpy.data.objects:
-        obj.hide = False
-        obj.select = obj.type == obj_type
+        if is_blender_28:
+            pass
+        else:
+            obj.hide = False
+            obj.select = obj.type == obj_type
 
     bpy.ops.object.delete(use_global=True)
+
+
+def create_line(p0: tuple, p1: tuple, name: str = 'line'):
+    mesh = bpy.data.meshes.new(name)
+
+    mesh.from_pydata([p0, p1], [(0, 1)], [])
+    mesh.update()
+
+    return _add_mesh_to_scene(mesh, name)
+
+
+def create_circle(radius: float, segments: int=32, name: str = 'circle'):
+    bm = bmesh.new()
+
+    if is_blender_28:
+        bmesh.ops.create_circle(bm, cap_ends=False, radius=radius, segments=segments)
+    else:
+        bmesh.ops.create_circle(bm, cap_ends=False, diameter=radius, segments=segments)
+
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+
+    return _add_mesh_to_scene(mesh, name)
+
+
+def _add_mesh_to_scene(mesh, obj_name: str):
+    scene = bpy.context.scene
+    obj = bpy.data.objects.new(obj_name, mesh)
+    if is_blender_28:
+        scene.collection.objects.link(obj)
+    else:
+        scene.objects.link(obj)
+    return obj
+
+
+
+# Get object
+#bpy.context.scene.objects.active
+#bpy.context.scene.objects['object_name']
+#bpy.data.objects['Camera'] ??difference with context
+
+# Frame handlers
+#bpy.app.handlers.frame_change_pre.clear()
+#bpy.app.handlers.frame_change_pre.append(lambda x : x)
+
+# Frames setting
+#bpy.context.scene.frame_end = NUM_FRAMES
+#bpy.context.scene.frame_set(frame)
+
+# Keyframing
+#target.location = (0, 0, 0)
+#target.keyframe_insert("location")
+#target.rotation_euler = (0, 0, 0)
+#target.keyframe_insert("rotation_euler")
+
+# Create vertex group
+#vg = target.vertex_groups.new(name="vg_name")
+#vg.add([1], 1.0, 'ADD')
+
+# Particles system
+#target.modifiers.new("name", type='PARTICLE_SYSTEM')
+#ps = target.particle_systems[0]
+#ps.settings.emit_from = 'VERT'
+#ps.vertex_group_density = "emitter"
+
+
+###################################
+###           Greasy Pencil
+###################################
+def init_greasy_pencil():
+
+    # Create grease pencil object if none exists
+    if 'GPencil' not in bpy.context.scene.objects:
+        bpy.ops.object.gpencil_add(view_align=False, location=(0., 0., 0.), type='EMPTY')
+
+    g_pencil = bpy.context.scene.objects['GPencil']
+
+    # Reference grease pencil layer or create one if none exists
+    if g_pencil.data.layers:
+        gp_layer = g_pencil.data.layers[0]
+    else:
+        gp_layer = g_pencil.data.layers.new('gpl', set_active=True)
+
+    bpy.ops.gpencil.paintmode_toggle()  # need to trigger otherwise there is no frame
+    gp_layer.clear()  # clear all previous layer data
+
+    return gp_layer
+
+
+# Frames and Strokes
+#gp_frame = gp_layer.frames.new(i) # notice that index in the frames list does not match frame number in the timeline
+#gp_stroke = gp_frame.strokes.new()
+#gp_stroke.points.add(count=4)
+#gp_stroke.points[0].co = (0, 0, 0)
