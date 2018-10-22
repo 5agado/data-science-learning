@@ -1,6 +1,7 @@
 <!-- MarkdownTOC autolink="true" -->
 
 - [Books](#books)
+	- [Artificial Intelligence](#artificial-intelligence)
 	- [Mathematics](#mathematics)
 	- [Statistics](#statistics)
 		- [Time-Series TOCHECK](#time-series-tocheck)
@@ -24,6 +25,9 @@
 
 # Books
 
+## Artificial Intelligence
+* [Artificial Intelligence: A Modern Approach (3rd Edition)](https://www.amazon.com/Artificial-Intelligence-Modern-Approach-3rd/dp/0136042597)
+
 ## Mathematics
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
@@ -39,7 +43,7 @@
 * [OpenIntro Statistics 3rd Edition](https://www.openintro.org/stat/textbook.php?stat_book=os) (exercises and inline questions with solutions)
 * [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
-* [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (math)
+* [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (highly technical)
 
 ### Time-Series TOCHECK
 * [Time Series Analysis - Hamilton](https://www.amazon.com/gp/product/0691042896)
@@ -59,7 +63,7 @@
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
  
 ## Deep Learning
-* [deeplearningbook](http://www.deeplearningbook.org/) (math, also overview and details about many technical prerequisites to machine learning, like linear algebra, probability and alike)
+* [deeplearningbook](http://www.deeplearningbook.org/) (highly technical, also overview and details about many prerequisites to machine learning, like linear algebra and probability)
 * [neuralnetworksanddeeplearning - Michael Nielsen (online)](http://neuralnetworksanddeeplearning.com/) (great intuitive look into neural-networks properties and deep-learning models working mechanisms)
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
 
@@ -84,6 +88,7 @@
 * [Machine Learning by Georgia Tech](https://www.udacity.com/course/machine-learning--ud262)
 * [Neural Networks for Machine Learning @ Coursera](https://www.coursera.org/learn/neural-networks) TODO
 * [Deep Learning A-Z™: Hands-On Artificial Neural Networks](https://www.udemy.com/deeplearning/) TODO
+* [Machine Learning For Coders @ Fast.ai](http://www.fast.ai/2018/09/26/ml-launch/) TODO
 
 ## Reinforcement Learning
 * [David Silver’s Reinforcement Learning Course](http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html) TOCHECK
@@ -107,7 +112,7 @@
 * [Spark Fundamentals 1](https://bigdatauniversity.com/courses/what-is-spark/) (poorly taught, monotonous reading of slides, non relevant quizzes)
 
 ## Art and Graphics
-* [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) TODO
+* [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) (clear overview and exploration of relevant artistic artifacts for different major topic: chaos theory, rule-based system, grammars, markov chains, agents, artificial-life. Coverage of both visual and audio media. Assignments in MAX)
 
 # Online Platforms
 * [Hackerrank](https://www.hackerrank.com/)
