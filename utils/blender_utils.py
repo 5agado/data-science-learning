@@ -62,6 +62,7 @@ def _add_mesh_to_scene(mesh, obj_name: str):
 #bpy.app.handlers.frame_change_pre.append(lambda x : x)
 
 # Frames setting
+#bpy.context.scene.frame_start = 0
 #bpy.context.scene.frame_end = NUM_FRAMES
 #bpy.context.scene.frame_set(frame)
 

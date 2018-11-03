@@ -75,6 +75,7 @@
 
 
 # [Courses](https://www.class-central.com/)
+[3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)

@@ -33,6 +33,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [Autoencoders](deep%20learning/Autoencoders.ipynb)
 * [GANs - Intro](deep%20learning/GANs%20Intro.ipynb)
 * [Style Transfer](deep%20learning/Style%20Transfer.ipynb)
+* [CPPN](deep%20learning/CPPN)
 ### NLP
 * [Text Clustering](nlp/Text%20Clustering.ipynb)
 * [RNN Text Generation - Advanced (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%Text%20Generation%20-%20Advanced.ipynb)
