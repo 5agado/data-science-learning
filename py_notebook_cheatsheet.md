@@ -63,10 +63,10 @@ import collections
 import argparse
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--in', metavar='inpath', dest='in_path', required=True)
+parser.add_argument('-i', '--input-path', type=str, help='input path', required=True)
 
 args = parser.parse_args()
-in_path = args.in_path
+args.input_path
 ```
 
 # Config Parser
@@ -91,10 +91,10 @@ color = sns.color_palette()
 ax.xaxis_date()
 plt.xticks(rotation='vertical')
 
-import plotly
+from plotly.offline import init_notebook_mode, plot, iplot
 import cufflinks as cf
+init_notebook_mode(connected=True)
 cf.go_offline(connected=True)
-plotly.offline.init_notebook_mode(connected=True)
 
 from ipywidgets import interact, widgets
 from IPython.display import display
@@ -181,6 +181,7 @@ for e in tqdm(range(nb_epochs))
     "kg.exe" submit submission.csv -u -p  -c challenge-name -m "message"
 
 # Video Conversion
+
     ffmpeg -i in.WMV -filter:v "setpts=0.7*PTS" -c:v libx264 -crf 23 -c:a libfaac -q:a 100 -ss 00:00:35 out.mp4
 
     ffmpeg -i in.WMV -filter:v "setpts=0.6*PTS" -ss 00:00:10 -t 00:00:10 out.gif
@@ -194,3 +195,5 @@ From video to frames
 From frames to video
 
     ffmpeg -i frames_path/frame_%d.png output_path/filename.gif
+
+See also [Video Conversion Script](scripts/convert_video.py)
