@@ -10,11 +10,12 @@ def main(_=None):
     parser.add_argument('--width', default=-1)
     parser.add_argument('--height', default=-1)
     parser.add_argument('--fps', default=24)
+    parser.add_argument('--pts', default=1.0)
 
     args = parser.parse_args()
 
     palette_path = "/tmp/palette.png"
-    filters = f"fps={args.fps},scale={args.width}:{args.height}:flags=lanczos"
+    filters = f"setpts={args.pts}*PTS,fps={args.fps},scale={args.width}:{args.height}:flags=lanczos"
 
     subprocess.call(f'ffmpeg -v warning -i "{args.inp}" -vf "{filters},palettegen" -y "{palette_path}"', shell=True)
     subprocess.call(f'ffmpeg -i "{args.inp}" -i "{palette_path}" -lavfi "{filters} [x]; [x][1:v] '

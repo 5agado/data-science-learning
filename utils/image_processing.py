@@ -3,7 +3,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image
+#from PIL import Image
 
 
 def get_imgs_paths(basepath: Path, img_types=('*.jpg', '*.jpeg', '*.png'), as_str=True):

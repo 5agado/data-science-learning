@@ -8,7 +8,7 @@ from abc import ABC, ABCMeta, abstractmethod
 SCALE_FACTOR = 0.05  # factor used to scale an object when close enough to target
 ROTATION_VEC = (3.0, 0., 0.)  # rotation vector applied to an object when close enough to target
 ORIGINAL_ROTATION_VEC = (0., 0., 0.)  # original rotation vector for an object
-DIST_LIM = 6.5  # distance threshold for which an object is influenced by a target
+DIST_LIM = 10.5  # distance threshold for which an object is influenced by a target
 TARGET_SPEED = 1.5  # speed at which the target is moving in the scene
 
 
@@ -257,14 +257,17 @@ def move_target(target):
 # handler called at every frame change
 def frame_handler(scene, objs, target, num_frames_change):
     frame = scene.frame_current
-    if (frame % num_frames_change) == 0:
+    # When reaching final frame, clear handlers
+    if frame >= bpy.context.scene.frame_end:
+        bpy.app.handlers.frame_change_pre.clear()
+    elif (frame % num_frames_change) == 0:
         move_target(target)
         # update grid
         update_grid(objs, target)
 
 
 def main(_):
-    NUM_FRAMES_CHANGE = 5  # higher values enable a more fluid transformation of objects, as frames between
+    NUM_FRAMES_CHANGE = 2  # higher values enable a more fluid transformation of objects, as frames between
     # keyframings interpolate the object modification taking place.
 
     bpy.ops.mesh.primitive_ico_sphere_add(
@@ -272,15 +275,16 @@ def main(_):
                        size=0.3,
                        location=(0, 0, 30))
 
-    target = bpy.context.scene.objects.active
-    target.keyframe_insert("location")
+    #target = bpy.context.scene.objects.active
+    #target.keyframe_insert("location")
+    target = bpy.context.scene.objects['Empty']
 
     obj = {
         'location': (0, 0, 0),
-        'radius': 10,
+        'radius': 15,
     }
 
-    objs = Cube.obj_replication(obj, max_depth=2)
+    objs = Cube.obj_replication(obj, max_depth=3)
     #objs = Pyramid.obj_replication(obj, max_depth=3)
 
     bpy.app.handlers.frame_change_pre.clear()

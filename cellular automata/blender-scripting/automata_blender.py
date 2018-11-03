@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
-sys.path.append(UTILS_PATH)
+sys.path.append(str(UTILS_PATH))
 
 import utils.blender_utils
 import importlib
