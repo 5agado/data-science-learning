@@ -29,6 +29,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [Logistic Regression](machine%20learning/Logistic%20Regression.ipynb)
 * [Evaluation Metrics](machine%20learning/Evaluation%20Metrics.ipynb)
 * [Tensorflow - Intro](machine%20learning/Tensorflow%20-%20Intro.ipynb)
+* [Markov Models](machine%20learning/Markov%20Models.ipynb)
 ### Deep Learning
 * [Autoencoders](deep%20learning/Autoencoders.ipynb)
 * [GANs - Intro](deep%20learning/GANs%20Intro.ipynb)
