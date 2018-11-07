@@ -3,13 +3,11 @@ from abc import ABC, abstractmethod
 
 
 class AbstractGOL(ABC):
-    def __init__(self, N, config, seed=None):
+    def __init__(self, config, seed=None):
         """
         Abstract Conway Game of Life
-        :param N: grid side size
         :param config: configuration for this GOL instance (cell survival and generation settings)
         """
-        self.N = N
         self.config = config
         if seed:
             np.random.seed(seed)

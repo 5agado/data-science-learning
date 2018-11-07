@@ -11,29 +11,34 @@ from abstract_GOL import AbstractGOL
 
 
 class ConwayGOL_2D(AbstractGOL):
-    def __init__(self, N, config='GOL_2D_standard', seed=None):
+    def __init__(self, rows: int, cols: int, config='GOL_2D_standard', seed=None):
         """
         2D Conway Game of Life
-        :param N: grid side size (resulting grid will be a NxN matrix)
+        :param rows: grid number of rows
+        :param cols: grid number of cols
         :param config: config: configuration for this GOL instance (cell survival and generation settings)
         """
-        super().__init__(N, config, seed)
-        self.grid = np.random.choice(2, (N,N))
+        super().__init__(config, seed)
+        self.rows = rows
+        self.cols = cols
+        self.grid = np.random.choice(2, (rows, cols))
     
     def update(self):
         """
         Update status of the grid
         """
         tmpGrid = self.grid.copy()
-        for i in range(self.N):
-            for j in range(self.N):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 neighbours = self.get_neighbours_count((i, j))
                 tmpGrid[i, j] = self.get_cell_newstate(self.grid[i, j], neighbours)
         self.grid = tmpGrid
 
     def get_neighbours_count(self, index):
         i, j = index
-        neighbours_count = self.grid[max(0, i-1):min(i+2,self.N), max(0, j-1):min(j+2,self.N)].sum()
+        neighbours_count = self.grid.take(range(i-1, i+2), mode='wrap', axis=0)\
+                                    .take(range(j-1, j+2), mode='wrap', axis=1).sum()
+        #neighbours_count = self.grid[max(0, i-1):min(i+2, self.rows), max(0, j-1):min(j+2, self.cols)].sum()
         neighbours_count -= self.grid[i, j]
         return neighbours_count
 
@@ -46,9 +51,9 @@ class ConwayGOL_2D(AbstractGOL):
 # The object generator is responsible for the creation of a single object instance
 def create_grid(gol, obj_generator):
     obj_grid = []
-    for i in range(gol.N):
+    for i in range(gol.rows):
         row = []
-        for j in range(gol.N):
+        for j in range(gol.cols):
             obj_generator(i, j, 0)
             row.append(bpy.context.scene.objects.active)
         obj_grid.append(row)
@@ -57,8 +62,8 @@ def create_grid(gol, obj_generator):
 
 # update grid of Blender objects to reflect gol status, then update gol.
 def update_grid(obj_grid, gol, obj_updater):
-    for i in range(gol.N):
-        for j in range(gol.N):
+    for i in range(gol.rows):
+        for j in range(gol.cols):
             obj_updater(obj_grid[i][j], gol.grid, (i, j))
     gol.update()
 

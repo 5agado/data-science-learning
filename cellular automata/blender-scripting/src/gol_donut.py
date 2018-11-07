@@ -3,31 +3,24 @@ import sys
 from pathlib import Path
 
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
-SRC_PATH = UTILS_PATH / "cellular automata/blender-scripting"
+SRC_PATH = UTILS_PATH / "cellular automata/blender-scripting/src"
 sys.path.append(str(SRC_PATH))
 sys.path.append(str(UTILS_PATH))
 
-CONFIG_PATH = str(SRC_PATH / 'GOL_config.ini')
+CONFIG_PATH = str(SRC_PATH / '..' / 'GOL_config.ini')
 
 import utils.blender_utils
 import importlib
 importlib.reload(utils.blender_utils)
 
 from utils.blender_utils import delete_all
+import math
 from mathutils import Matrix, Vector
 import numpy as np
 import bpy
 
 import gol_utils as utils
-from conway_2D import ConwayGOL_2D
-
-
-# update grid of Blender objects to reflect gol status, then update gol.
-def update_grid(obj_grid, gol, obj_updater):
-    for i in range(gol.N):
-        for j in range(gol.N):
-            obj_updater(obj_grid[i][j], gol.grid, (i, j))
-    gol.update()
+from conway_2D import ConwayGOL_2D, update_grid
 
 
 def object_updater_move(obj, grid_val):
@@ -38,24 +31,38 @@ def object_updater_move(obj, grid_val):
     obj['obj'].keyframe_insert("location")
 
 
+def set_gol_to_glider(gol, row_shift=0, col_shift=0):
+    gol.grid.fill(0)
+    gol.grid[row_shift, col_shift + 1] = 1
+    gol.grid[row_shift+1, col_shift + 2] = 1
+    gol.grid[row_shift+2, col_shift:col_shift+3] = 1
+
+
 def main():
     NUM_FRAMES_CHANGE = 5
-    NUM_FRAMES = 50
+    NUM_FRAMES = 160
+    PATH_DURATION = 100
+    MIRROR_FRAME = 80
+    bpy.context.scene.frame_start = 0
     bpy.context.scene.frame_end = NUM_FRAMES
 
-    torus_major_segments = 30
-    torus_minor_segments = 15
+    assert (NUM_FRAMES % NUM_FRAMES_CHANGE == 0)
+
+    torus_major_segments = 70
+    torus_minor_segments = 25
     torus_major_radius = 1
     torus_minor_radius = 0.25
-    obj_size = 0.05
+    seed = 10
+    obj_size = 0.015
     move_factor = 2
-
-    grid_side = int(np.sqrt(torus_major_segments*torus_minor_segments))
 
     delete_all()
 
     utils.cube_generator(obj_size, 0, 0, 0)
     cube = bpy.context.scene.objects.active
+
+    print("-----------------------")
+    print("Start creation process")
 
     # create Donut
     bpy.ops.mesh.primitive_torus_add(location=(0, 0, 0), major_radius=torus_major_radius,
@@ -74,18 +81,24 @@ def main():
     obj_updater = lambda obj, grid, idx: object_updater_move(obj, grid[idx])
 
     # create GOL data
-    gol = ConwayGOL_2D(grid_side,
-                       utils.load_GOL_config(CONFIG_PATH, 'GOL_3D_standard'),
-                       seed=42)
+    gol = ConwayGOL_2D(rows=torus_major_segments, cols=torus_minor_segments,
+                       config=utils.load_GOL_config(CONFIG_PATH, 'GOL_3D_standard'),
+                       seed=seed)
+    gol.update()  # update gol to start with a cleaner grid
+    gol_grid_cache = []
+
     # create GOL object grid by selected all previously created objects
-    objs = [bpy.context.scene.objects["Cube.{:03d}".format(int(i))]
-            for i in range(1, (grid_side*grid_side)+1)]
+    objs = [obj for name, obj in bpy.context.scene.objects.items() if name.startswith('Cube.')]
+    assert len(objs) == gol.grid.shape[0] * gol.grid.shape[1]
+
+    #set_gol_to_glider(gol)
 
     # Add camera path and follow path action
     bpy.ops.curve.primitive_bezier_circle_add(radius=torus_major_radius, location=(0, 0, 0))
     cube.select = False
     torus.select = False
     bpy.data.objects['BezierCircle'].select = False
+    #bpy.data.objects['BezierCircle'].data.path_duration = PATH_DURATION
     camera = bpy.data.objects['Camera']
     camera.select = True
     camera.location = (0, 0, 0)
@@ -96,8 +109,11 @@ def main():
     follow_path.forward_axis = 'TRACK_NEGATIVE_Z'
     follow_path.up_axis = 'UP_Y'
     follow_path.use_curve_follow = True
+
+    # Animate path. Doesn't seem to work because of wrong context
     #bpy.ops.constraint.followpath_path_animate(constraint="Follow Path", owner='OBJECT')
-    bpy.data.objects['Camera'].rotation_euler = (0, -0.5, 0)
+
+    camera.rotation_euler = (0, -0.25, 0)
 
     # Set objects on and off location by translating across object axes
     obj_grid = []
@@ -110,21 +126,27 @@ def main():
         trans_world = obj.matrix_world.to_3x3() * trans_local_move
         obj.matrix_world.translation += trans_world
         translated_loc = obj.location.copy()
-        obj_grid.append({'obj': obj, 'original_loc': original_loc,
-                         'translated_loc': translated_loc})
+        obj_grid.append({'obj': obj, 'original_loc': original_loc, 'translated_loc': translated_loc})
 
-    obj_grid = np.array(obj_grid).reshape((grid_side, grid_side))
+    obj_grid = np.array(obj_grid).reshape(gol.grid.shape)
 
-    for frame in range(1, NUM_FRAMES+1):
+    for frame in range(0, NUM_FRAMES+1):
         if frame % 10 == 0:
             print("Updating frame {}".format(frame))
+
         bpy.context.scene.frame_set(frame)
         # When reaching final frame, clear handlers
+        if (frame % NUM_FRAMES_CHANGE) == 0:
+            if frame < MIRROR_FRAME:
+                gol_grid_cache.append(gol.grid)
+            elif frame > MIRROR_FRAME:
+                gol.grid = gol_grid_cache.pop()
+            update_grid(obj_grid, gol, obj_updater)
         if frame >= NUM_FRAMES:
             bpy.app.handlers.frame_change_pre.clear()
-            bpy.context.scene.frame_set(1)
-        elif (frame % NUM_FRAMES_CHANGE) == 0:
-            update_grid(obj_grid, gol, obj_updater)
+            bpy.context.scene.frame_set(0)
+
+    print("-----------------------")
 
 
 main()

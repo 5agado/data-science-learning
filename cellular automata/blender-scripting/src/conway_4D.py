@@ -17,7 +17,8 @@ class ConwayGOL_4D(AbstractGOL):
         :param N: 4D grid side size (resulting grid will be a NxNxNxN matrix)
         :param config: configuration for this GOL instance (cell survival and generation settings)
         """
-        super().__init__(N, config, seed)
+        super().__init__(config, seed)
+        self.N = N
         self.grid = np.random.choice(2, (N,N,N,N))
     
     def update(self):
