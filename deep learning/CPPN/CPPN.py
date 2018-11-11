@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 import sys
+import math
 from keras.initializers import RandomNormal
 from keras.layers import Activation
 from keras.layers import Input, Dense, RepeatVector, Lambda
@@ -22,7 +23,8 @@ class CPPN:
                  kernel_init_mean: float = 0.,
                  kernel_init_stddev: float = 1.,
                  inner_activation: str = 'tanh',
-                 inner_architecture_key: str = 'base'):
+                 inner_architecture_key: str = 'base',
+                 **kargs):
 
         self.img_width = img_width
         self.img_height = img_height
@@ -72,10 +74,12 @@ class CPPN:
         x_vec = Input(shape=(self.nb_points, 1), name='in_x')
         y_vec = Input(shape=(self.nb_points, 1), name='in_y')
         r_vec = Input(shape=(self.nb_points, 1), name='in_r')
+        e_vec = Input(shape=(self.nb_points, 1), name='in_e')
         z_vec = Input(shape=(self.z_dim,), name='in_z')
 
         # Repeat z for each point and scale
         z_unroll = RepeatVector(self.nb_points)(z_vec)
+        # TODO compare scaling of z with scaling data
         z_scaled = Lambda(lambda x: x * self.scale_factor)(z_unroll)
 
         # Input dense
@@ -83,6 +87,7 @@ class CPPN:
             Dense(units=self.hidden_dim, use_bias=False, kernel_initializer=kernel_initializer)(x_vec),
             Dense(units=self.hidden_dim, use_bias=False, kernel_initializer=kernel_initializer)(y_vec),
             Dense(units=self.hidden_dim, use_bias=False, kernel_initializer=kernel_initializer)(r_vec),
+            Dense(units=self.hidden_dim, use_bias=False, kernel_initializer=kernel_initializer)(e_vec),
             Dense(units=self.hidden_dim, kernel_initializer=kernel_initializer,
                   bias_initializer=kernel_initializer,
                   )(z_scaled)
@@ -94,7 +99,7 @@ class CPPN:
         output = self._get_internal_output('base', x)
 
         # Build model
-        cppn = Model([x_vec, y_vec, r_vec, z_vec], output)
+        cppn = Model([x_vec, y_vec, r_vec, e_vec, z_vec], output)
 
         return cppn
 
@@ -149,32 +154,48 @@ class CPPN:
 
         return output
 
-    def get_data(self, scale: float = 1., traslation: float = 0., rotation: float = 0.):
+    def get_data(self, scale: float = 1., translation: float = 0., rotation: float = 0.,
+                 extra_fun=lambda x, y: x*y):
         """
         Get data to feed to the model, based on the batch_size and img_size defined initially.
         For pixel coordinates, values are scaled down in the range [-1, 1].
         r is the distance from the center for each coordinate
-        :return: x, y and r
+        :param extra_fun: function to compute an extra matrix data from x and y values
+        :param scale:
+        :param translation:
+        :param rotation: rotation factor in degrees
+        :return: x, y, r and the extra vector
         """
-
         # get pixels coordinates in the range [-1, 1]
         # this would be equivalent to explicitly operating min-max normalization
-        x_range = scale * np.linspace(-1., 1., self.img_width) + traslation
-        y_range = scale * np.linspace(-1., 1., self.img_height) + traslation
+        x_range = scale * np.linspace(-1., 1., self.img_width) + translation
+        y_range = scale * np.linspace(-1., 1., self.img_height) + translation
 
         # repeat each range along the opposite axis
-        x_mat = np.tile(x_range.reshape(1, self.img_width), self.img_height).reshape(self.img_size)
-        y_mat = np.tile(y_range.reshape(self.img_height, 1), self.img_width).reshape(self.img_size)
+        x_mat, y_mat = np.meshgrid(x_range, y_range)
+
+        # if give, rotate coords via rotation matrix
+        if rotation != 0:
+            theta = math.radians(rotation)
+            rot_matrix = np.array([[math.cos(theta), -math.sin(theta)],
+                                   [math.sin(theta), math.cos(theta)]])
+            new_mat = np.transpose([x_mat, y_mat]) @ rot_matrix
+            x_mat = new_mat.transpose()[0]
+            y_mat = new_mat.transpose()[1]
 
         # compute radius matrix
         r_mat = np.sqrt(x_mat * x_mat + y_mat * y_mat)
+
+        # computer additional arbitrary matrix based on given key
+        extra_mat = extra_fun(x_mat, y_mat)
 
         # flatten matrices and reshape based on batch size
         x = np.tile(x_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
         y = np.tile(y_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
         r = np.tile(r_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
+        extra = np.tile(extra_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
 
-        return x, y, r
+        return x, y, r, extra
 
     def get_z(self):
         """
@@ -184,16 +205,17 @@ class CPPN:
         z = np.random.uniform(-1.0, 1.0, size=(self.batch_size, self.z_dim)).astype(np.float32)
         return z
 
-    def generate_imgs(self, x, y, r, z):
+    def generate_imgs(self, x, y, r, e, z):
         """
         Generate batch_size images feeding the given data to the model.
         :param x:
         :param y:
         :param r:
+        :param e:
         :param z:
         :return: batch_size images already reshaped to be displayed or saved
         """
-        prediction = self.model.predict([x, y, r, z])
+        prediction = self.model.predict([x, y, r, e, z])
         if self.nb_channels == 1:
             return prediction.reshape([self.batch_size, *self.img_size])
         else:
