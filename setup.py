@@ -8,7 +8,10 @@ setup(
     license="Apache 2.0",
     # TODO define need of using a prefix like data_science_utils
     # right now can be imported as utils
-    packages=['utils'],
+    packages=['utils', 'scripts'],
+    entry_points={
+        'console_scripts': ['convert-video=scripts.convert_video:main'],
+    },
     install_requires=[
         'numpy',
         'pandas',
