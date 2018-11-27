@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import scipy.signal as signal
 
 # adapted from http://stackoverflow.com/questions/4387878/simulator-of-realistic-ecg-signal-from-rr-data-for-matlab-or-python/33737898#33737898
@@ -47,3 +48,9 @@ def simulate_heartbeat(bpm_series: list, capture_length: int = 10):
     simulations = [get_simulated_heartbeat(bpm, capture_length) for bpm in bpm_series]
 
     return np.concatenate(simulations)
+
+
+def load_test_data(data_path):
+    test_data = pd.read_csv(data_path, parse_dates=True)
+    test_data.fillna(value=test_data['value'].mean(), inplace=True)
+    return test_data

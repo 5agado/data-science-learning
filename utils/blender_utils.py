@@ -36,7 +36,17 @@ def create_circle(radius: float, segments: int=32, name: str = 'circle'):
 
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
-    bm.free()
+    bm.free()  # TODO necessary??
+
+    return _add_mesh_to_scene(mesh, name)
+
+
+def create_grid(x_segments: int, y_segments: int, size: int, name: str = 'grid'):
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=x_segments, y_segments=y_segments, size=size)
+
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
 
     return _add_mesh_to_scene(mesh, name)
 
@@ -48,39 +58,48 @@ def _add_mesh_to_scene(mesh, obj_name: str):
         scene.collection.objects.link(obj)
     else:
         scene.objects.link(obj)
+    #scene.update()
     return obj
 
 
+def add_text(text: str, location: tuple = (0, 0, 0)):
+    bpy.ops.object.text_add(location=location)
+    text_obj = bpy.context.scene.objects.active
+    text_obj.data.body = text
+    return text_obj
 
+
+"""
 # Get object
-#bpy.context.scene.objects.active
-#bpy.context.scene.objects['object_name']
-#bpy.data.objects['Camera'] ??difference with context
+bpy.context.scene.objects.active
+bpy.context.scene.objects['object_name']
+bpy.data.objects['Camera'] ??difference with context
 
 # Frame handlers
-#bpy.app.handlers.frame_change_pre.clear()
-#bpy.app.handlers.frame_change_pre.append(lambda x : x)
+bpy.app.handlers.frame_change_pre.clear()
+bpy.app.handlers.frame_change_pre.append(lambda scene : scene.frame_current)
 
 # Frames setting
-#bpy.context.scene.frame_start = 0
-#bpy.context.scene.frame_end = NUM_FRAMES
-#bpy.context.scene.frame_set(frame)
+bpy.context.scene.frame_start = 0
+bpy.context.scene.frame_end = NUM_FRAMES
+bpy.context.scene.frame_set(frame)
 
 # Keyframing
-#target.location = (0, 0, 0)
-#target.keyframe_insert("location")
-#target.rotation_euler = (0, 0, 0)
-#target.keyframe_insert("rotation_euler")
+target.location = (0, 0, 0)
+target.keyframe_insert("location")
+target.rotation_euler = (0, 0, 0)
+target.keyframe_insert("rotation_euler")
 
 # Create vertex group
-#vg = target.vertex_groups.new(name="vg_name")
-#vg.add([1], 1.0, 'ADD')
+vg = target.vertex_groups.new(name="vg_name")
+vg.add([1], 1.0, 'ADD')
 
 # Particles system
-#target.modifiers.new("name", type='PARTICLE_SYSTEM')
-#ps = target.particle_systems[0]
-#ps.settings.emit_from = 'VERT'
-#ps.vertex_group_density = "emitter"
+target.modifiers.new("name", type='PARTICLE_SYSTEM')
+ps = target.particle_systems[0]
+ps.settings.emit_from = 'VERT'
+ps.vertex_group_density = "emitter" 
+"""
 
 
 ###################################
@@ -106,8 +125,35 @@ def init_greasy_pencil():
     return gp_layer
 
 
+"""
 # Frames and Strokes
-#gp_frame = gp_layer.frames.new(i) # notice that index in the frames list does not match frame number in the timeline
-#gp_stroke = gp_frame.strokes.new()
-#gp_stroke.points.add(count=4)
-#gp_stroke.points[0].co = (0, 0, 0)
+gp_frame = gp_layer.frames.new(i) # notice that index in the frames list does not match frame number in the timeline
+gp_stroke = gp_frame.strokes.new()
+gp_stroke.points.add(count=4)
+gp_stroke.points[0].co = (0, 0, 0)
+"""
+
+
+"""
+# Blender import system clutter
+import bpy
+import bmesh
+from mathutils import Vector
+import numpy as np
+
+import sys
+from pathlib import Path
+
+UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
+SRC_PATH = UTILS_PATH / "graphics/agents"
+sys.path.append(str(UTILS_PATH))
+sys.path.append(str(SRC_PATH))
+
+import importlib
+import <cls_example>
+import utils.blender_utils
+importlib.reload(<cls_example>)
+importlib.reload(utils.blender_utils)
+from <cls_example> import <cls_example>
+from utils.blender_utils import delete_all
+"""

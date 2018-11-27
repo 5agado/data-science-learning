@@ -7,8 +7,8 @@ import numpy as np
 import sys
 from pathlib import Path
 
-SRC_PATH = Path.home() / "python_workspace/data-science-learning/graphics/agents"
-UTILS_PATH = Path.home() / "python_workspace/data-science-learning"
+SRC_PATH = Path.home() / "Documents/python_workspace/data-science-learning/graphics/agents"
+UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
 sys.path.append(str(SRC_PATH))
 sys.path.append(str(UTILS_PATH))
 

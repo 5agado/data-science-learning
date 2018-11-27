@@ -69,7 +69,7 @@ def animated_plot():
     init_intercept, init_slope = res[0]
     line, = plt.plot([0, 1.0], [init_intercept, 1.0 * init_slope + init_intercept], 'k-')
     epoch_text = plt.text(0, 0, "Epoch 0")
-    #im = ax.imshow(np.random.zeros((28, 28)), cmap='gray')
+    #im = ax.imshow(np.zeros((28, 28)), cmap='gray')
     plt.axis('off')
 
     def animate(i, ):
@@ -78,7 +78,7 @@ def animated_plot():
         epoch_text.set_text("Epoch {}, cost {:.3f}".format(i, history[i][0]))
         return line,
         # one other option is to set the data like
-        #im.set_data(np.random.zeros((28, 28))+1)
+        #im.set_data(np.zeros((28, 28))+1)
 
     ani = animation.FuncAnimation(fig, animate, frames=100, interval=100,
                                   fargs=[])  # be sure to pass the additional args needed for the animation
