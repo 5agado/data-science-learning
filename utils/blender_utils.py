@@ -90,6 +90,8 @@ target.keyframe_insert("location")
 target.rotation_euler = (0, 0, 0)
 target.keyframe_insert("rotation_euler")
 
+target.matrix_world.to_translation()  # better to use cause modifiers can not affect the previous
+
 # Create vertex group
 vg = target.vertex_groups.new(name="vg_name")
 vg.add([1], 1.0, 'ADD')

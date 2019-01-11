@@ -32,6 +32,8 @@
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
 * [Calculus Made Easy - Silvanus P. Thompson]()
+* [A Programmer's Introduction to Mathematics](https://jeremykun.com/2018/12/01/a-programmers-introduction-to-mathematics/) TOCHECK
+* [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf)
 * [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617)
 * [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229)
 * https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192 TOCHECK
@@ -41,6 +43,7 @@
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python, good intuitive explanation of basic concepts, often from a different POV compared to other more technical books about statistics)
 * [Think Bayes](http://greenteapress.com/wp/think-bayes/) (Python, many good concrete examples that can be easily implemented and solved from scratch, greatly helps to absorb Bayes's Theorem and related concepts at a more intuitive level. A bit of interdependency between chapters with code written/presented in previous ones)
 * [OpenIntro Statistics 3rd Edition](https://www.openintro.org/stat/textbook.php?stat_book=os) (exercises and inline questions with solutions)
+* [Review of Probability Theory - cs229 Stanford](http://cs229.stanford.edu/section/cs229-prob.pdf)
 * [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
 * [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (highly technical)
@@ -54,7 +57,7 @@
 ## Machine Learning
 * [Machine Learning - Tom Mitchell - 1997](http://www.cs.cmu.edu/~tom/mlbook.html)
 * [Artificial Intelligence: A Modern Approach 3rd Edition](http://aima.cs.berkeley.edu/)
-* [Pattern Recognition and Machine Learning by Christopher M. Bishop](http://www.springer.com/gp/book/9780387310732) TOREAD
+* [Pattern Recognition and Machine Learning by Christopher M. Bishop](https://www.microsoft.com/en-us/research/people/cmbishop/#!prml-book) TOREAD
 * [Applied Predictive Modeling](http://appliedpredictivemodeling.com/) TOREAD
 * [Model-Based Machine Learning](http://mbmlbook.com/index.html) TOCHECK
 * [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
@@ -102,6 +105,9 @@
 * [Creative Applications of Deep Learning with Tensorflow @ Kadenze](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO
 
+## Computer Vision
+* [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)
+
 ## NLP
 * [Introduction to Natural Language Processing @ Coursera]()
 * [Deep Learning for NLP](http://cs224d.stanford.edu/syllabus.html) TODO
@@ -114,6 +120,8 @@
 
 ## Art and Graphics
 * [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) (clear overview and exploration of relevant artistic artifacts for different major topic: chaos theory, rule-based system, grammars, markov chains, agents, artificial-life. Coverage of both visual and audio media. Assignments in MAX)
+* [Interactive 3D Graphics @ Udacity](https://classroom.udacity.com/courses/cs291) (introductions to many fundamentals of 3D Graphics while playing around with concrete examples and code in WebGL)
+* [Introduction to Programming for the Visual Arts @ Kadenze](https://www.kadenze.com/courses/introduction-to-programming-for-the-visual-arts-with-p5-js-vi/info) TODO
 
 # Online Platforms
 * [Hackerrank](https://www.hackerrank.com/)
