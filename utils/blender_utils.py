@@ -105,34 +105,67 @@ ps.vertex_group_density = "emitter"
 
 
 ###################################
-###           Greasy Pencil
+###           Grease Pencil
 ###################################
-def init_greasy_pencil():
+def get_grease_pencil(gpencil_obj_name='GPencil') -> bpy.types.GreasePencil:
+    """
+    Return the grease-pencil object with the given name. Initialize one if not already present.
+    :param gpencil_obj_name: name/key of the grease pencil object in the scene
+    """
 
-    # Create grease pencil object if none exists
-    if 'GPencil' not in bpy.context.scene.objects:
-        bpy.ops.object.gpencil_add(view_align=False, location=(0., 0., 0.), type='EMPTY')
+    # If not present already, create grease pencil object
+    if gpencil_obj_name not in bpy.context.scene.objects:
+        bpy.ops.object.gpencil_add(view_align=False, location=(0, 0, 0), type='EMPTY')
 
-    g_pencil = bpy.context.scene.objects['GPencil']
+    # Get grease pencil object
+    gpencil = bpy.context.scene.objects[gpencil_obj_name]
 
-    # Reference grease pencil layer or create one if none exists
-    if g_pencil.data.layers:
-        gp_layer = g_pencil.data.layers[0]
+    return gpencil
+
+
+def get_grease_pencil_layer(gpencil: bpy.types.GreasePencil, gpencil_layer_name='GP_Layer',
+                            clear_layer=False) -> bpy.types.GPencilLayer:
+    """
+    Return the grease-pencil layer with the given name. Create one if not already present.
+    :param gpencil: grease-pencil object for the layer data
+    :param gpencil_layer_name: name/key of the grease pencil layer
+    :param clear_layer: whether to clear all previous layer data
+    """
+
+    # Get grease pencil layer or create one if none exists
+    if gpencil.data.layers and gpencil_layer_name in gpencil.data.layers:
+        gpencil_layer = gpencil.data.layers[gpencil_layer_name]
     else:
-        gp_layer = g_pencil.data.layers.new('gpl', set_active=True)
+        gpencil_layer = gpencil.data.layers.new(gpencil_layer_name, set_active=True)
 
-    bpy.ops.gpencil.paintmode_toggle()  # need to trigger otherwise there is no frame
-    gp_layer.clear()  # clear all previous layer data
+    if clear_layer:
+        gpencil_layer.clear()  # clear all previous layer data
 
-    return gp_layer
+    # bpy.ops.gpencil.paintmode_toggle()  # need to trigger otherwise there is no frame
+
+    return gpencil_layer
+
+
+# Util for default behavior merging previous two methods
+def init_grease_pencil(gpencil_obj_name='GPencil', gpencil_layer_name='GP_Layer',
+                       clear_layer=True) -> bpy.types.GPencilLayer:
+    gpencil = get_grease_pencil(gpencil_obj_name)
+    gpencil_layer = get_grease_pencil_layer(gpencil, gpencil_layer_name, clear_layer=clear_layer)
+    return gpencil_layer
 
 
 """
 # Frames and Strokes
-gp_frame = gp_layer.frames.new(i) # notice that index in the frames list does not match frame number in the timeline
+# https://docs.blender.org/api/blender2.8/bpy.types.GPencilStroke.html#bpy.types.GPencilStroke
+gp_frame = gp_layer.frames.new(frame_number) # notice that index in the frames list does not match frame number in the timeline
 gp_stroke = gp_frame.strokes.new()
+gp_stroke.line_width = 10
+gp_stroke.material_index
+gp_stroke.display_mode = '3DSPACE'  # allows for editing
 gp_stroke.points.add(count=4)
 gp_stroke.points[0].co = (0, 0, 0)
+
+bpy.context.object.active_material_index = 1
 """
 
 
