@@ -25,7 +25,7 @@ def duplicate_object(target, scene, material=None):
     if material:
         new_obj.active_material = material.copy()
 
-    scene.objects.link(new_obj)
+    scene.collection.objects.link(new_obj)
     return new_obj
 
 

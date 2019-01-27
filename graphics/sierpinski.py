@@ -48,7 +48,7 @@ class Object(ABC):
 
         if link:
             scene = bpy.context.scene
-            scene.objects.link(self.obj)
+            scene.collection.objects.link(self.obj)
 
     @staticmethod
     def scale_objects(object: dict, grid_val, scale_factor=SCALE_FACTOR):
@@ -103,7 +103,7 @@ class Object(ABC):
         # Just at this point link object to scene
         for sub_obj in sub_objs:
             scene = bpy.context.scene
-            scene.objects.link(sub_obj['object'])
+            scene.collection.objects.link(sub_obj['object'])
 
         return sub_objs
 
@@ -272,10 +272,9 @@ def main(_):
 
     bpy.ops.mesh.primitive_ico_sphere_add(
                        subdivisions=4,
-                       size=0.3,
+                       radius=0.3,
                        location=(0, 0, 30))
 
-    #target = bpy.context.scene.objects.active
     #target.keyframe_insert("location")
     target = bpy.context.scene.objects['Empty']
 

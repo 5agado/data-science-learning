@@ -1,6 +1,5 @@
 # Blender import system clutter
 import sys
-import bpy
 from pathlib import Path
 
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
@@ -13,7 +12,7 @@ importlib.reload(utils.blender_utils)
 from math import cos, sin, pi
 import itertools
 
-from utils.blender_utils import init_greasy_pencil
+from utils.blender_utils import init_grease_pencil, draw_line
 
 class DragonCurve:
 
@@ -146,43 +145,39 @@ class FractalPlant:
 def animate_plant():
     fractal_plant = FractalPlant()
 
-    NB_ITERATIONS = 6
+    NB_ITERATIONS = 5
 
     res = fractal_plant.axiom
     for i in range(1, NB_ITERATIONS):
         res = list(itertools.chain(*[fractal_plant.rules(x) for x in res]))
 
-    gp_layer = init_greasy_pencil()
+    gp_layer = init_grease_pencil(clear_layer=True)
     gp_layer.frames.new(0)
 
-    fractal_plant.rec_draw(lambda x, y: draw_line(x, y, gp_layer), plant=res, pos=(0,0,0))
+    fractal_plant.rec_draw(lambda x, y: draw(x, y, gp_layer), plant=res, pos=(0,0,0))
 
 
 def animate_dragon_curve():
     l_system = DragonCurve()
-    gp_layer = init_greasy_pencil()
+    gp_layer = init_grease_pencil(clear_layer=True)
     gp_layer.frames.new(0)
 
-    l_system.rec_draw(lambda x, y: draw_line(x, y, gp_layer), vals=l_system.axiom, pos=(0,0,0), max_depth=11)
+    l_system.rec_draw(lambda x, y: draw(x, y, gp_layer), vals=l_system.axiom, pos=(0,0,0), max_depth=11)
 
 
 def animate_koch_curve():
     l_system = KochCurve()
-    gp_layer = init_greasy_pencil()
+    gp_layer = init_grease_pencil(clear_layer=True)
     gp_layer.frames.new(0)
 
-    l_system.rec_draw(lambda x, y: draw_line(x, y, gp_layer), vals=l_system.axiom, pos=(0,0,0), max_depth=5)
+    l_system.rec_draw(lambda x, y: draw(x, y, gp_layer), vals=l_system.axiom, pos=(0,0,0), max_depth=5)
 
 
-def draw_line(start: tuple, end: tuple, gp_layer):
+def draw(start: tuple, end: tuple, gp_layer):
     gp_frame = gp_layer.frames.copy(gp_layer.frames[-1])
-    gp_stroke = gp_frame.strokes.new()
-    gp_stroke.line_width = 20
-    gp_stroke.points.add(count=2)
-    gp_stroke.points[0].co = start
-    gp_stroke.points[1].co = end
+    draw_line(gp_frame, start, end)
 
 
-animate_plant()
+#animate_plant()
 animate_dragon_curve()
-animate_koch_curve()
+#animate_koch_curve()

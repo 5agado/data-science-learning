@@ -2,6 +2,7 @@ import bpy
 import bmesh
 from mathutils import Vector
 import numpy as np
+import math
 
 # Blender import system clutter
 import sys
@@ -16,18 +17,20 @@ import Flock
 import importlib
 importlib.reload(Flock)
 from Flock import Flock
-from utils.blender_utils import delete_all
+from utils.blender_utils import delete_all, init_grease_pencil, draw_line
 
+use_grease_pencil = True
 compute_animation = False
 sphere_subdivisions = 3
 
 Flock.NB_DIMENSIONS = 3
+Flock.VELOCITY_FACTOR = 1
 
 Flock.COHESION_FACTOR = 1 / 5
 Flock.ALIGNMENT_FACTOR = 1 / 5
 Flock.SEPARATION_FACTOR = 1 / 2
 Flock.ATTRACTOR_FACTOR = 1 / 20
-Flock.VELOCITY_FACTOR = 2
+Flock.VELOCITY_FACTOR = 1
 
 Flock.COHESION = True
 Flock.ALIGNMENT = True
@@ -55,7 +58,7 @@ class SimplePanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
-    bl_category = "Flock"
+    #bl_category = "Flock"
     bl_label = "Create Flock"
 
     # define panel UI components
@@ -114,12 +117,18 @@ class SimpleOperator(bpy.types.Operator):
                 if i % 10 == 0:
                     print("Updating frame {}".format(i))
                 bpy.context.scene.frame_set(i)
-                frame_handler(bpy.context.scene, flock, context)
+                if use_grease_pencil:
+                    grease_pencil_frame_handler(bpy.context.scene, flock, context)
+                else:
+                    frame_handler(bpy.context.scene, flock, context)
 
         else:
             # Animate by adding handler to frame change
             bpy.app.handlers.frame_change_pre.clear()
-            bpy.app.handlers.frame_change_pre.append(lambda x: frame_handler(x, flock, context))
+            if use_grease_pencil:
+                grease_pencil_frame_handler(bpy.context.scene, flock, context)
+            else:
+                bpy.app.handlers.frame_change_pre.append(lambda x: frame_handler(x, flock, context))
 
         # better to return this string when done with the execution work
         return {'FINISHED'}
@@ -235,7 +244,7 @@ def create_line():
     # Add the mesh to the scene
     scene = bpy.context.scene
     obj = bpy.data.objects.new("Line", me)
-    scene.objects.link(obj)
+    scene.collection.objects.link(obj)
     return obj
 
 
@@ -257,7 +266,7 @@ def create_circle():
     # Add the mesh to the scene
     scene = bpy.context.scene
     obj = bpy.data.objects.new("Visibility", me)
-    scene.objects.link(obj)
+    scene.collection.objects.link(obj)
     return obj
 
 
@@ -270,53 +279,49 @@ def init_flock(size: int, sphere_size: float, seed: int = None, volume_size: int
 
     # Add object for attractor
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=ATTRACTOR_POS)
-    flock.attractor_obj = bpy.context.scene.objects.active
+    flock.attractor_obj = bpy.context.view_layer.objects.active
     flock.attractor_pos = np.array(flock.attractor_obj.location)
 
-    # Create basic sphere from which we will copy the mesh
-    bpy.ops.mesh.primitive_ico_sphere_add(
-        subdivisions=sphere_subdivisions,
-        size=sphere_size,
-        location=(0, 0, 0))
-    base_obj = bpy.context.scene.objects.active
-    scene = bpy.context.scene
+    if not use_grease_pencil:
+        # Create basic sphere from which we will copy the mesh
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=sphere_subdivisions,
+            radius=sphere_size,
+            location=(0, 0, 0))
+        base_obj = bpy.context.view_layer.objects.active
+        scene = bpy.context.scene
 
-    for unit in flock.units:
-        # add blender object to unit attributes
-        unit.obj = base_obj.copy()
-        unit.obj.location = unit.pos
-        scene.objects.link(unit.obj)
-        # add visibility border
-        if DRAW_VISIBILITY:
-            unit.visibility = create_circle()
-            unit.visibility.location = unit.pos
-        # add velocity line
-        if DRAW_VELOCITY:
-            unit.vel_obj = create_line()
-            unit.vel_obj.data.vertices[0].co = unit.pos
-            unit.vel_obj.data.vertices[1].co = unit.pos+unit.vel*4
+        for unit in flock.units:
+            # add blender object to unit attributes
+            unit.obj = base_obj.copy()
+            unit.obj.location = unit.pos
+            scene.collection.objects.link(unit.obj)
+            # add visibility border
+            if DRAW_VISIBILITY:
+                unit.visibility = create_circle()
+                unit.visibility.location = unit.pos
+            # add velocity line
+            if DRAW_VELOCITY:
+                unit.vel_obj = create_line()
+                unit.vel_obj.data.vertices[0].co = unit.pos
+                unit.vel_obj.data.vertices[1].co = unit.pos+unit.vel*4
 
-    # delete original
-    objs = bpy.data.objects
-    objs.remove(base_obj, True)
+        # delete original
+        objs = bpy.data.objects
+        objs.remove(base_obj)
 
     return flock
 
 
 def move_target(target, frame: int):
     (x, y, z) = target.location
-    if frame < 100:
-        target.location = (x + np.random.rand() - 0.5,
-                           y + np.random.rand() - 0.5,
-                           z - TARGET_SPEED + np.random.rand() - 0.5)
-    elif 100 <= frame < 150:
-        target.location = (x + np.random.rand() - 0.5,
-                           y + np.random.rand() - 0.5,
-                           z + TARGET_SPEED + np.random.rand() - 0.5)
-    elif frame >= 150:
-        target.location = (x + np.random.rand() - 0.5,
-                           y + TARGET_SPEED + np.random.rand() - 0.5,
-                           z + np.random.rand() - 0.5)
+    radius = 5
+
+    angle = 2 * math.pi / 32  # angle in radians
+    x = radius * math.cos(angle * frame)
+    y = radius * math.sin(angle * frame)
+    z = z
+    target.location = (x, y, z)
     target.keyframe_insert("location")
 
 
@@ -328,7 +333,6 @@ def frame_handler(scene, flock: Flock, context):
         bpy.app.handlers.frame_change_pre.clear()
     elif (frame % context.scene.NUM_FRAMES_CHANGE) == 0:
         flock.update()
-        move_target(flock.attractor_obj, frame)
         flock.attractor_pos = np.array(flock.attractor_obj.location)
         for unit in flock.units:
             # update and keyframe location
@@ -342,3 +346,30 @@ def frame_handler(scene, flock: Flock, context):
             if DRAW_VELOCITY:
                 unit.vel_obj.data.vertices[0].co = unit.pos
                 unit.vel_obj.data.vertices[1].co = unit.pos + unit.vel * 4
+
+
+def grease_pencil_frame_handler(scene, flock: Flock, context):
+    frame = scene.frame_current
+    if frame == 0:
+        for i, unit in enumerate(flock.units):
+            gp_layer = init_grease_pencil(gpencil_layer_name="unit_{}".format(i),
+                                          clear_layer=True)
+            gp_layer.frames.new(0)
+    # When reaching final frame, clear handlers
+    if frame >= context.scene.NUM_FRAMES:
+        bpy.app.handlers.frame_change_pre.clear()
+    elif (frame % context.scene.NUM_FRAMES_CHANGE) == 0:
+        flock.update()
+        move_target(flock.attractor_obj, frame)
+        flock.attractor_pos = np.array(flock.attractor_obj.location)
+
+        for i, unit in enumerate(flock.units):
+            gp_layer = init_grease_pencil(gpencil_layer_name="unit_{}".format(i),
+                                          clear_layer=False)
+            gp_frame = gp_layer.frames.copy(gp_layer.frames[-1])
+            gp_frame.frame_number = frame
+
+            p0 = unit.pos
+            p1 = unit.pos + unit.vel
+
+            draw_line(gp_frame, p0, p1, i)
