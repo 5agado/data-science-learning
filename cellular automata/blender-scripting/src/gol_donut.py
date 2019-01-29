@@ -59,7 +59,7 @@ def main():
     delete_all()
 
     utils.cube_generator(obj_size, 0, 0, 0)
-    cube = bpy.context.scene.objects.active
+    cube = bpy.context.view_layer.objects.active
 
     print("-----------------------")
     print("Start creation process")
@@ -69,7 +69,7 @@ def main():
                                      minor_radius=torus_minor_radius, abso_major_rad=1., abso_minor_rad=1.,
                                      major_segments=torus_major_segments,
                                      minor_segments=torus_minor_segments)
-    torus = bpy.context.scene.objects.active
+    torus = bpy.context.view_layer.objects.active
 
     # duplicate object by donut faces
     cube.select = True

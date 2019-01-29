@@ -55,7 +55,7 @@ def create_grid(gol, obj_generator):
         row = []
         for j in range(gol.cols):
             obj_generator(i, j, 0)
-            row.append(bpy.context.scene.objects.active)
+            row.append(bpy.context.view_layer.objects.active)
         obj_grid.append(row)
     return obj_grid
 

@@ -21,7 +21,7 @@ def cube_generator(cube_side, x, y, z):
 def icosphere_generator(size, subdivisions, x, y, z):
     bpy.ops.mesh.primitive_ico_sphere_add(
                         subdivisions = subdivisions,
-                        size = size,
+                        radius = size,
                         location = (x*2, y*2, z*2))
 
 
