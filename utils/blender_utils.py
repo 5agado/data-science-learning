@@ -271,7 +271,7 @@ def draw_cube(gp_frame: GPencilFrame, center: tuple, size: float, material_index
 def draw_sphere(gp_frame: GPencilFrame, center: tuple, radius: int, circles: int, material_index=0):
     angle = pi / circles
     for i in range(circles):
-        circle = draw_circle(gp_frame, (0, 0, 0), radius, 32, material_index=material_index)
+        circle = draw_circle(gp_frame, (0, 0, 0), radius, 4, material_index=material_index)
         rotate_stroke(circle, angle*i, 'x')
         translate_stroke(circle, center)
 
