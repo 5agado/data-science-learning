@@ -106,7 +106,7 @@ def animate_2d_automata():
         for i in range(gol.rows):
             for j in range(gol.cols):
                 if gol.grid[i, j]:
-                    draw_square(gp_frame, 1, (i, j, 0))
+                    draw_square(gp_frame, (i, j, 0), 1)
         gol.update()
 
 

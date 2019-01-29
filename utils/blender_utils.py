@@ -209,7 +209,7 @@ def draw_line(gp_frame: GPencilFrame, p0: tuple, p1: tuple, material_index=0):
     return gp_stroke
 
 
-def draw_square(gp_frame: GPencilFrame, size: int, center: tuple, material_index=0):
+def draw_square(gp_frame: GPencilFrame, center: tuple, size: int, material_index=0):
     # Init new stroke
     gp_stroke = gp_frame.strokes.new()
     gp_stroke.display_mode = '3DSPACE'  # allows for editing
