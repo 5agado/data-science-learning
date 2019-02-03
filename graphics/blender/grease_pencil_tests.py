@@ -93,7 +93,7 @@ def polygon_stairs(gp_frame, center: tuple, polygon_sides: int, side_len: float,
 
 gp_layer = init_grease_pencil(clear_layer=True, gpencil_layer_name='anim')
 
-NUM_FRAMES = 30
+NUM_FRAMES = 100
 FRAMES_SPACING = 1
 bpy.context.scene.frame_start = 0
 bpy.context.scene.frame_end = NUM_FRAMES*FRAMES_SPACING
@@ -110,6 +110,30 @@ def draw_multiple_circles_animated(gp_layer):
 #draw_multiple_circles_animated(gp_layer)
 
 
+def kinetic_rotation_polygon(gp_layer, center: tuple, nb_polygons: int, nb_sides: int,
+                    min_radius: float, max_radius: float,
+                    nb_frames: int):
+    radiuses = np.linspace(min_radius, max_radius, nb_polygons)
+    #radiuses = np.random.rand(nb_polygons)*(max_radius - min_radius) + min_radius  # randomized radiuses
+    main_angle = (2*pi)/nb_frames
+
+    # Animate polygons across frames
+    for frame in range(nb_frames):
+        gp_frame = gp_layer.frames.new(frame)
+        for i in range(nb_polygons):
+            polygon = draw_circle(gp_frame, (0, 0, 0), radiuses[i], nb_sides, i)
+            #cur_angle = ((len(radiuses) - i) * (2 * pi)) / nb_frames
+            cur_angle = ((len(radiuses) - i) // 2 * (2 * pi)) / nb_frames
+            for axis in ['x']:
+                rotate_stroke(polygon, cur_angle*frame, axis=axis)
+            translate_stroke(polygon, center)
+
+
+
+#kinetic_rotation_polygon(gp_layer, (0, 0, 0), nb_polygons=20, nb_sides=4, min_radius=3, max_radius=10,
+#                         nb_frames=NUM_FRAMES)
+
+
 def animate_square_sliding(gp_layer):
     main_size = 4
     positions = np.linspace(-main_size / 2, main_size / 2, num=NUM_FRAMES)
@@ -123,7 +147,7 @@ def animate_square_sliding(gp_layer):
 #animate_square_sliding(gp_layer)
 
 
-def get_midpoint(p0: tuple, p1:tuple):
+def _get_midpoint(p0: tuple, p1:tuple):
     return (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2
 
 
@@ -146,10 +170,10 @@ def polygon_recursive(gp_frame, polygon, step=0, max_steps=3):
             p0 = polygon[i]
             p1 = polygon[0] if i == len(polygon)-1 else polygon[i+1]
             opposite_point = (0, 0, 0)
-            midpoint = get_midpoint(p0, p1)
-            new_point = get_midpoint(opposite_point, midpoint)
+            midpoint = _get_midpoint(p0, p1)
+            new_point = _get_midpoint(opposite_point, midpoint)
             for i in range(step):
-                new_point = get_midpoint(new_point, midpoint)
+                new_point = _get_midpoint(new_point, midpoint)
             new_polygon.append(new_point)
             midpoints.append(midpoint)
         polygon_recursive(gp_frame, new_polygon, step+1, max_steps)
@@ -176,13 +200,8 @@ def polygon_recursive_2(gp_layer, center, radius, sides, step=0, max_steps=3):
             polygon_recursive_2(gp_layer, center.co, new_radius/2, sides, step + 1, max_steps=max_steps)
 
 
-def draw_polygon_fractal_2(gp_layer, polygon_sides: int, radius: int, max_steps: int):
-    # Define stroke geometry
-    polygon_recursive_2(gp_layer, (0, 0, 0), radius, polygon_sides, 0, max_steps=max_steps)
-
-
 def draw_polygon_fractal(gp_frame, polygon_sides: int):
-    # Define stroke geometry
+    # Define base polygon
     angle = 2*math.pi/polygon_sides  # angle in radians
     polygon = []
     for i in range(polygon_sides):
@@ -194,4 +213,4 @@ def draw_polygon_fractal(gp_frame, polygon_sides: int):
 
 
 #draw_polygon_fractal(gp_frame, 6)
-draw_polygon_fractal_2(gp_layer, 4, 10, 3)
+#polygon_recursive_2(gp_layer, (0, 0, 0), 10, 4, 0, max_steps=3)
