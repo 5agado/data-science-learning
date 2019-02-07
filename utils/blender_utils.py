@@ -191,6 +191,8 @@ gp_stroke.material_index
 gp_stroke.display_mode = '3DSPACE'  # allows for editing
 gp_stroke.points.add(count=4)
 gp_stroke.points[0].co = (0, 0, 0)
+gp_stroke.points[0].pressure
+gp_stroke.points[0].strength
 
 bpy.context.object.active_material_index = 1
 """
