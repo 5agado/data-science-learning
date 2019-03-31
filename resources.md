@@ -120,7 +120,7 @@
 
 ## Art and Graphics
 * [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) (clear overview and exploration of relevant artistic artifacts for different major topic: chaos theory, rule-based system, grammars, markov chains, agents, artificial-life. Coverage of both visual and audio media. Assignments in MAX)
-* [Interactive 3D Graphics @ Udacity](https://classroom.udacity.com/courses/cs291) (introductions to many fundamentals of 3D Graphics while playing around with concrete examples and code in WebGL)
+* [Interactive 3D Graphics @ Udacity](https://classroom.udacity.com/courses/cs291) (introductions to many fundamentals of 3D Graphics while playing around with concrete examples and code in three.js)
 * [Introduction to Programming for the Visual Arts @ Kadenze](https://www.kadenze.com/courses/introduction-to-programming-for-the-visual-arts-with-p5-js-vi/info) TODO
 
 # Online Platforms
