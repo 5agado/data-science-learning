@@ -16,6 +16,7 @@
 	- [Machine Learning](#machine-learning-1)
 	- [Reinforcement Learning](#reinforcement-learning-1)
 	- [Deep Learning](#deep-learning-1)
+	- [Computer Vision](#computer-vision)
 	- [NLP](#nlp)
 	- [Big Data](#big-data)
 	- [Art and Graphics](#art-and-graphics)
@@ -55,12 +56,12 @@
 * [Introduction to Time Series and Forecasting - Brockwell and Davis](https://www.amazon.com/Introduction-Series-Forecasting-Springer-Statistics/dp/0387953515/)
 
 ## Machine Learning
-* [Machine Learning - Tom Mitchell - 1997](http://www.cs.cmu.edu/~tom/mlbook.html)
-* [Artificial Intelligence: A Modern Approach 3rd Edition](http://aima.cs.berkeley.edu/)
-* [Pattern Recognition and Machine Learning by Christopher M. Bishop](https://www.microsoft.com/en-us/research/people/cmbishop/#!prml-book) TOREAD
+* [Machine Learning - Tom Mitchell - 1997](http://www.cs.cmu.edu/~tom/mlbook.html) (A must #1)
+* [Pattern Recognition and Machine Learning by Christopher M. Bishop](https://www.microsoft.com/en-us/research/people/cmbishop/#!prml-book) (A must #2)
 * [Applied Predictive Modeling](http://appliedpredictivemodeling.com/) TOREAD
 * [Model-Based Machine Learning](http://mbmlbook.com/index.html) TOCHECK
 * [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
+* [Hands-On Machine Learning with Scikit-Learn and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781491962282/) TOCHECK
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
@@ -92,15 +93,16 @@
 * [Machine Learning by Georgia Tech](https://www.udacity.com/course/machine-learning--ud262)
 * [Neural Networks for Machine Learning @ Coursera](https://www.coursera.org/learn/neural-networks) TODO
 * [Deep Learning A-Z™: Hands-On Artificial Neural Networks](https://www.udemy.com/deeplearning/) TODO
-* [Machine Learning For Coders @ Fast.ai](http://www.fast.ai/2018/09/26/ml-launch/) TODO
+* [Machine Learning For Coders @ Fast.ai](http://course18.fast.ai/ml) TODO
+* [AWS Machine Learning Course](https://aws.amazon.com/training/learning-paths/machine-learning/) TODO
 
 ## Reinforcement Learning
 * [David Silver’s Reinforcement Learning Course](http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html) TOCHECK
 
 ## Deep Learning
 * [CS231n Convolutional Neural Networks for Visual Recognition](https://cs231n.github.io/)
-* [Practical Deep Learning For Coders, Part 1](http://course.fast.ai/index.html) (entertaining, great view of SOA results, notebooks and great tips on code)
-* [Practical Deep Learning For Coders, Part 2](http://www.fast.ai/2017/07/28/deep-learning-part-two-launch/) TODO
+* [Practical Deep Learning For Coders, Part 1](https://course.fast.ai/) (entertaining, great view of SOA results, notebooks and great tips on code)
+* [Practical Deep Learning For Coders, Part 2](http://course18.fast.ai/part2.html) TODO
 * [Deep Learning by Google @ Udacity](https://classroom.udacity.com/courses/ud730)
 * [Creative Applications of Deep Learning with Tensorflow @ Kadenze](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO

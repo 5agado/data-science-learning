@@ -22,7 +22,7 @@ sys.path.append(str(SRC_PATH))
 
 import importlib
 import <cls_example>
-import utils.blender_utils
+from ds_utils import blender_utils
 importlib.reload(<cls_example>)
 importlib.reload(utils.blender_utils)
 from <cls_example> import <cls_example>
@@ -139,6 +139,8 @@ def get_grease_pencil(gpencil_obj_name='GPencil') -> bpy.types.GreasePencil:
     # If not present already, create grease pencil object
     if gpencil_obj_name not in bpy.context.scene.objects:
         bpy.ops.object.gpencil_add(view_align=False, location=(0, 0, 0), type='EMPTY')
+        # rename grease pencil
+        bpy.context.scene.objects[-1].name = gpencil_obj_name
 
     # Get grease pencil object
     gpencil = bpy.context.scene.objects[gpencil_obj_name]

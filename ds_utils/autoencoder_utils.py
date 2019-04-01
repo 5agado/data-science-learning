@@ -64,8 +64,8 @@ def decoder_model(latent_dim, img_shape, init_filters=128, num_deconv_blocks=2):
     x = BatchNormalization()(x)
     x = Reshape(init_shape)(x)
 
-    for i in range(num_deconv_blocks):
-        x = decoder_deconv_block(init_filters // (1 if i == 0 else (2 ** i)), block_input=x)
+    for i in range(1, num_deconv_blocks + 1):
+        x = decoder_deconv_block(init_filters // (2 ** i), block_input=x)
 
     x = Convolution2D(img_shape[-1], (2, 2), padding='same', activation='sigmoid')(x)
 

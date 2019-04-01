@@ -5,7 +5,7 @@ from keras.layers import *
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Model
 
-from utils import image_processing
+from ds_utils import image_processing
 
 
 def conv(filters, kernel_size=5, strides=2, leaky_relu=False):
