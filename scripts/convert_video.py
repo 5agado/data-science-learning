@@ -22,7 +22,7 @@ def main(_=None):
     cropping = f"-ss {args.ss}" if args.ss else "" + f"-t {args.t}" if args.t else ""
 
     subprocess.call(f'ffmpeg -v warning -i "{args.inp}" -vf "{filters},palettegen" -y "{palette_path}"', shell=True)
-    subprocess.call(f'ffmpeg -i "{args.inp}" -i "{palette_path}" -lavfi "{filters} [x]; [x][1:v] '
+    subprocess.call(f'ffmpeg -i "{args.inp}" -i "{palette_path}" -movflags +faststart -lavfi "{filters} [x]; [x][1:v] '
                     f'paletteuse" {cropping} -y "{args.out}"', shell=True)
 
 
