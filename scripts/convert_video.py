@@ -2,6 +2,7 @@ import argparse
 import sys
 import subprocess
 
+# see https://medium.com/abraia/basic-video-editing-for-social-media-with-ffmpeg-commands-1e873801659
 
 def main(_=None):
     parser = argparse.ArgumentParser(description='Video Conversion via FFMPEG')

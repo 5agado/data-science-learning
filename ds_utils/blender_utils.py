@@ -1,6 +1,7 @@
 import bpy
 import bmesh
 import numpy as np
+from typing import List
 
 is_blender_28 = bpy.app.version[1] >= 80
 assert is_blender_28
@@ -210,6 +211,20 @@ def draw_line(gp_frame: GPencilFrame, p0: tuple, p1: tuple, material_index=0):
     gp_stroke.points.add(count=2)
     gp_stroke.points[0].co = p0
     gp_stroke.points[1].co = p1
+    return gp_stroke
+
+
+def draw_segment(gp_frame: GPencilFrame, points: List[tuple], draw_cyclic=False, material_index=0):
+    # Init new stroke
+    gp_stroke = gp_frame.strokes.new()
+    gp_stroke.display_mode = '3DSPACE'   # allows for editing
+    gp_stroke.draw_cyclic = draw_cyclic  # closes the stroke
+    gp_stroke.material_index = material_index
+
+    # Define stroke geometry
+    gp_stroke.points.add(count=len(points))
+    for i, p in enumerate(points):
+        gp_stroke.points[i].co = p
     return gp_stroke
 
 
