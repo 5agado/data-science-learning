@@ -14,10 +14,10 @@ UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
 sys.path.append(str(UTILS_PATH))
 
 import importlib
-import utils.blender_utils
-importlib.reload(utils.blender_utils)
+import ds_utils.blender_utils
+importlib.reload(ds_utils.blender_utils)
 
-from utils.blender_utils import *
+from ds_utils.blender_utils import *
 
 
 ###################################

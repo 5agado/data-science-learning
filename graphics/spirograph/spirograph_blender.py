@@ -13,12 +13,12 @@ sys.path.append(str(SRC_PATH))
 sys.path.append(str(UTILS_PATH))
 
 import Spirograph
-import utils.blender_utils
+import ds_utils.blender_utils
 import importlib
 importlib.reload(Spirograph)
-importlib.reload(utils.blender_utils)
+importlib.reload(ds_utils.blender_utils)
 from Spirograph import Spirograph
-from utils.blender_utils import delete_all, create_line, create_circle
+from ds_utils.blender_utils import delete_all, create_line, create_circle
 
 
 def add_to_scene(spirograph: Spirograph, obj=None):

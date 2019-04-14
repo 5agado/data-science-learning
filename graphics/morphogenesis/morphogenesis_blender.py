@@ -17,42 +17,10 @@ from math import cos, sin, pi
 import numpy as np
 import itertools
 
-from utils.blender_utils import init_grease_pencil, draw_line
+from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, get_grease_pencil_layer
 
 
-def draw_segment(gp_frame, points, material_index=0, draw_cyclic=False):
-    # Init new stroke
-    gp_stroke = gp_frame.strokes.new()
-    gp_stroke.display_mode = '3DSPACE'  # allows for editing
-    gp_stroke.draw_cyclic = draw_cyclic
-    gp_stroke.material_index = material_index
-
-    # Define stroke geometry
-    gp_stroke.points.add(count=len(points))
-    for i, p in enumerate(points):
-        gp_stroke.points[i].co = p
-    return gp_stroke
-
-
-def morphogenesis(morphogenesis_config, nb_nodes, is_circle, draw_debug, draw_progress,
-                  num_frames, name):
-    # Circle
-    if is_circle:
-        center = (0, 0, 0)
-        radius = 1
-        angle = 2 * pi / nb_nodes
-
-        nodes = []
-        for i in range(nb_nodes):
-            x = center[0] + radius * cos(angle * i)
-            y = center[1] + radius * sin(angle * i)
-            z = center[2]
-            nodes.append(np.array([x, y, z]))
-    # Line
-    else:
-        nodes = [(np.array((x, 0, 0)) + (0.5 - np.random.rand(3))) * np.array([1., 1., 0.])
-                 for x in np.linspace(1, 11, nb_nodes)]
-
+def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames):
     morphogenesis = Morphogenesis(nodes, closed=is_circle, config=morphogenesis_config)
 
     if draw_debug:
@@ -63,7 +31,6 @@ def morphogenesis(morphogenesis_config, nb_nodes, is_circle, draw_debug, draw_pr
         draw_force_fun = draw_segment_fun = None
 
     # Run and Draw Simulation
-    gp_layer = init_grease_pencil(gpencil_obj_name=name, clear_layer=True)
     gp_layer.frames.new(-1)
     for frame in range(num_frames):
         print("Updating frame {}".format(frame))
@@ -79,11 +46,11 @@ def morphogenesis(morphogenesis_config, nb_nodes, is_circle, draw_debug, draw_pr
 def main():
     print("###################################")
 
-    nb_nodes = 5
-    num_frames = 40
+    nb_nodes = 6
+    num_frames = 80
     bpy.context.scene.frame_end = num_frames
     draw_progress = True
-    draw_debug = True
+    draw_debug = False
 
     is_circle = True
     morphogenesis_config = {
@@ -92,15 +59,44 @@ def main():
         'ATTRACTION_FAC': 1 / 20,
         'SPLIT_DIST_THRESHOLD': 0.2,
         'RAND_OPTIMIZATION_FAC': 0,
+        'SUBDIVISION_METHOD': 'BY_DISTANCE',
     }
 
-    N = 5
-    visibility_radiuses = np.linspace(0.1, 0.5, N)
+    SPACING_FACTOR = 10
+    NB_ROWS = 8
+    NB_COLS = 10
+    visibility_radiuses = np.linspace(0.1, 1., NB_ROWS)
+    split_dist_thresholds = np.linspace(0.2, 0.3, NB_COLS)
 
-    for i in range(10):
-        morphogenesis_config['VISIBILITY_RADIUS'] = visibility_radiuses[i]
-        morphogenesis(morphogenesis_config, nb_nodes, is_circle, draw_debug, draw_progress,
-                      num_frames, "exp_{}".format(i))
+    base_gp = get_grease_pencil()
+    for row in range(NB_ROWS):
+        for col in range(NB_COLS):
+            # Circle
+            if is_circle:
+                center = (row*SPACING_FACTOR, col*SPACING_FACTOR, 0)
+                radius = 1
+                angle = 2 * pi / nb_nodes
+
+                nodes = []
+                for i in range(nb_nodes):
+                    x = center[0] + radius * cos(angle * i)
+                    y = center[1] + radius * sin(angle * i)
+                    z = center[2]
+                    nodes.append(np.array([x, y, z]))
+            # Line
+            else:
+                nodes = [(np.array((x, 0, 0)) + (0.5 - np.random.rand(3))) * np.array([1., 1., 0.])
+                         for x in np.linspace(1, 11, nb_nodes)]
+
+            # gp = base_gp.copy()
+            # gp.name = "exp_{}".format(NB_COLS*row + col)
+            # gp.data = base_gp.data.copy()
+            # bpy.context.scene.collection.objects.link(gp)
+            gp_layer = get_grease_pencil_layer(base_gp, "exp_{}".format(NB_COLS*row + col), clear_layer=True)
+
+            morphogenesis_config['VISIBILITY_RADIUS'] = visibility_radiuses[row]
+            morphogenesis_config['SPLIT_DIST_THRESHOLD'] = split_dist_thresholds[col]
+            run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames)
 
 main()
 

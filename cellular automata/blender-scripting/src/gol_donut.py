@@ -9,11 +9,11 @@ sys.path.append(str(UTILS_PATH))
 
 CONFIG_PATH = str(SRC_PATH / '..' / 'GOL_config.ini')
 
-import utils.blender_utils
+import ds_utils.blender_utils
 import importlib
-importlib.reload(utils.blender_utils)
+importlib.reload(ds_utils.blender_utils)
 
-from utils.blender_utils import delete_all
+from ds_utils.blender_utils import delete_all
 import math
 from mathutils import Matrix, Vector
 import numpy as np

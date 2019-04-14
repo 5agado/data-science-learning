@@ -15,9 +15,9 @@ sys.path.append(str(SRC_PATH))
 
 import importlib
 
-import utils.blender_utils
-importlib.reload(utils.blender_utils)
-from utils.blender_utils import init_grease_pencil, draw_square, draw_line
+import ds_utils.blender_utils
+importlib.reload(ds_utils.blender_utils)
+from ds_utils.blender_utils import init_grease_pencil, draw_square, draw_line
 
 import conway_2D, gol_utils
 importlib.reload(conway_2D)

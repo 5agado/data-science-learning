@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 # data-science-utils
-from utils import image_processing
+from ds_utils import image_processing
 
 
 def selective_sampling(img: np.array, nb_width_cells: int,

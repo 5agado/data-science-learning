@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from scipy.spatial import distance
 
 from rtree import index
@@ -9,6 +10,7 @@ MORPHOGENESIS_BASE_CONFIG = {
     'ATTRACTION_FAC': 1/20,
     'SPLIT_DIST_THRESHOLD': 0.2,
     'RAND_OPTIMIZATION_FAC': 0,
+    'SUBDIVISION_METHOD': 'BY_DISTANCE',
 }
 
 
@@ -24,6 +26,7 @@ class Morphogenesis:
         self.ATTRACTION_FAC = config['ATTRACTION_FAC']
         self.SPLIT_DIST_THRESHOLD = config['SPLIT_DIST_THRESHOLD']
         self.RAND_OPTIMIZATION_FAC = config['RAND_OPTIMIZATION_FAC']
+        self.SUBDIVISION_METHOD = config['SUBDIVISION_METHOD']
 
         self.CLOSED = closed
 
@@ -46,10 +49,8 @@ class Morphogenesis:
         for i, n in enumerate(self.nodes):
             # add new node between this and previous, if growth conditions are met
             if new_nodes:
-                dist = Morphogenesis._get_dist(new_nodes[-1], n)
-                if dist > self.SPLIT_DIST_THRESHOLD:
-                    # new node is halfway between the two connected ones
-                    new_node = (new_nodes[-1] + n) / 2
+                new_node = self._subdivision(new_nodes[-1], n)
+                if new_node is not None:
                     new_nodes.append(new_node)
                     self._add_node_to_index(len(new_nodes) - 1, new_node)
 
@@ -59,9 +60,10 @@ class Morphogenesis:
 
         # If closed shape, add node between last and first nodes
         if self.CLOSED:
-            new_node = (new_nodes[-1] + new_nodes[0]) / 2
-            new_nodes.append(new_node)
-            self._add_node_to_index(len(new_nodes) - 1, new_node)
+            new_node = self._subdivision(new_nodes[-1], new_nodes[0])
+            if new_node is not None:
+                new_nodes.append(new_node)
+                self._add_node_to_index(len(new_nodes) - 1, new_node)
 
         return new_nodes
 
@@ -75,6 +77,7 @@ class Morphogenesis:
             if not self.CLOSED and (i==0 or i==len(new_nodes)-1):
                 attraction_vec = np.array((0, 0, 0))
             else:
+                # TODO attraction works even if connected are further than visibility dist
                 attraction_vec = ((new_nodes[i-1] + new_nodes[(i+1) % len(new_nodes)])/2) - n
                 # normalize
                 attraction_norm = np.linalg.norm(attraction_vec)
@@ -110,6 +113,19 @@ class Morphogenesis:
             optimized_nodes.append(new_node)
 
         return optimized_nodes
+
+    def _subdivision(self, from_node, to_node):
+        if self.SUBDIVISION_METHOD == "BY_DISTANCE":
+            dist = Morphogenesis._get_dist(from_node, to_node)
+            if dist > self.SPLIT_DIST_THRESHOLD:
+                # new node is halfway between the two connected ones
+                new_node = (from_node + to_node) / 2
+                return new_node
+            else:
+                return None
+        else:
+            print("No such subdivision method: {}. Exiting".format(self.SUBDIVISION_METHOD))
+            sys.exit(1)
 
     def _add_node_to_index(self, node_idx, node):
         self.idx_2d.insert(node_idx, (node[0], node[1], node[0], node[1]))

@@ -8,6 +8,6 @@ sys.path.append(str(SRC_PATH))
 CONFIG_PATH = str(SRC_PATH / 'GOL_config.ini')
 
 sys.path.append(str(UTILS_PATH))
-import utils.blender_utils
+import ds_utils.blender_utils
 import importlib
-importlib.reload(utils.blender_utils)
+importlib.reload(ds_utils.blender_utils)

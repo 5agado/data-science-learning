@@ -8,16 +8,19 @@ import math
 import sys
 from pathlib import Path
 
-SRC_PATH = Path.home() / "Documents/python_workspace/data-science-learning/graphics/agents"
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
+SRC_PATH = UTILS_PATH / "graphics"
 sys.path.append(str(SRC_PATH))
 sys.path.append(str(UTILS_PATH))
 
-import Flock
+from agents import Flock
+from spirograph import Spirograph
 import importlib
 importlib.reload(Flock)
-from Flock import Flock
-from utils.blender_utils import delete_all, init_grease_pencil, draw_line
+importlib.reload(Spirograph)
+from agents.Flock import Flock
+from spirograph.Spirograph import Spirograph
+from ds_utils.blender_utils import delete_all, init_grease_pencil, draw_line
 
 use_grease_pencil = True
 compute_animation = False
@@ -109,6 +112,9 @@ class SimpleOperator(bpy.types.Operator):
                            seed=context.scene.SEED,
                            volume_size=volume_size)
 
+        spirograph = Spirograph((0, 0, 0), volume_size, sphere_size, sphere_size, 0,
+                                (2*math.pi)/context.scene.NUM_FRAMES)
+
         bpy.context.scene.frame_end = context.scene.NUM_FRAMES
 
         # Animate directly by looping through frames
@@ -118,7 +124,7 @@ class SimpleOperator(bpy.types.Operator):
                     print("Updating frame {}".format(i))
                 bpy.context.scene.frame_set(i)
                 if use_grease_pencil:
-                    grease_pencil_frame_handler(bpy.context.scene, flock, context)
+                    grease_pencil_frame_handler(bpy.context.scene, flock, spirograph, context)
                 else:
                     frame_handler(bpy.context.scene, flock, context)
 
@@ -126,7 +132,7 @@ class SimpleOperator(bpy.types.Operator):
             # Animate by adding handler to frame change
             bpy.app.handlers.frame_change_pre.clear()
             if use_grease_pencil:
-                grease_pencil_frame_handler(bpy.context.scene, flock, context)
+                grease_pencil_frame_handler(bpy.context.scene, flock, spirograph, context)
             else:
                 bpy.app.handlers.frame_change_pre.append(lambda x: frame_handler(x, flock, context))
 
@@ -348,7 +354,7 @@ def frame_handler(scene, flock: Flock, context):
                 unit.vel_obj.data.vertices[1].co = unit.pos + unit.vel * 4
 
 
-def grease_pencil_frame_handler(scene, flock: Flock, context):
+def grease_pencil_frame_handler(scene, flock: Flock, spirograph: Spirograph, context):
     frame = scene.frame_current
     if frame == 0:
         for i, unit in enumerate(flock.units):
@@ -360,8 +366,13 @@ def grease_pencil_frame_handler(scene, flock: Flock, context):
         bpy.app.handlers.frame_change_pre.clear()
     elif (frame % context.scene.NUM_FRAMES_CHANGE) == 0:
         flock.update()
-        move_target(flock.attractor_obj, frame)
-        flock.attractor_pos = np.array(flock.attractor_obj.location)
+        spirograph.update()
+
+        # Update target location
+        target = flock.attractor_obj
+        target.location = spirograph.get_hypotrochoid_loc()
+        target.keyframe_insert("location")
+        flock.attractor_pos = np.array(target.location)
 
         for i, unit in enumerate(flock.units):
             gp_layer = init_grease_pencil(gpencil_layer_name="unit_{}".format(i),
