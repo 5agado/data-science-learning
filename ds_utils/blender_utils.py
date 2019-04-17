@@ -1,6 +1,8 @@
 import bpy
 import bmesh
 import numpy as np
+from math import sin, cos, pi
+import itertools
 from typing import List
 
 is_blender_28 = bpy.app.version[1] >= 80
@@ -23,11 +25,10 @@ sys.path.append(str(SRC_PATH))
 
 import importlib
 import <cls_example>
-from ds_utils import blender_utils
 importlib.reload(<cls_example>)
-importlib.reload(utils.blender_utils)
 from <cls_example> import <cls_example>
-from utils.blender_utils import delete_all
+
+from ds_utils.blender_utils import delete_all
 """
 
 
@@ -73,6 +74,14 @@ def create_grid(x_segments: int, y_segments: int, size: int, name: str = 'grid')
     return _add_mesh_to_scene(mesh, name)
 
 
+def create_object(verts, edges, faces, obj_name: str):
+    mesh_data = bpy.data.meshes.new("{}_mesh_data".format(obj_name))
+    mesh_data.from_pydata(verts, edges, faces)
+    mesh_data.update()
+
+    return _add_mesh_to_scene(mesh_data, obj_name=obj_name)
+
+
 def _add_mesh_to_scene(mesh, obj_name: str):
     scene = bpy.context.scene
     obj = bpy.data.objects.new(obj_name, mesh)
@@ -86,6 +95,11 @@ def add_text(text: str, location: tuple = (0, 0, 0)):
     text_obj = bpy.context.view_layer.objects.active
     text_obj.data.body = text
     return text_obj
+
+
+def render_image(filepath: str):
+    bpy.context.scene.render.filepath = filepath
+    bpy.ops.render.render(write_still=True)
 
 
 """
@@ -127,8 +141,6 @@ ps.vertex_group_density = "emitter"
 ###           Grease Pencil
 ###################################
 from bpy.types import GPencilFrame
-from math import sin, cos, pi
-import itertools
 
 
 def get_grease_pencil(gpencil_obj_name='GPencil') -> bpy.types.GreasePencil:
