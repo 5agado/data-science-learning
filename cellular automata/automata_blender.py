@@ -74,7 +74,6 @@ def animate_1d_automata(rule, nb_frames=10, scale=1., material_index=0):
         for i, cell in enumerate(automaton.grid):
             # maintain pyramid shape (render only if further from the center at least the current frame number)
             if cell and ((automaton_size // 2 - frame) <= i <= (automaton_size // 2 + frame)):
-                # TODO formalize code
                 # render cell
                 centers = [
                     (i, frame, 0),  # normal center
@@ -100,7 +99,7 @@ rule_sierpinski = {'111': 0, '110': 1, '101': 0, '100': 1, '011': 1, '010': 0, '
 rule_x = {'111': 0, '110': 0, '101': 0, '100': 1, '011': 1, '010': 1, '001': 1, '000': 0}
 rule_106 = {'111': 0, '110': 1, '101': 1, '100': 0, '011': 1, '010': 0, '001': 1, '000': 0}
 
-#animate_1d_automata(rule_sierpinski, nb_frames=40)
+#animate_1d_automata(rule_sierpinski, nb_frames=50)
 
 
 def explore_1d_automata(nb_frames):
@@ -116,18 +115,17 @@ def explore_1d_automata(nb_frames):
         print(f"Rule {idx}")
         config = all_rules_config[idx]
         print(config)
-        material_index = np.random.randint(6)
         rule = dict(zip(['111', '110', '101', '100', '011', '010', '001', '000'], config))
-        animate_1d_automata(rule, nb_frames=nb_frames, scale=scale, material_index=material_index)
+        animate_1d_automata(rule, nb_frames=nb_frames, scale=scale, material_index=0)
         bpy.context.scene.frame_set(nb_frames)
         #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
-        #random_gp_material()
-        render_dir = Path.home() / "Downloads/automaton_1d/symm_4_plain"
+        random_gp_material()
+        render_dir = Path.home() / "Downloads/automaton_1d/symm_4_colors"
         render(str(render_dir / f"rule_{idx}"), animation=False)
         render(str(render_dir / f"rule_{idx}"), animation=True)
 
 
-#explore_1d_automata(40)
+explore_1d_automata(50)
 
 ##################
 # 2-D Automata
@@ -248,7 +246,6 @@ def explore_hexagonal_automata(nb_frames):
         print(f"Run {run}")
         print(f"p_freeze {p_freeze}")
         print(f"p_melt {p_melt}")
-        #material_index = np.random.randint(6)
         animate_hexagonal_automata(p_freeze, p_melt, nb_frames=nb_frames, material_index=0)
         bpy.context.scene.frame_set(nb_frames)
         #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
@@ -258,4 +255,4 @@ def explore_hexagonal_automata(nb_frames):
         render(str(render_dir / f"run_{run}"), animation=True)
 
 
-explore_hexagonal_automata(40)
+#explore_hexagonal_automata(40)
