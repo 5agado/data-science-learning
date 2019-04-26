@@ -1,26 +1,22 @@
 # Blender import system clutter
 import sys
 from pathlib import Path
+from mathutils import Matrix, Vector
+import bpy
 
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
-SRC_PATH = UTILS_PATH / "cellular automata/blender-scripting/src"
+SRC_PATH = UTILS_PATH / "cellular automata"
 sys.path.append(str(SRC_PATH))
 sys.path.append(str(UTILS_PATH))
 
-CONFIG_PATH = str(SRC_PATH / '..' / 'GOL_config.ini')
-
-import ds_utils.blender_utils
+import Automaton
+import automata_blender_utils
 import importlib
-importlib.reload(ds_utils.blender_utils)
+importlib.reload(Automaton)
+importlib.reload(automata_blender_utils)
+from Automaton import *
 
 from ds_utils.blender_utils import delete_all
-import math
-from mathutils import Matrix, Vector
-import numpy as np
-import bpy
-
-import gol_utils as utils
-from conway_2D import ConwayGOL_2D, update_grid
 
 
 def object_updater_move(obj, grid_val):
@@ -58,7 +54,7 @@ def main():
 
     delete_all()
 
-    utils.cube_generator(obj_size, 0, 0, 0)
+    automata_blender_utils.cube_generator(obj_size, 0, 0, 0)
     cube = bpy.context.view_layer.objects.active
 
     print("-----------------------")
@@ -81,9 +77,13 @@ def main():
     obj_updater = lambda obj, grid, idx: object_updater_move(obj, grid[idx])
 
     # create GOL data
-    gol = ConwayGOL_2D(rows=torus_major_segments, cols=torus_minor_segments,
-                       config=utils.load_GOL_config(CONFIG_PATH, 'GOL_3D_standard'),
-                       seed=seed)
+    rule_gol = {'neighbours_count_born': 3,
+                'neighbours_maxcount_survive': 3,
+                'neighbours_mincount_survive': 2,
+                }
+    gol = Automaton2D(nb_rows=torus_major_segments, nb_cols=torus_minor_segments,
+                      config=rule_gol,
+                      seed=seed)
     gol.update()  # update gol to start with a cleaner grid
     gol_grid_cache = []
 
@@ -141,7 +141,7 @@ def main():
                 gol_grid_cache.append(gol.grid)
             elif frame > MIRROR_FRAME:
                 gol.grid = gol_grid_cache.pop()
-            update_grid(obj_grid, gol, obj_updater)
+        automata_blender_utils.update_grid(obj_grid, gol, obj_updater)
         if frame >= NUM_FRAMES:
             bpy.app.handlers.frame_change_pre.clear()
             bpy.context.scene.frame_set(0)

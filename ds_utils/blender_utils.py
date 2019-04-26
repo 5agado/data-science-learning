@@ -97,9 +97,28 @@ def add_text(text: str, location: tuple = (0, 0, 0)):
     return text_obj
 
 
-def render_image(filepath: str):
+def render(filepath: str, animation=False, file_format=None):
     bpy.context.scene.render.filepath = filepath
-    bpy.ops.render.render(write_still=True)
+    if animation:
+        bpy.context.scene.render.image_settings.file_format = file_format if file_format is not None else 'FFMPEG'
+        if bpy.context.scene.render.image_settings.file_format == 'FFMPEG':
+            bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+        bpy.ops.render.render(animation=True)
+    else:
+        bpy.context.scene.render.image_settings.file_format = file_format if file_format is not None else 'PNG'
+        bpy.ops.render.render(write_still=True)
+
+
+def blender_run(nb_frames, frames_spacing=1, frame_update_print_mod=1):
+    print("----------------------------")
+
+    bpy.context.scene.frame_start = 0
+    bpy.context.scene.frame_end = nb_frames * frames_spacing
+
+    delete_all()
+    for frame in range(0, nb_frames):
+        if frame % frame_update_print_mod == 0:
+            print("Frame {}".format(frame))
 
 
 """
