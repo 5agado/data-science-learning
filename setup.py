@@ -8,7 +8,9 @@ setup(
     license="Apache 2.0",
     packages=['ds_utils', 'scripts'],
     entry_points={
-        'console_scripts': ['convert-video=scripts.convert_video:main'],
+        'console_scripts': ['convert-video=scripts.convert_video:main',
+                            'video-mosaic=scripts.video_mosaic:main',
+                            'image-montage=scripts.image_montage:main'],
     },
     install_requires=[
         'numpy',

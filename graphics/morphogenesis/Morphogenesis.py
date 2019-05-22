@@ -11,6 +11,7 @@ MORPHOGENESIS_BASE_CONFIG = {
     'SPLIT_DIST_THRESHOLD': 0.2,
     'RAND_OPTIMIZATION_FAC': 0,
     'SUBDIVISION_METHOD': 'BY_DISTANCE',
+    'DIMENSIONS': 2
 }
 
 
@@ -19,7 +20,12 @@ class Morphogenesis:
         self.nodes = nodes
         self.config = config
 
-        self.idx_2d = None
+        # Init rtree index
+        self.index_props = index.Property()
+        self.index_props.dimension = config['DIMENSIONS']
+        #self.index_props.dat_extension = 'data'
+        #self.index_props.idx_extension = 'index'
+        self.index = None
 
         self.VISIBILITY_RADIUS = config['VISIBILITY_RADIUS']
         self.REPULSION_FAC = config['REPULSION_FAC']
@@ -32,7 +38,7 @@ class Morphogenesis:
 
     def update(self, draw_force=None, draw_segment=None):
         # Reset index before subdivision
-        self.idx_2d = index.Index()
+        self.index = index.Index(properties=self.index_props)
         new_nodes = self._adaptive_subdivision()
 
         if draw_segment:
@@ -128,15 +134,24 @@ class Morphogenesis:
             sys.exit(1)
 
     def _add_node_to_index(self, node_idx, node):
-        self.idx_2d.insert(node_idx, (node[0], node[1], node[0], node[1]))
+        if self.index_props.dimension == 2:
+            self.index.insert(node_idx, (node[0], node[1], node[0], node[1]))
+        else:
+            self.index.insert(node_idx, (node[0], node[1], node[2], node[0], node[1], node[2]))
 
     def _get_neighbors(self, nodes, pos: np.array):
-        left, bottom, right, top = (pos[0] - self.VISIBILITY_RADIUS,
-                                    pos[1] - self.VISIBILITY_RADIUS,
-                                    pos[0] + self.VISIBILITY_RADIUS,
-                                    pos[1] + self.VISIBILITY_RADIUS)
-        neighbors_nodes = np.array(nodes)[list(self.idx_2d.intersection((left, bottom, right, top)))]
-        # neighbors_nodes = np.array(new_nodes)[list(idx_2d.nearest((n[0], n[1], n[0], n[1]), 10))]
+        left, bottom, back, right, top, front = (pos[0] - self.VISIBILITY_RADIUS,
+                                                 pos[1] - self.VISIBILITY_RADIUS,
+                                                 pos[2] - self.VISIBILITY_RADIUS,
+                                                 pos[0] + self.VISIBILITY_RADIUS,
+                                                 pos[1] + self.VISIBILITY_RADIUS,
+                                                 pos[2] + self.VISIBILITY_RADIUS
+                                                 )
+        if self.index_props.dimension == 2:
+            neighbors_nodes = np.array(nodes)[list(self.index.intersection((left, bottom, right, top)))]
+        else:
+            neighbors_nodes = np.array(nodes)[list(self.index.intersection((left, bottom, back, right, top, front)))]
+        # neighbors_nodes = np.array(new_nodes)[list(index.nearest((n[0], n[1], n[0], n[1]), 10))]
 
         return neighbors_nodes
 

@@ -36,8 +36,12 @@ def random_camera_pos(radius, azimuth, inclination, center=(0, 0, 0)):
 def random_gp_material():
     line_color = np.random.rand(3)
     fill_color = np.random.rand(3)
-    line_alpha = 1 if np.random.rand() > 0.5 else 0
-    fill_alpha = not line_alpha
+    line_alpha, fill_alpha = [(1, 1), (0, 1)][np.random.randint(2)]  # random comb of alpha for line and fill
+
+    if fill_color.sum() > 1.5:
+        bpy.context.scene.world.color = (1, 1, 1)
+    else:
+        bpy.context.scene.world.color = (0, 0, 0)
 
     material = bpy.context.object.active_material.grease_pencil
     material.color = (line_color[0], line_color[1], line_color[2], line_alpha)
@@ -102,13 +106,13 @@ rule_106 = {'111': 0, '110': 1, '101': 1, '100': 0, '011': 1, '010': 0, '001': 1
 #animate_1d_automata(rule_sierpinski, nb_frames=50)
 
 
-def explore_1d_automata(nb_frames):
+def explore_1d_automata(nb_frames, nb_runs: int, render_dir: Path):
     nb_simmetry = 4
     angle = 360/nb_simmetry
     scale = angle/90
 
     all_rules_config = list(itertools.product([0, 1], repeat=8))
-    configs_idxs = np.random.choice(np.arange(len(all_rules_config)), 20)
+    configs_idxs = np.random.choice(np.arange(len(all_rules_config)), nb_runs)
     for idx in configs_idxs:
         print(scale)
         print("#####")
@@ -120,12 +124,12 @@ def explore_1d_automata(nb_frames):
         bpy.context.scene.frame_set(nb_frames)
         #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
         random_gp_material()
-        render_dir = Path.home() / "Downloads/automaton_1d/symm_4_colors"
         render(str(render_dir / f"rule_{idx}"), animation=False)
         render(str(render_dir / f"rule_{idx}"), animation=True)
 
 
-explore_1d_automata(50)
+#explore_1d_automata(50, nb_runs=20
+#                    render_dir = Path.home() / "Downloads/automaton_1d/symm_4_colors_02")
 
 ##################
 # 2-D Automata
@@ -184,9 +188,9 @@ def animate_2d_automata(rule, nb_frames: 10, use_grease_pencil=True):
 #animate_2d_automata(rule_gol, nb_frames=10, use_grease_pencil=True)
 
 
-def animate_hexagonal_automata(p_freeze, p_melt, nb_frames: 10, material_index=0):
-    nb_rows = 100
-    nb_cols = 100
+def animate_hexagonal_automata(p_freeze, p_melt, nb_frames: 10,
+                               nb_rows: int, nb_cols: int,
+                               material_index=0):
     automaton = HexagonalAutomaton(nb_rows=nb_rows, nb_cols=nb_cols, p_melt=p_melt, p_freeze=p_freeze)
 
     # Set middle cell as the only active one
@@ -235,24 +239,51 @@ def animate_hexagonal_automata(p_freeze, p_melt, nb_frames: 10, material_index=0
 
 p_freeze = [0, 1, 0., 0., 0, 0., 0., 1., 0, 0., 0., 0., 0., 0]
 p_melt = [0, 0, 0., 0., 0., 0, 1, 0, 0., 1., 0, 1., 0., 0]
-#animate_hexagonal_automata(p_freeze, p_melt, 10)
+#animate_hexagonal_automata(p_freeze, p_melt, 10, nb_rows=120, nb_cols=120)
 
 
-def explore_hexagonal_automata(nb_frames):
-    for run in range(40):
-        p_freeze = np.random.choice([1., 0.], 14)
-        p_melt = np.random.choice([1., 0.], 14)
-        print("#####")
-        print(f"Run {run}")
-        print(f"p_freeze {p_freeze}")
-        print(f"p_melt {p_melt}")
-        animate_hexagonal_automata(p_freeze, p_melt, nb_frames=nb_frames, material_index=0)
-        bpy.context.scene.frame_set(nb_frames)
-        #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
-        random_gp_material()
-        render_dir = Path.home() / "Downloads/automaton_hexagonal/flat_hexa"
-        render(str(render_dir / f"run_{run}"), animation=False)
-        render(str(render_dir / f"run_{run}"), animation=True)
+def explore_hexagonal_automata(nb_frames: int, nb_runs: int, nb_rows: int, nb_cols: int):
+    render_dir = Path.home() / f"Downloads/automaton_hexagonal/flat_hexa_logo/{nb_frames}"
+    render_dir.mkdir(exist_ok=True)
+    with open(str(render_dir / "logs.txt"), 'w+') as f:
+        for run in range(nb_runs):
+            p_freeze = np.random.choice([1., 0.], 14)
+            p_melt = np.random.choice([1., 0.], 14)
+            print("#####")
+            print(f"Run {run}")
+            print(f"p_freeze {p_freeze}")
+            print(f"p_melt {p_melt}")
+            animate_hexagonal_automata(p_freeze, p_melt, nb_frames=nb_frames, nb_rows=nb_rows, nb_cols=nb_cols,
+                                       material_index=0)
+            bpy.context.scene.frame_set(nb_frames)
+            #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
+            #andom_gp_material()
+
+            render(str(render_dir / f"run_{run}"), animation=False)
+            #render(str(render_dir / f"run_{run}"), animation=True)
+
+            f.write(f"p_freeze:{p_freeze}-")
+            f.write(f"p_melt:{p_melt}\n")
 
 
-#explore_hexagonal_automata(40)
+#for nb_frames in range(10, 20):
+#    explore_hexagonal_automata(nb_frames, nb_runs=30, nb_rows=120, nb_cols=120)
+
+# Dummy method to load some good configs from the exploratory generations
+def load_good_configs(dir):
+    imgs = dir.glob('*.png')
+    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
+    confs = []
+    with open(dir / 'logs.txt') as f:
+        for i, line in enumerate(f):
+            if i in good_runs:
+                print(i)
+                p_freeze, p_melt = line.split('-')
+                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
+                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
+                confs.append((p_freeze, p_melt))
+    print(len(confs))
+    print(confs[0])
+    return confs
+
+load_good_configs(Path.home() / "Downloads/automaton_hexagonal/flat_hexa_logo/13")

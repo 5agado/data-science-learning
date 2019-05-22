@@ -19,14 +19,16 @@ def process_video(input_video_path: str, frame_fun):
     # some codecs don't support this, so in such cases we need to rollback to base looping
     nb_frames = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
     if nb_frames and nb_frames > 0:
-        for _ in tqdm(range(nb_frames)):
+        for frame_count in tqdm(range(nb_frames)):
             _, frame = input_video.read()
-            frame_fun(frame)
+            frame_fun(frame, frame_count)
     else:
+        frame_count = 0
         while input_video.isOpened():
             ret, frame = input_video.read()
             if ret:
-                frame_fun(frame)
+                frame_fun(frame, frame_count)
+                frame_count += 1
             else:
                 break
 
