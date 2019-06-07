@@ -86,7 +86,6 @@ def _add_mesh_to_scene(mesh, obj_name: str):
     scene = bpy.context.scene
     obj = bpy.data.objects.new(obj_name, mesh)
     scene.collection.objects.link(obj)
-    #scene.update()
     return obj
 
 
@@ -153,6 +152,12 @@ target.modifiers.new("name", type='PARTICLE_SYSTEM')
 ps = target.particle_systems[0]
 ps.settings.emit_from = 'VERT'
 ps.vertex_group_density = "emitter" 
+
+# Metaballs
+bpy.ops.object.metaball_add(type='BALL', enter_editmode=True, location=(0,0,0))
+mball = bpy.context.active_object.data
+mball.elements.new()
+mball.elements[-1].co = (x, y, z)
 """
 
 
@@ -162,15 +167,22 @@ ps.vertex_group_density = "emitter"
 from bpy.types import GPencilFrame
 
 
-def get_grease_pencil(gpencil_obj_name='GPencil') -> bpy.types.GreasePencil:
+def get_grease_pencil(gpencil_obj_name='GPencil', clear_data=False) -> bpy.types.GreasePencil:
     """
     Return the grease-pencil object with the given name. Initialize one if not already present.
     :param gpencil_obj_name: name/key of the grease pencil object in the scene
+    :param clear_data: if grease pencil object already present, delete and recreate an empty one
     """
+
+    # Delete if present and clear data required
+    if gpencil_obj_name in bpy.context.scene.objects and clear_data:
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.context.scene.objects[gpencil_obj_name].select_set(True)
+        bpy.ops.object.delete(use_global=True)
 
     # If not present already, create grease pencil object
     if gpencil_obj_name not in bpy.context.scene.objects:
-        bpy.ops.object.gpencil_add(view_align=False, location=(0, 0, 0), type='EMPTY')
+        bpy.ops.object.gpencil_add(location=(0, 0, 0), type='EMPTY')
         # rename grease pencil
         bpy.context.scene.objects[-1].name = gpencil_obj_name
 
