@@ -20,7 +20,10 @@ from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, g
 
 
 def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames):
-    morphogenesis = Morphogenesis(nodes, closed=is_circle, config=morphogenesis_config)
+    container = [np.array([1., 1., 1.]), np.array([1., -1., 1.]),
+                 np.array([-1., -1., 1.]), np.array([-1., 1., 1.])]
+    morphogenesis = Morphogenesis(nodes, closed=is_circle, config=morphogenesis_config,
+                                  container=container)
 
     if draw_debug:
         draw_force_fun = lambda p0, p1, mat_idx: draw_line(gp_frame, p0, p1, material_index=mat_idx)
@@ -42,7 +45,7 @@ def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_deb
         morphogenesis.update(draw_force=draw_force_fun, draw_segment=draw_segment_fun)
         # increase z pos
         nodes = np.array(morphogenesis.nodes)
-        nodes += np.array([0, 0, frame*0.1])
+        nodes += np.array([0, 0, 0])
         draw_segment(gp_frame, nodes, draw_cyclic=is_circle)
 
 
@@ -54,19 +57,23 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
     is_circle = True
     morphogenesis_config = {
         'VISIBILITY_RADIUS': 0.4,
-        'REPULSION_FAC': 1 / 20,
-        'ATTRACTION_FAC': 1 / 20,
+        'REPULSION_FAC': 1 / 25,
+        'ATTRACTION_FAC': 1 / 25,
         'SPLIT_DIST_THRESHOLD': 0.2,
+        'SIMPLIFICATION_DIST_THRESHOLD': 0.05,
+        'SPLIT_CROWD_THRESHOLD': 5,
         'RAND_OPTIMIZATION_FAC': 0,
         'SUBDIVISION_METHOD': 'BY_DISTANCE',
+        'ATTRACTION': True,
+        'SIMPLIFICATION': False,
         'DIMENSIONS': 2
     }
 
     SPACING_FACTOR = 10
-    visibility_radiuses = np.linspace(0.1, 1., nb_rows)
-    split_dist_thresholds = np.linspace(0.2, 0.3, nb_cols)
+    visibility_radiuses = np.linspace(0.8, 1., nb_rows)
+    split_dist_thresholds = np.linspace(0.25, 0.3, nb_cols)
 
-    base_gp = get_grease_pencil()
+    base_gp = get_grease_pencil(clear_data=True)
     for row in range(nb_rows):
         for col in range(nb_cols):
             # Circle
@@ -79,11 +86,12 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
                 for i in range(nb_nodes):
                     x = center[0] + radius * cos(angle * i)
                     y = center[1] + radius * sin(angle * i)
-                    z = 0#center[2] + (np.random.rand()-0.5)
+                    z = center[2] + (np.random.rand()-0.5) if morphogenesis_config['DIMENSIONS'] == 3 else 0
                     nodes.append(np.array([x, y, z]))
             # Line
             else:
-                nodes = [(np.array((x, 0, 0)) + (0.5 - np.random.rand(3))) * np.array([1., 1., 0.])
+                nodes = [(np.array((x, 0, 0))
+                          + (0.5 - np.random.rand(3))) * np.array([1., 1., morphogenesis_config['DIMENSIONS'] == 3])
                          for x in np.linspace(1, 11, nb_nodes)]
 
             gp_layer = get_grease_pencil_layer(base_gp, "r_{}_c_{}".format(row, col), clear_layer=True)
@@ -98,7 +106,7 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
             run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, nb_frames)
 
 
-run_morphogenesis_grid(nb_frames=10, nb_rows=3, nb_cols=3, draw_progress=True, draw_debug=False)
+run_morphogenesis_grid(nb_frames=30, nb_rows=1, nb_cols=1, draw_progress=True, draw_debug=False)
 
 
 

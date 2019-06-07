@@ -96,6 +96,22 @@ def add_text(text: str, location: tuple = (0, 0, 0)):
     return text_obj
 
 
+def add_curve(name: str, points: List[tuple], type='CURVE'):
+    # create data block
+    curve = bpy.data.curves.new(name, type=type)
+    curve.dimensions = '3D'
+    curve.resolution_u = 2
+
+    # map given points
+    polyline = curve.splines.new('POLY')
+    polyline.points.add(len(points))
+    for i, p in enumerate(points):
+        polyline.points[i].co = (p[0], p[1], p[2], 1)
+
+    _add_mesh_to_scene(curve, name)
+    #curveData.bevel_depth = 0.01
+
+
 def render(filepath: str, animation=False, file_format=None):
     bpy.context.scene.render.filepath = filepath
     if animation:
