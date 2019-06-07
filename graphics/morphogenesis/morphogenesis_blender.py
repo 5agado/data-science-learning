@@ -4,19 +4,25 @@ from pathlib import Path
 
 UTILS_PATH = Path.home() / "Documents/python_workspace/data-science-learning"
 SRC_PATH = UTILS_PATH / "graphics/morphogenesis"
+GROWTH_PATH = UTILS_PATH / "graphics/blender"
 sys.path.append(str(UTILS_PATH))
 sys.path.append(str(SRC_PATH))
+sys.path.append(str(GROWTH_PATH))
 
 import Morphogenesis
+import growth_anim
 import importlib
 importlib.reload(Morphogenesis)
+importlib.reload(growth_anim)
 from Morphogenesis import Morphogenesis
 
 import bpy
+import bmesh
 from math import cos, sin, pi
 import numpy as np
 
 from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, get_grease_pencil_layer
+from growth_anim import anim_particles
 
 
 def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames):
@@ -29,7 +35,14 @@ def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_deb
     else:
         draw_force_fun = draw_segment_fun = None
 
+    # bpy.ops.mesh.primitive_circle_add(vertices=len(morphogenesis.nodes))  # , fill_type='NGON')
+    # obj = bpy.context.active_object
+    # sk_basis = obj.shape_key_add(name='Basis')
+    # sk_basis.interpolation = 'KEY_LINEAR'
+    # obj.data.shape_keys.use_relative = False
+
     # Run and Draw Simulation
+    objs = []
     gp_layer.frames.new(-1)
     for frame in range(num_frames):
         if frame % 10 == 0:
@@ -42,14 +55,59 @@ def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_deb
         morphogenesis.update(draw_force=draw_force_fun, draw_segment=draw_segment_fun)
         # increase z pos
         nodes = np.array(morphogenesis.nodes)
-        nodes += np.array([0, 0, frame*0.1])
+        nodes += np.array([0, 0, frame*0.])
         draw_segment(gp_frame, nodes, draw_cyclic=is_circle)
+
+        objs.append(morphogenesis.nodes)
+        continue
+        # Create new shape-key block
+        block = obj.shape_key_add(name=str(frame), from_mix=False)  # returns a key_blocks member
+        block.interpolation = 'KEY_LINEAR'
+        block.value = 0
+
+        mesh = obj.data
+        bm = bmesh.new()
+
+        # convert the current mesh to a bmesh (must be in edit mode)
+        bpy.ops.object.mode_set(mode='EDIT')
+        bm.from_mesh(mesh)
+        bpy.ops.object.mode_set(mode='OBJECT')  # return to object mode
+
+        for v in bm.verts:
+            bm.verts.remove(v)
+        for v in nodes:
+            bm.verts.new(v)  # add a new vert
+
+        # make the bmesh the object's mesh
+        bm.to_mesh(mesh)
+        bm.free()  # always do this when finished
+
+
+        # bpy.ops.mesh.primitive_circle_add(vertices=len(nodes))
+        #tmpobj = bpy.context.active_object
+        #block.data = tmpobj.data
+        # Update vertices position
+        #for i, vert in enumerate(tmpobj.data.vertices):
+        #    vert.co = nodes[i]
+
+        #bm = bmesh.new()
+        #bpy.ops.object.mode_set(mode='EDIT')
+        #bm.from_mesh(tmpobj.data)
+        #bpy.ops.object.mode_set(mode='OBJECT')
+        #bm.to_mesh(obj.data)
+        #bpy.ops.object.delete(use_global=True)
+
+        # Keyframe evaluation time
+        obj.data.shape_keys.eval_time = frame * 1
+        obj.data.shape_keys.keyframe_insert(data_path='eval_time', frame=frame)
+
+    anim_particles(objs, num_frames)
 
 
 def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
                            draw_progress=False, draw_debug=False):
     nb_nodes = 6
-    bpy.context.scene.frame_end = nb_frames
+    bpy.context.scene.frame_end = 50
 
     is_circle = True
     morphogenesis_config = {
@@ -59,14 +117,14 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
         'SPLIT_DIST_THRESHOLD': 0.2,
         'RAND_OPTIMIZATION_FAC': 0,
         'SUBDIVISION_METHOD': 'BY_DISTANCE',
-        'DIMENSIONS': 2
+        'DIMENSIONS': 3
     }
 
     SPACING_FACTOR = 10
-    visibility_radiuses = np.linspace(0.1, 1., nb_rows)
-    split_dist_thresholds = np.linspace(0.2, 0.3, nb_cols)
+    visibility_radiuses = np.linspace(0.3, 1.5, nb_rows)
+    split_dist_thresholds = np.linspace(0.15, 0.25, nb_cols)
 
-    base_gp = get_grease_pencil()
+    base_gp = get_grease_pencil(clear_data=False)
     for row in range(nb_rows):
         for col in range(nb_cols):
             # Circle
@@ -98,7 +156,7 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
             run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, nb_frames)
 
 
-run_morphogenesis_grid(nb_frames=10, nb_rows=3, nb_cols=3, draw_progress=True, draw_debug=False)
+run_morphogenesis_grid(nb_frames=40, nb_rows=1, nb_cols=1, draw_progress=False, draw_debug=False)
 
 
 
