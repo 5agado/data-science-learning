@@ -9,37 +9,59 @@ MORPHOGENESIS_BASE_CONFIG = {
     'REPULSION_FAC': 1/20,
     'ATTRACTION_FAC': 1/20,
     'SPLIT_DIST_THRESHOLD': 0.2,
+    'SIMPLIFICATION_DIST_THRESHOLD': 0.05,
+    'SPLIT_CROWD_THRESHOLD': 5,
     'RAND_OPTIMIZATION_FAC': 0,
-    'SUBDIVISION_METHOD': 'BY_DISTANCE',
+    'SUBDIVISION_METHOD': 'BY_DISTANCE',  # also BY_CROWDEDNESS
+    'ATTRACTION': True,
+    'SIMPLIFICATION': False,
     'DIMENSIONS': 2
 }
 
+# TODO more elegant handling of container
+# currently would influence also subdivision, for example if BY_CROWDEDNESS
+
 
 class Morphogenesis:
-    def __init__(self, nodes, closed: bool, config: dict):
+    def __init__(self, nodes, closed: bool, config: dict, container=None):
         self.nodes = nodes
         self.config = config
 
         # Init rtree index
         self.index_props = index.Property()
         self.index_props.dimension = config['DIMENSIONS']
-        #self.index_props.dat_extension = 'data'
-        #self.index_props.idx_extension = 'index'
         self.index = None
+        self.container = container
 
         self.VISIBILITY_RADIUS = config['VISIBILITY_RADIUS']
         self.REPULSION_FAC = config['REPULSION_FAC']
         self.ATTRACTION_FAC = config['ATTRACTION_FAC']
         self.SPLIT_DIST_THRESHOLD = config['SPLIT_DIST_THRESHOLD']
+        self.SIMPLIFICATION_DIST_THRESHOLD = config['SIMPLIFICATION_DIST_THRESHOLD']
+        self.SPLIT_CROWD_THRESHOLD = config['SPLIT_CROWD_THRESHOLD']
         self.RAND_OPTIMIZATION_FAC = config['RAND_OPTIMIZATION_FAC']
+        self.ATTRACTION = config['ATTRACTION']
+        self.SIMPLIFICATION = config['SIMPLIFICATION']
         self.SUBDIVISION_METHOD = config['SUBDIVISION_METHOD']
 
         self.CLOSED = closed
 
     def update(self, draw_force=None, draw_segment=None):
+        """
+        Update system status (run one growth epoch)
+        :param draw_force: optional rendering function, takes two points and a material index
+        :param draw_segment: optional rendering function, takes N points and a material index
+        """
         # Reset index before subdivision
         self.index = index.Index(properties=self.index_props)
+
+        # subdivision
         new_nodes = self._adaptive_subdivision()
+
+        # if we have a container, append its nodes to the index
+        if self.container:
+            for i, node in enumerate(self.container):
+                self._add_node_to_index(len(new_nodes)+i, node)
 
         if draw_segment:
             draw_segment(new_nodes, 3)
@@ -49,27 +71,34 @@ class Morphogenesis:
         self.nodes = optimized_nodes
 
     def _adaptive_subdivision(self):
-        # Nodes Insertion
-        new_nodes = []
+        # start with first node
+        new_nodes = [self.nodes[0]]
+        self._add_node_to_index(0, new_nodes[0])
 
-        for i, n in enumerate(self.nodes):
+        # If closed shape, allow to add node between last and first nodes
+        if self.CLOSED:
+            self.nodes.append(self.nodes[0])
+
+        for i, n in enumerate(self.nodes[1:]):
             # add new node between this and previous, if growth conditions are met
-            if new_nodes:
-                new_node = self._subdivision(new_nodes[-1], n)
-                if new_node is not None:
-                    new_nodes.append(new_node)
-                    self._add_node_to_index(len(new_nodes) - 1, new_node)
+            new_node = self._subdivision(new_nodes[-1], n, new_nodes)
+            if new_node is not None:
+                self._add_node_to_index(len(new_nodes), new_node)
+                new_nodes.append(new_node)
+
+            # simplification
+            # avoid appending current node is simplification enabled, and too close to previous one
+            if self.SIMPLIFICATION:
+                dist = Morphogenesis._get_dist(n, new_nodes[-1])
+                if dist < self.SIMPLIFICATION_DIST_THRESHOLD:
+                    continue
 
             # append current node
-            new_nodes.append(n)
-            self._add_node_to_index(len(new_nodes) - 1, n)
-
-        # If closed shape, add node between last and first nodes
-        if self.CLOSED:
-            new_node = self._subdivision(new_nodes[-1], new_nodes[0])
-            if new_node is not None:
-                new_nodes.append(new_node)
-                self._add_node_to_index(len(new_nodes) - 1, new_node)
+            if self.CLOSED and i >= (len(self.nodes)-2):
+                continue
+            else:
+                self._add_node_to_index(len(new_nodes), n)
+                new_nodes.append(n)
 
         return new_nodes
 
@@ -77,18 +106,19 @@ class Morphogenesis:
         # Nodes Optimization
         optimized_nodes = []
         for i, n in enumerate(new_nodes):
-            # Attraction
 
-            # first and last nodes are not subject to attraction forces if not a closed line
-            if not self.CLOSED and (i==0 or i==len(new_nodes)-1):
-                attraction_vec = np.array((0, 0, 0))
-            else:
-                # TODO attraction works even if connected are further than visibility dist
-                attraction_vec = ((new_nodes[i-1] + new_nodes[(i+1) % len(new_nodes)])/2) - n
-                # normalize
-                attraction_norm = np.linalg.norm(attraction_vec)
-                if attraction_norm != 0:
-                    attraction_vec /= attraction_norm
+            # Attraction
+            if self.ATTRACTION:
+                # first and last nodes are not subject to attraction forces if not a closed line
+                if not self.CLOSED and (i == 0 or i == len(new_nodes)-1):
+                    attraction_vec = np.array((0, 0, 0))
+                else:
+                    # TODO attraction works even if connected are further than visibility dist
+                    attraction_vec = ((new_nodes[i-1] + new_nodes[(i+1) % len(new_nodes)])/2) - n
+                    # normalize
+                    attraction_norm = np.linalg.norm(attraction_vec)
+                    if attraction_norm != 0:
+                        attraction_vec /= attraction_norm
 
             # Repulsion
 
@@ -106,11 +136,14 @@ class Morphogenesis:
 
             if draw_force:
                 draw_force(n, n+(repulsion_vec * self.REPULSION_FAC), 2)
-                draw_force(n, n+(attraction_vec * self.ATTRACTION_FAC), 1)
+                if self.ATTRACTION:
+                    draw_force(n, n+(attraction_vec * self.ATTRACTION_FAC), 1)
 
             # compute new node optimized position
-            new_node = n + (repulsion_vec * self.REPULSION_FAC) \
-                         + (attraction_vec * self.ATTRACTION_FAC)
+            new_node = n + (repulsion_vec * self.REPULSION_FAC)
+
+            if self.ATTRACTION:
+                new_node = new_node + (attraction_vec * self.ATTRACTION_FAC)
 
             # if set, add some random noise to node position
             if self.RAND_OPTIMIZATION_FAC > 0:
@@ -120,18 +153,24 @@ class Morphogenesis:
 
         return optimized_nodes
 
-    def _subdivision(self, from_node, to_node):
+    def _subdivision(self, from_node, to_node, nodes):
+        new_node = None
+
         if self.SUBDIVISION_METHOD == "BY_DISTANCE":
             dist = Morphogenesis._get_dist(from_node, to_node)
             if dist > self.SPLIT_DIST_THRESHOLD:
                 # new node is halfway between the two connected ones
                 new_node = (from_node + to_node) / 2
-                return new_node
-            else:
-                return None
+        elif self.SUBDIVISION_METHOD == "BY_CROWDEDNESS":
+            neighbors_nodes = self._get_neighbors(nodes, from_node)
+            if len(neighbors_nodes) < self.SPLIT_CROWD_THRESHOLD:
+                # new node is halfway between the two connected ones
+                new_node = (from_node + to_node) / 2
         else:
             print("No such subdivision method: {}. Exiting".format(self.SUBDIVISION_METHOD))
             sys.exit(1)
+
+        return new_node
 
     def _add_node_to_index(self, node_idx, node):
         if self.index_props.dimension == 2:
@@ -140,6 +179,9 @@ class Morphogenesis:
             self.index.insert(node_idx, (node[0], node[1], node[2], node[0], node[1], node[2]))
 
     def _get_neighbors(self, nodes, pos: np.array):
+        if self.container is not None:
+            nodes = nodes + self.container
+
         left, bottom, back, right, top, front = (pos[0] - self.VISIBILITY_RADIUS,
                                                  pos[1] - self.VISIBILITY_RADIUS,
                                                  pos[2] - self.VISIBILITY_RADIUS,
