@@ -268,22 +268,3 @@ def explore_hexagonal_automata(nb_frames: int, nb_runs: int, nb_rows: int, nb_co
 
 #for nb_frames in range(10, 20):
 #    explore_hexagonal_automata(nb_frames, nb_runs=30, nb_rows=120, nb_cols=120)
-
-# Dummy method to load some good configs from the exploratory generations
-def load_good_configs(dir):
-    imgs = dir.glob('*.png')
-    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
-    confs = []
-    with open(dir / 'logs.txt') as f:
-        for i, line in enumerate(f):
-            if i in good_runs:
-                print(i)
-                p_freeze, p_melt = line.split('-')
-                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
-                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
-                confs.append((p_freeze, p_melt))
-    print(len(confs))
-    print(confs[0])
-    return confs
-
-load_good_configs(Path.home() / "Downloads/automaton_hexagonal/flat_hexa_logo/13")

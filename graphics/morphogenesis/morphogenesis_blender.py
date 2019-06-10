@@ -21,13 +21,20 @@ import bmesh
 from math import cos, sin, pi
 import numpy as np
 
-from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, get_grease_pencil_layer
+from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, get_grease_pencil_layer, add_curve
 from growth_anim import anim_particles
 
 
-def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames):
-    container = [np.array([1., 1., 1.]), np.array([1., -1., 1.]),
-                 np.array([-1., -1., 1.]), np.array([-1., 1., 1.])]
+def load_container(obj_name: str):
+    container = bpy.context.scene.objects[obj_name]
+    container = [np.array(v.co) for v in container.data.vertices]
+    return container
+
+
+def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, num_frames,
+                      container_name=None, draw_curve=False, skip_curve_nodes=1):
+    container = load_container(container_name) if container_name is not None else None
+
     morphogenesis = Morphogenesis(nodes, closed=is_circle, config=morphogenesis_config,
                                   container=container)
 
@@ -40,6 +47,7 @@ def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_deb
 
     # Run and Draw Simulation
     gp_layer.frames.new(-1)
+    curve = []
     for frame in range(num_frames):
         if frame % 10 == 0:
             print("Updating frame {}".format(frame))
@@ -49,34 +57,45 @@ def run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_deb
         else:
             gp_frame = gp_layer.frames.new(frame)
         morphogenesis.update(draw_force=draw_force_fun, draw_segment=draw_segment_fun)
-        # increase z pos
         nodes = np.array(morphogenesis.nodes)
-        nodes += np.array([0, 0, 0])
         draw_segment(gp_frame, nodes, draw_cyclic=is_circle)
+
+        if frame % skip_curve_nodes == 0:
+            if is_circle:
+                curve.extend(nodes)
+            else:
+                if frame % 2 == 0:
+                    curve.extend(nodes[::-1])
+                else:
+                    curve.extend(nodes)
+
+    if draw_curve:
+        add_curve("morpho_curve", curve)
 
 
 def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
-                           draw_progress=False, draw_debug=False):
+                           draw_progress=False, draw_debug=False, draw_curve=False, skip_curve_nodes=1,
+                           container_name=None):
     nb_nodes = 6
     bpy.context.scene.frame_end = nb_frames
 
     is_circle = True
     morphogenesis_config = {
         'VISIBILITY_RADIUS': 0.4,
-        'REPULSION_FAC': 1 / 25,
-        'ATTRACTION_FAC': 1 / 25,
+        'REPULSION_FAC': 1 / 15,
+        'ATTRACTION_FAC': 1 / 15,
         'SPLIT_DIST_THRESHOLD': 0.2,
-        'SIMPLIFICATION_DIST_THRESHOLD': 0.05,
+        'SIMPLIFICATION_DIST_THRESHOLD': 0.1,
         'SPLIT_CROWD_THRESHOLD': 5,
         'RAND_OPTIMIZATION_FAC': 0,
         'SUBDIVISION_METHOD': 'BY_DISTANCE',
         'ATTRACTION': True,
         'SIMPLIFICATION': False,
-        'DIMENSIONS': 2
+        'DIMENSIONS': 3
     }
 
     SPACING_FACTOR = 10
-    visibility_radiuses = np.linspace(0.8, 1., nb_rows)
+    visibility_radiuses = np.linspace(0.8, 1.2, nb_rows)
     split_dist_thresholds = np.linspace(0.25, 0.3, nb_cols)
 
     base_gp = get_grease_pencil(clear_data=True)
@@ -85,7 +104,7 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
             # Circle
             if is_circle:
                 center = (row*SPACING_FACTOR, col*SPACING_FACTOR, 0)
-                radius = 1
+                radius = 0.5
                 angle = 2 * pi / nb_nodes
 
                 nodes = []
@@ -109,10 +128,13 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
             print("Row {}, Col {}".format(row, col))
             print("vis_rad {:.2f}, dist_threshold {:.2f}".format(visibility_radiuses[row], split_dist_thresholds[
                 col]))
-            run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, nb_frames)
+            run_morphogenesis(morphogenesis_config, gp_layer, nodes, is_circle, draw_debug, draw_progress, nb_frames,
+                              container_name=container_name,
+                              draw_curve=draw_curve, skip_curve_nodes=skip_curve_nodes)
 
 
-run_morphogenesis_grid(nb_frames=30, nb_rows=1, nb_cols=1, draw_progress=True, draw_debug=False)
+run_morphogenesis_grid(nb_frames=40, nb_rows=1, nb_cols=1, draw_progress=True, draw_debug=False,
+                       draw_curve=False, skip_curve_nodes=1, container_name="container")
 
 
 

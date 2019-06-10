@@ -1,5 +1,6 @@
 import bpy
 from mathutils import Vector
+import math
 import numpy as np
 
 #######################################
@@ -117,3 +118,19 @@ def init_materials(obj_grid, init_color):
         mat = bpy.data.materials.new("mat_{}".format(index))
         mat.diffuse_color = init_color
         obj.active_material = mat
+
+
+def calculate_hexagonal_cell_position(row, col, nb_rows, nb_cols, size):
+    # Hexagonal shape size for grid adjustment
+    hex_size = size * math.cos(math.pi / 6)
+    short_size = size / 2
+
+    # Calculate row and col position for the current cell
+    # taking into account hexagonal shape and shifting by growth
+    y = (row - nb_rows // 2) * (2 * size - short_size)
+    x = (col - nb_cols // 2) * (2 * hex_size) - hex_size
+    # shift even rows
+    if row % 2 == 0:
+        x += hex_size
+
+    return y, x

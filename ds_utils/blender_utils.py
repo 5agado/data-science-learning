@@ -74,18 +74,17 @@ def create_grid(x_segments: int, y_segments: int, size: int, name: str = 'grid')
     return _add_mesh_to_scene(mesh, name)
 
 
-def create_object(verts, edges, faces, obj_name: str):
+def create_object(verts, edges, faces, obj_name: str, collection='Collection'):
     mesh_data = bpy.data.meshes.new("{}_mesh_data".format(obj_name))
     mesh_data.from_pydata(verts, edges, faces)
     mesh_data.update()
 
-    return _add_mesh_to_scene(mesh_data, obj_name=obj_name)
+    return _add_mesh_to_scene(mesh_data, obj_name=obj_name, collection=collection)
 
 
-def _add_mesh_to_scene(mesh, obj_name: str):
-    scene = bpy.context.scene
+def _add_mesh_to_scene(mesh, obj_name: str, collection="Collection"):
     obj = bpy.data.objects.new(obj_name, mesh)
-    scene.collection.objects.link(obj)
+    bpy.data.collections[collection].objects.link(obj)
     return obj
 
 
@@ -104,12 +103,11 @@ def add_curve(name: str, points: List[tuple], type='CURVE'):
 
     # map given points
     polyline = curve.splines.new('POLY')
-    polyline.points.add(len(points))
+    polyline.points.add(len(points)-1)
     for i, p in enumerate(points):
         polyline.points[i].co = (p[0], p[1], p[2], 1)
 
     _add_mesh_to_scene(curve, name)
-    #curveData.bevel_depth = 0.01
 
 
 def render(filepath: str, animation=False, file_format=None):

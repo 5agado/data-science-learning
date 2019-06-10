@@ -24,6 +24,12 @@ MORPHOGENESIS_BASE_CONFIG = {
 
 class Morphogenesis:
     def __init__(self, nodes, closed: bool, config: dict, container=None):
+        """
+        :param nodes: initial set of nodes (list of 2/3D coordinates)
+        :param closed: whether nodes form a close line
+        :param config: morphogenesis parameters
+        :param container: optional list of nodes that constrain the growth (via influence on repulsion forces)
+        """
         self.nodes = nodes
         self.config = config
 
