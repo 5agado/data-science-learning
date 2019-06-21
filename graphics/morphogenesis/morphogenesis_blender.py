@@ -10,10 +10,10 @@ sys.path.append(str(SRC_PATH))
 sys.path.append(str(GROWTH_PATH))
 
 import Morphogenesis
-import growth_anim
+#import growth_anim
 import importlib
 importlib.reload(Morphogenesis)
-importlib.reload(growth_anim)
+#importlib.reload(growth_anim)
 from Morphogenesis import Morphogenesis
 
 import bpy
@@ -22,12 +22,12 @@ from math import cos, sin, pi
 import numpy as np
 
 from ds_utils.blender_utils import draw_line, draw_segment, get_grease_pencil, get_grease_pencil_layer, add_curve
-from growth_anim import anim_particles
+#from growth_anim import anim_particles
 
 
 def load_container(obj_name: str):
     container = bpy.context.scene.objects[obj_name]
-    container = [np.array(v.co) for v in container.data.vertices]
+    container = [np.array(v.co) for v   in container.data.vertices]
     return container
 
 
@@ -82,8 +82,8 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
     is_circle = True
     morphogenesis_config = {
         'VISIBILITY_RADIUS': 0.4,
-        'REPULSION_FAC': 1 / 15,
-        'ATTRACTION_FAC': 1 / 15,
+        'REPULSION_FAC': 1 / 20,
+        'ATTRACTION_FAC': 1 / 20,
         'SPLIT_DIST_THRESHOLD': 0.2,
         'SIMPLIFICATION_DIST_THRESHOLD': 0.1,
         'SPLIT_CROWD_THRESHOLD': 5,
@@ -95,8 +95,8 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
     }
 
     SPACING_FACTOR = 10
-    visibility_radiuses = np.linspace(0.8, 1.2, nb_rows)
-    split_dist_thresholds = np.linspace(0.25, 0.3, nb_cols)
+    visibility_radiuses = np.linspace(0.6, 1., nb_rows)
+    split_dist_thresholds = np.linspace(0.25, 0.28, nb_cols)
 
     base_gp = get_grease_pencil(clear_data=True)
     for row in range(nb_rows):
@@ -133,8 +133,8 @@ def run_morphogenesis_grid(nb_frames: int, nb_rows: int, nb_cols: int,
                               draw_curve=draw_curve, skip_curve_nodes=skip_curve_nodes)
 
 
-run_morphogenesis_grid(nb_frames=40, nb_rows=1, nb_cols=1, draw_progress=True, draw_debug=False,
-                       draw_curve=False, skip_curve_nodes=1, container_name="container")
+run_morphogenesis_grid(nb_frames=100, nb_rows=1, nb_cols=1, draw_progress=True, draw_debug=False,
+                       draw_curve=True, skip_curve_nodes=1, container_name="container")
 
 
 

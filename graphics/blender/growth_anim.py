@@ -34,6 +34,38 @@ def get_particles():
     return particles
 
 
+def shape_key_anim(objs_verts: List):
+    obj = create_object(objs_verts[-1], edges=[], faces=[], obj_name="frame_{}".format(len(objs_verts)))
+    objs_verts.pop()
+    sk_basis = obj.shape_key_add(name='Basis')
+    sk_basis.interpolation = 'KEY_LINEAR'
+    obj.data.shape_keys.use_relative = False
+
+    count = 1
+    while True:
+        if not objs_verts:
+            break
+        points = objs_verts.pop()
+
+        # Create new shape-key block
+        block = obj.shape_key_add(name=str(count), from_mix=False)  # returns a key_blocks member
+        block.interpolation = 'KEY_LINEAR'
+        block.value = 0
+
+        # Update vertices position
+        for (vert, co) in zip(block.data, points):
+            vert.co = co
+
+        for vert in block.data[len(points):]:
+            vert.co = points[-1 ]
+
+        # Keyframe evaluation time
+        #bpy.context.object.active_shape_key_index = count+1
+        obj.data.shape_keys.eval_time = count * 10
+        obj.data.shape_keys.keyframe_insert(data_path='eval_time', frame=count*10)
+        count += 1
+
+
 def anim_objs(objs_verts: List):
     # Convert points to objects
     objs = [create_object(verts, edges=[], faces=[], obj_name="obj{}".format(i), collection='keyed_objs')
