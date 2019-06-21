@@ -1,0 +1,18 @@
+data:
+  input_shape: [256, 256, 3]
+  buffer_size: 400
+model:
+  generator:
+    init_side: 7
+    init_filters: 128
+    num_conv_blocks: 4
+  discriminator:
+    init_filters: 32
+    num_conv_blocks: 3
+training:
+  lr: 0.0002
+  beta1: 0.5
+  lambda: 100
+  batch_size: 8
+  eval_steps: 1000
+  save_summary_steps: 100

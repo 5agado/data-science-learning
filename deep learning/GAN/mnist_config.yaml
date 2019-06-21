@@ -1,0 +1,35 @@
+data:
+  input_shape: [28, 28, 1]
+  z_size: 100
+  buffer_size: 5000
+model:
+  generator:
+    init_side: 7
+    init_filters: 128
+    num_conv_blocks: 1
+    n_channels: 1
+    kernel_size: 5
+    strides: 1 # 1 if UPSAMPLING, 2 if DECONV
+    # Generator might not rely on LeakyReLU
+    leaky_relu_slope: 0.2
+    # UPSAMPLING, DECONV, ??PIXELSHUFFLER
+    upscale_method: UPSAMPLING
+  discriminator:
+    init_filters: 32
+    num_conv_blocks: 3
+    kernel_size: 5
+    strides: 2
+    leaky_relu_slope: 0.2
+training:
+  # Adam for both
+  generator:
+    learning_rate: 0.0002
+    beta1: 0.5
+  discriminator:
+    learning_rate: 0.0002
+    beta1: 0.5
+  batch_size: 128
+  # how often to save model checkpoint
+  checkpoint_steps: 20
+  # how many examples to display during training
+  plot_sample_size: 16
