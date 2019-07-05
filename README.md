@@ -40,6 +40,7 @@ A third type of content is about notebooks where I simply play around with code 
 * [RNN Text Generation - Advanced (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%Text%20Generation%20-%20Advanced.ipynb)
 ### Miscellaneous
 * [Sorting](miscellaneous/Sorting.ipynb)
+* [Dynamical Systems](graphics/Dynamical%20Systems.ipynb)
 
 ### Graphics
 * [Generative Art Intro](graphics/Generative%20Art%20-%20Intro.ipynb)
