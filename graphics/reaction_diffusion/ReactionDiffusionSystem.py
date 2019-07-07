@@ -38,18 +38,11 @@ SYSTEM_ZEBRA_CONFIG = {
 
 
 class ReactionDiffusionSystem:
-    def __init__(self, shape: Tuple, config: dict):
+    def __init__(self, shape: Tuple, config: dict, init_type='DEFAULT', random_influence=0.2):
         self.shape = shape
         self.config = config
-        self.A = None
-        self.B = None
 
-        self._set_init_config()
-
-    def _set_init_config(self):
-        #A = np.random.rand(*self.shape)
-        #B = np.random.rand(*self.shape)
-        A, B = get_initial_configuration(self.shape)
+        A, B = get_initial_configuration(self.shape, init_type, random_influence)
         self.A = A
         self.B = B
 
@@ -104,15 +97,20 @@ def gray_scott_update(A, B, coeff_A, coeff_B, f, k, delta_t):
     lB = discrete_laplacian(B)
 
     # apply the update formula
-    A += (coeff_A * lA - (A * B ** 2) + f * (1 - A)) * delta_t
-    B += (coeff_B * lB + (A * B ** 2) - (k + f) * B) * delta_t
+    AB_squared = A * B ** 2
+    diff_A = (coeff_A * lA - AB_squared + f * (1 - A)) * delta_t
+    diff_B = (coeff_B * lB + AB_squared - (k + f) * B) * delta_t
+
+    A += diff_A
+    B += diff_B
 
     return A, B
 
 
-def get_initial_configuration(shape, random_influence=0.2):
+def get_initial_configuration(shape, init_type: str, random_influence=0.2):
     """
     Initialize a concentration configuration
+    :param init_type: specify initialization mechanism
     :param shape: shape of the grid
     :param random_influence: describes how much noise is added
     :return: initial configuration
@@ -124,11 +122,12 @@ def get_initial_configuration(shape, random_influence=0.2):
     # assume there's only a bit of B everywhere
     B = random_influence * np.random.random(shape)
 
-    # add a disturbance in the center
-    center = np.array(shape) // 2
-    r = np.array(shape) // 10
+    if init_type == 'CENTER':
+        # add a disturbance in the center
+        center = np.array(shape) // 2
+        r = np.array(shape) // 10
 
-    A[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.50
-    B[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.25
+        A[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.50
+        B[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.25
 
     return A, B

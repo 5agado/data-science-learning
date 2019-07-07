@@ -28,7 +28,7 @@ def main(_=None):
     # Validate mosaic size against number of videos
     video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv'))[:(nb_rows*nb_cols)]
     nb_videos = len(video_paths)
-    assert (nb_cols*nb_cols) <= nb_videos
+    assert (nb_cols*nb_rows) <= nb_videos
 
     # Generate commands parts
     input_line = " ".join([f"-i {path}" for path in video_paths])
