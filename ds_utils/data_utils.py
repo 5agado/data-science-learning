@@ -37,3 +37,13 @@ def bin_dataframe(df,label_tobin, n_bins, y_label=None):
 def vector_scaling(a):
     a = (a - np.min(a))/(np.max(a) - np.min(a))
     return a
+
+
+# Grid-Search creation of named parameters
+from itertools import product, starmap
+from collections import namedtuple
+
+
+def named_configs(items):
+    Config = namedtuple('Config', items.keys())
+    return starmap(Config, product(*items.values()))

@@ -1,8 +1,34 @@
 import numpy as np
 import cv2
+from typing import Tuple
 from tqdm import tqdm
 
 # Option of relying on MoviePy (http://zulko.github.io/moviepy/index.html)
+
+
+def generate_video(out_path: str, shape: Tuple[int], frame_gen_fun, nb_frames: int,
+                   codec='mp4v', fps=24, is_color=False):
+    """
+    Write generated frames to file
+    :param out_path:
+    :param shape:
+    :param frame_gen_fun: function that given a frame_count returns an image of the given shape
+    :param nb_frames:
+    :param codec: default mp4v
+    :param fps: default 24
+    :param is_color: default False
+    :return:
+    """
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*codec)
+    out = cv2.VideoWriter(out_path, fourcc, fps, shape, is_color)
+
+    for frame_count in tqdm(range(nb_frames)):
+        frame = frame_gen_fun(frame_count)
+        out.write(frame)
+
+    # Release everything if job is finished
+    out.release()
 
 
 def process_video(input_video_path: str, frame_fun):

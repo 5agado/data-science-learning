@@ -4,7 +4,8 @@
 # proposed setup to ignore margins: https://ipython-books.github.io/124-simulating-a-partial-differential-equation-reaction-diffusion-systems-and-turing-patterns/
 
 import numpy as np
-from typing import List, Tuple
+from typing import Tuple
+from scipy import signal
 
 # Some sample tested configs
 
@@ -38,11 +39,19 @@ SYSTEM_ZEBRA_CONFIG = {
 
 
 class ReactionDiffusionSystem:
-    def __init__(self, shape: Tuple, config: dict, init_type='DEFAULT', random_influence=0.2):
+    def __init__(self, shape: Tuple, config: dict, init_fun=None):
+        """
+        Instantiate a reaction-diffusion system with given config and initial grid state
+        :param shape: size for each dimension of the system grid
+        :param config: parameters that defined the behavior of the system
+        :param init_fun: function that given a shape returns two initialized grids (one for each system component)
+        """
         self.shape = shape
         self.config = config
 
-        A, B = get_initial_configuration(self.shape, init_type, random_influence)
+        if init_fun is None:
+            init_fun = get_init_state
+        A, B = init_fun(self.shape)
         self.A = A
         self.B = B
 
@@ -59,6 +68,7 @@ class ReactionDiffusionSystem:
 
     def run_simulation(self, steps: int, delta_t=1.0):
         """
+        Update system state for the given number of steps
         :param steps: number of iterations to run
         :param delta_t: change in time for each iteration
         :return:
@@ -67,7 +77,7 @@ class ReactionDiffusionSystem:
             self.update(delta_t=delta_t)
 
 
-def discrete_laplacian(M):
+def discrete_laplacian(M: np.ndarray):
     """Get the discrete Laplacian of matrix M"""
 
     L = -4 * M
@@ -79,7 +89,19 @@ def discrete_laplacian(M):
     return L
 
 
-def gray_scott_update(A, B, coeff_A, coeff_B, f, k, delta_t):
+kernel = np.array([
+    [0, 1, 0],
+    [1, -4, 1],
+    [0, 1, 0]
+])
+def discrete_laplacian_convolve(M: np.ndarray):
+    """Get the discrete Laplacian of matrix M via a 2D convolution operation
+    Seems to perform way worse then the purely numpy implementation
+    """
+    return signal.convolve2d(M, kernel, mode='same', boundary='wrap')
+
+
+def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delta_t):
     """
     Updates a concentration configuration according to a Gray-Scott model
     :param A: concentration configuration A
@@ -107,13 +129,13 @@ def gray_scott_update(A, B, coeff_A, coeff_B, f, k, delta_t):
     return A, B
 
 
-def get_initial_configuration(shape, init_type: str, random_influence=0.2):
+def get_init_state(shape, init_type='DEFAULT', random_influence=0.2):
     """
-    Initialize a concentration configuration
+    Initialize a grid concentration state
     :param init_type: specify initialization mechanism
     :param shape: shape of the grid
     :param random_influence: describes how much noise is added
-    :return: initial configuration
+    :return: two initialized grids (one for each system component)
     """
 
     # start with a configuration where on every grid cell has a high concentration of chemical A

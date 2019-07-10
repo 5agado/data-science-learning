@@ -69,6 +69,7 @@ class Automaton1D(AbstractAutomaton):
         return self.rule["".join([str(s) for s in neighbors])]
 
 
+# TODO test full vectorization for update (use roll for 8 directions)
 class Automaton2D(AbstractAutomaton):
     def __init__(self, nb_rows: int, nb_cols: int, config, seed=None):
         """

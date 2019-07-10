@@ -63,27 +63,37 @@ from matplotlib import animation
 plt.rcParams['animation.ffmpeg_path'] = '~/path/to/bin/ffmpeg'
 
 
-def animated_plot():
-    fig, ax = plt.subplots(dpi=100, figsize=(5, 4))
-    sns.regplot(x, y, fit_reg=False)
-    init_intercept, init_slope = res[0]
-    line, = plt.plot([0, 1.0], [init_intercept, 1.0 * init_slope + init_intercept], 'k-')
-    epoch_text = plt.text(0, 0, "Epoch 0")
-    #im = ax.imshow(np.zeros((28, 28)), cmap='gray')
+def animated_plot(img_width: int, img_height: int, nb_frames: int, outpath: str = None):
+    # Setup plot
+    dpi = 100
+    if outpath:
+        fig, ax = plt.subplots(dpi=dpi, figsize=(img_width / dpi, img_height / dpi))
+    else:
+        fig, ax = plt.subplots(dpi=dpi, figsize=(5, 5))
     plt.axis('off')
 
+    #line, = plt.plot([0, 1.0], [init_intercept, 1.0 * init_slope + init_intercept], 'k-')
+    #epoch_text = plt.text(0, 0, "Epoch 0")
+    #im = ax.imshow(np.zeros((28, 28)), cmap='gray')
+
     def animate(i, ):
-        current_intercept, current_slope = res[i]
-        line.set_ydata([current_intercept, 1.0 * current_slope + current_intercept])
-        epoch_text.set_text("Epoch {}, cost {:.3f}".format(i, history[i][0]))
-        return line,
+        pass
+        #current_intercept, current_slope = res[i]
+        #line.set_ydata([current_intercept, 1.0 * current_slope + current_intercept])
+        #epoch_text.set_text("Epoch {}, cost {:.3f}".format(i, history[i][0]))
+        #return line,
         # one other option is to set the data like
         #im.set_data(np.zeros((28, 28))+1)
+        #ax.imshow(system.B, cmap='gray')
 
-    ani = animation.FuncAnimation(fig, animate, frames=100, interval=100,
+    # Animate
+    ani = animation.FuncAnimation(fig, animate, frames=nb_frames, interval=100,
                                   fargs=[])  # be sure to pass the additional args needed for the animation
-                                    #.save('anim.mp4', writer=animation.FFMpegFileWriter(fps=30))
-    return ani
+
+    if outpath:
+        ani.save(outpath, animation.FFMpegFileWriter(fps=30))
+    else:
+        return ani
 
 """
 Writer = animation.writers['ffmpeg']
