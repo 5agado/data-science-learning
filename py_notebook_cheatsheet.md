@@ -91,13 +91,15 @@ color = sns.color_palette()
 ax.xaxis_date()
 plt.xticks(rotation='vertical')
 
+# Import interactive libraries and set offline mode
 from plotly.offline import init_notebook_mode, plot, iplot
 import cufflinks as cf
 init_notebook_mode(connected=True)
 cf.go_offline(connected=True)
 
 from ipywidgets import interact, widgets
-from IPython.display import display
+from IPython.display import display  # not sure about differences here
+from IPython.core.display import HTML, display
 ```
 
 ## Animation

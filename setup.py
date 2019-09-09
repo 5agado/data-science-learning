@@ -15,12 +15,10 @@ setup(
     install_requires=[
         'numpy',
         'pandas',
-        'sklearn',
         'matplotlib',
         'seaborn',
         'opencv-python',
         'scipy',
-        'keras',
         'tqdm',
     ],
 )

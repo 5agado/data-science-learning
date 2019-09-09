@@ -70,6 +70,7 @@
 * [deeplearningbook](http://www.deeplearningbook.org/) (highly technical, also overview and details about many prerequisites to machine learning, like linear algebra and probability)
 * [neuralnetworksanddeeplearning - Michael Nielsen (online)](http://neuralnetworksanddeeplearning.com/) (great intuitive look into neural-networks properties and deep-learning models working mechanisms)
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
+* [Generative Deep Learning](https://www.goodreads.com/book/show/44144492-generative-deep-learning) TOREAD
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
@@ -105,7 +106,9 @@
 * [Practical Deep Learning For Coders, Part 2](http://course18.fast.ai/part2.html) TODO
 * [Deep Learning by Google @ Udacity](https://classroom.udacity.com/courses/ud730)
 * [Creative Applications of Deep Learning with Tensorflow @ Kadenze](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-iv) (good interactive examples and exposition, some specific topics not generally found in other courses, otherwise usual CNN and RNN pass)
+* [Creative Applications of Deep Learning with TensorFlow II](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-ii/info)
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO
+* [TensorFlow in Practice Specialization @ Coursera](https://www.coursera.org/specializations/tensorflow-in-practice) TODO
 
 ## Computer Vision
 * [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)
