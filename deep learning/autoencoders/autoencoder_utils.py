@@ -2,9 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras.models import *
 from tensorflow.python.keras.layers import *
-from tensorflow.python.keras.layers.core import Activation, Dense
 from tensorflow.python.keras import backend as K
-#from tensorflow.python.keras import objectives
 
 
 # standard convolution block used in the encoder
@@ -14,6 +12,7 @@ from tensorflow.python.keras import backend as K
 def encoder_conv_block(filters, block_input, kernel_size=3, strides=1, padding='same'):
     block = Conv2D(filters, kernel_size, strides=strides, padding=padding)(block_input)
     block = LeakyReLU()(block)
+    block = BatchNormalization()(block)
     #block = MaxPool2D(pool_size=2)(block)
     return block
 
@@ -46,6 +45,7 @@ def sampling(z_mean, z_log_sigma, batch_size, latent_dim):
 
 
 # Custom Keras layer: sample latent vector using learned distribution parameters
+# could also wrap a Python function into a Lambda layer
 class Sampling(Layer):
     def call(self, inputs):
         mean, log_var = inputs
@@ -63,10 +63,11 @@ class PlotData(tf.keras.callbacks.Callback):
         self.sample_size = sample_size
 
     def on_epoch_begin(self, epoch, logs=None):
-        rand_idxs = np.random.randint(0, len(self.test_data), self.sample_size)
-        x = self.test_data[rand_idxs]
-        with self.summary_writer.as_default():
-            # Plot sample data
-            predictions = self.model.predict(x)
-            tf.summary.image("Sample Generated", predictions, step=epoch)
-            tf.summary.image("Sample Input", x, step=epoch)
+        for x, y in self.test_data:  # todo decent way to get random entry from prefetch dataset
+            rand_idx = np.random.randint(len(x))
+            x = x[rand_idx:rand_idx+1]
+            with self.summary_writer.as_default():
+                # Plot sample data
+                predictions = self.model.predict(x)
+                tf.summary.image("Sample Generated", predictions, step=epoch)
+                tf.summary.image("Sample Input", x, step=epoch)

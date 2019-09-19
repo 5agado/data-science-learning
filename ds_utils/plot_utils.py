@@ -14,15 +14,21 @@ def plot_sample_imgs(get_imgs_fun, img_shape, plot_side=5, savepath=None, cmap='
     :param savepath: if given, save plot to such filepath, otherwise show plot
     :param cmap: matplotlib specific cmap to use for the plot
     """
-    f, axarr = plt.subplots(plot_side, plot_side)
+    fig, axarr = plt.subplots(plot_side, plot_side)
+    #dpi = 100
+    #fig, ax = plt.subplots(dpi=dpi, figsize=(img_shape[0] / dpi, img_shape[1] / dpi))
+    #fig.subplots_adjust(left=0, right=1, bottom=0, top=1)  # hspace=0.4, wspace=0.4
+
     samples = get_imgs_fun(plot_side*plot_side)
     for row in range(plot_side):
         for col in range(plot_side):
             axarr[row, col].imshow(samples[plot_side*row+col].reshape(img_shape), cmap=cmap)
             axarr[row, col].set_title('')
             axarr[row, col].axis('off')
+
+    # Save figure if savepath is provided
     if savepath:
-        f.savefig(savepath)
+        fig.savefig(savepath)
         plt.close()
     else:
         plt.show()
@@ -60,7 +66,7 @@ py.iplot(plotly_fig
 
 #%matplotlib notebook  # rely on notebook mode as the inline doesn't seem to work in Jupyter
 from matplotlib import animation
-plt.rcParams['animation.ffmpeg_path'] = '~/path/to/bin/ffmpeg'
+#plt.rcParams['animation.ffmpeg_path'] = '~/path/to/bin/ffmpeg'
 
 
 def animated_plot(img_width: int, img_height: int, nb_frames: int, outpath: str = None):

@@ -7,7 +7,7 @@ from tensorflow.python.keras.layers import LeakyReLU, BatchNormalization, Lambda
 from tensorflow.python.keras import backend as K
 import tensorflow as tf
 
-from autoencoder_utils import encoder_conv_block, decoder_deconv_block, get_initial_size, PlotData
+from autoencoder_utils import encoder_conv_block, decoder_deconv_block, get_initial_size, PlotData, Sampling
 
 # NOTES
 # * some just keep 2D + maxpool and skip the flattening in the encoder
@@ -44,7 +44,8 @@ class VAE:
         def kl_loss(y_true, y_pred):
             tmp_sum = K.sum(1 + log_var_vector - K.exp(log_var_vector) - K.square(mean_vector), axis=-1)
             latent_loss = Lambda(lambda x: -0.5 * x)(tmp_sum)
-            latent_loss = Lambda(lambda x: x / 784.)(K.mean(latent_loss))
+            # If using binary-cross-entropy, to ensure appropriate scale compared to the reconstruction loss
+            #latent_loss = Lambda(lambda x: x / 784.)(K.mean(latent_loss))
             return latent_loss
 
         @tf.function()
@@ -63,7 +64,7 @@ class VAE:
 
         self.model = model
 
-    def train(self, train_ds, validation_ds, nb_epochs: int, log_dir, checkpoint_dir):
+    def train(self, train_ds, validation_ds, nb_epochs: int, log_dir, checkpoint_dir, is_tfdataset=False):
         callbacks = []
 
         # tensorboard
@@ -82,12 +83,17 @@ class VAE:
         plot_callback = PlotData(validation_ds, self.model, log_dir)
         callbacks.append(plot_callback)
 
-        # model.fit(x_train, y_train, epochs=nb_epochs)  # "old" way, passing pure numpy data
-        # when passing an infinitely repeating dataset, must specify the `steps_per_epoch` argument.
-        self.model.fit(train_ds, train_ds, epochs=nb_epochs,
-                       batch_size=self.config['training']['batch_size'],
-                       validation_data=[validation_ds, validation_ds],
-                       callbacks=callbacks)
+        if is_tfdataset:
+            # when passing an infinitely repeating dataset, must specify the `steps_per_epoch` argument.
+            self.model.fit(train_ds, epochs=nb_epochs,
+                           validation_data=validation_ds,
+                           callbacks=callbacks)
+        else:
+            # "old" way, passing pure numpy data
+            self.model.fit(train_ds, train_ds, epochs=nb_epochs,
+                           batch_size=self.config['training']['batch_size'],
+                           validation_data=[validation_ds, validation_ds],
+                           callbacks=callbacks)
 
     @staticmethod
     # takes an image and generates two vectors: means and standards deviations
@@ -100,14 +106,15 @@ class VAE:
                                    kernel_size=config['kernel_size'], strides=config['strides'])
 
         features = Flatten()(x)
-        features_vec = Dense(latent_dim)(features)
+        # features = Dense(150, activation="selu")(z)  #  could add some dense layers
 
         # gaussian parameters
         mean_vector = Dense(latent_dim, activation='linear', name='mu')(features)
         log_var_vector = Dense(latent_dim, activation='linear', name='log_var')(features)
+        latent_vector = Sampling()([mean_vector, log_var_vector])
 
         encoder = Model(inputs=[model_input],
-                        outputs=[mean_vector, log_var_vector, features_vec])
+                        outputs=[mean_vector, log_var_vector, latent_vector])
         return encoder
 
     @staticmethod
@@ -133,3 +140,11 @@ class VAE:
 
         # ??why not passing as input the actual features tensor, output of the encoder??
         return Model(inputs=latent_vector, outputs=x)
+
+    def setup_dataset(self, dataset):
+        # prefetch lets the dataset fetch batches in the background while the model is training
+        dataset = dataset.shuffle(self.config['data']['buffer_size']) \
+                            .repeat(1) \
+                            .batch(self.config['training']['batch_size'], drop_remainder=True) \
+                            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        return dataset

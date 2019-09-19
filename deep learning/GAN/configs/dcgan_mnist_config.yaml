@@ -6,7 +6,7 @@ model:
   generator:
     init_side: 7
     init_filters: 128
-    num_conv_blocks: 1
+    num_conv_blocks: 2
     n_channels: 1
     kernel_size: 5
     strides: 1 # 1 if UPSAMPLING, 2 if DECONV
@@ -16,20 +16,18 @@ model:
     upscale_method: UPSAMPLING
   discriminator:
     init_filters: 32
-    num_conv_blocks: 3
+    num_conv_blocks: 2
     kernel_size: 5
     strides: 2
     leaky_relu_slope: 0.2
 training:
   # Adam for both
   generator:
-    learning_rate: 0.0002
-    beta1: 0.5
+    learning_rate: 0.0001
   discriminator:
-    learning_rate: 0.0002
-    beta1: 0.5
+    learning_rate: 0.0001
   batch_size: 128
   # how often to save model checkpoint
-  checkpoint_steps: 20
+  checkpoint_steps: 1000
   # how many examples to display during training
   plot_sample_size: 16

@@ -1,18 +1,18 @@
 data:
-  input_shape: [256, 256, 3]
+  input_shape: [128, 128, 3]
   buffer_size: 5000
 model:
   encoder:
-    latent_dim: 100
+    latent_dim: 200
     init_filters: 16
-    num_conv_blocks: 3
+    num_conv_blocks: 4
     n_channels: 3
     kernel_size: 3
     strides: 2
   decoder:
-    latent_dim: 100
+    latent_dim: 200
     init_filters: 32
-    num_conv_blocks: 2
+    num_conv_blocks: 3
     kernel_size: 3
     leaky_relu_slope: 0.2
     strides: 1 # 1 if UPSAMPLING, 2 if DECONV
@@ -22,9 +22,9 @@ model:
     upscale_method: UPSAMPLING
 training:
   # Adam for both
-  learning_rate: 0.0002
+  learning_rate: 0.0005
   beta1: 0.5
-  rmse_loss_factor: 1.
+  rmse_loss_factor: 1000.
   batch_size: 128
   # how often to save model checkpoint
   checkpoint_steps: 20
