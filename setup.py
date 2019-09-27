@@ -20,5 +20,6 @@ setup(
         'opencv-python',
         'scipy',
         'tqdm',
+        'pyyaml'
     ],
 )

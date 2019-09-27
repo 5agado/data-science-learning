@@ -80,7 +80,6 @@ class DCGan:
         batch_size = self.config['training']['batch_size']
         z_dim = self.config['data']['z_size']
         for epoch in range(nb_epochs):
-            # TODO iterate through entire dataset for each epoch
             if is_tfdataset:
                 for x in train_ds:
                     train_batch = x.numpy()
@@ -95,7 +94,8 @@ class DCGan:
             # TODO add validation step
 
     # Train with pure TF, because Keras doesn't work
-    def _train(self, train_ds, validation_ds, nb_epochs: int, log_dir, checkpoint_dir, is_tfdataset=False):
+    def _train(self, train_ds, validation_ds, nb_epochs: int, log_dir, checkpoint_dir, is_tfdataset=False,
+               restore_latest_checkpoint=True):
         batch_size = self.config['training']['batch_size']
         z_dim = self.config['data']['z_size']
 
@@ -108,10 +108,17 @@ class DCGan:
         discriminator_optimizer = tf.keras.optimizers.Adam(self.config['training']['discriminator']['learning_rate'])
 
         # checkpoints
-        checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
-                                         discriminator_optimizer=discriminator_optimizer,
-                                         generator=self.generator,
-                                         discriminator=self.discriminator)
+        if checkpoint_dir:
+            checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
+                                             discriminator_optimizer=discriminator_optimizer,
+                                             generator=self.generator,
+                                             discriminator=self.discriminator)
+            ckpt_manager = tf.train.CheckpointManager(checkpoint, os.path.join(checkpoint_dir, "ckpt"),
+                                                      max_to_keep=self.config['training']['checkpoints_to_keep'])
+            if restore_latest_checkpoint and ckpt_manager.latest_checkpoint:
+                print(f"Restored from {ckpt_manager.latest_checkpoint}")
+            else:
+                print("Initializing from scratch.")
 
         # train loop
         for epoch in tqdm(range(nb_epochs)):
@@ -140,8 +147,12 @@ class DCGan:
                 tf.summary.image("Sample Input", [ds_batch[np.random.randint(len(ds_batch))]], step=epoch)
 
             # checkpoint
-            if (epoch + 1) % self.config['training']['checkpoint_steps'] == 0:
-                checkpoint.save(os.path.join(checkpoint_dir, "ckpt"))
+            if checkpoint_dir:
+                checkpoint.step.assign_add(1)
+                ckpt_step = int(checkpoint.step)
+                if ckpt_step % self.config['training']['checkpoint_steps'] == 0:
+                    save_path = ckpt_manager.save()
+                    print(f"Saved checkpoint for step {ckpt_step}: {save_path}")
 
     @staticmethod
     # takes an image and generates two vectors: means and standards deviations
@@ -230,10 +241,11 @@ def discriminator_loss(real_output, generated_output):
 def train_step(images, generator, discriminator,
                generator_optimizer, discriminator_optimizer,
                batch_size, noise_dim):
-    # generating noise from a normal distribution
-    noise = tf.random.normal([batch_size, noise_dim])
 
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+        # generating noise from a normal distribution
+        noise = tf.random.normal([batch_size, noise_dim])
+
         generated_images = generator(noise, training=True)
 
         real_output = discriminator(images, training=True)

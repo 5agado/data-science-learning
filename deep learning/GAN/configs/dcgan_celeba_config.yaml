@@ -29,5 +29,6 @@ training:
   batch_size: 128
   # how often to save model checkpoint
   checkpoint_steps: 1000
+  checkpoints_to_keep: 5
   # how many examples to display during training
   plot_sample_size: 16
