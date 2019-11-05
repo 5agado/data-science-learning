@@ -242,29 +242,49 @@ p_melt = [0, 0, 0., 0., 0., 0, 1, 0, 0., 1., 0, 1., 0., 0]
 #animate_hexagonal_automata(p_freeze, p_melt, 10, nb_rows=120, nb_cols=120)
 
 
+# Dummy method to load some good configs from the exploratory generations
+def load_good_configs(dir):
+    imgs = dir.glob('*.png')
+    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
+    confs = []
+    with open(dir / 'logs.txt') as f:
+        for i, line in enumerate(f):
+            if i in good_runs:
+                print(i)
+                p_freeze, p_melt = line.split('-')
+                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
+                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
+                confs.append((p_freeze, p_melt))
+    print(len(confs))
+    print(confs[0])
+    return confs
+
+
 def explore_hexagonal_automata(nb_frames: int, nb_runs: int, nb_rows: int, nb_cols: int):
-    render_dir = Path.home() / f"Downloads/automaton_hexagonal/flat_hexa_logo/{nb_frames}"
+    render_dir = Path.home() / f"Documents/videos/cellular_automata/automaton_hexagonal/flat_hexa_good_extended"
     render_dir.mkdir(exist_ok=True)
-    with open(str(render_dir / "logs.txt"), 'w+') as f:
-        for run in range(nb_runs):
-            p_freeze = np.random.choice([1., 0.], 14)
-            p_melt = np.random.choice([1., 0.], 14)
-            print("#####")
-            print(f"Run {run}")
-            print(f"p_freeze {p_freeze}")
-            print(f"p_melt {p_melt}")
+
+    run = 0
+    for i in range(5, 20):
+        configs = load_good_configs(Path.home() / "Documents/videos/cellular_automata/automaton_hexagonal/flat_hexa_logo/{}".format(i))
+        for config in configs:
+            p_freeze, p_melt = config
+
+            automaton = HexagonalAutomaton(nb_rows=nb_rows, nb_cols=nb_cols, p_melt=p_melt, p_freeze=p_freeze)
+
+            # Set middle cell as the only active one
+            automaton.grid = np.zeros((nb_rows, nb_cols), dtype=np.uint8)
+            automaton.grid[(nb_rows // 2, nb_cols // 2)] = 1
+
             animate_hexagonal_automata(p_freeze, p_melt, nb_frames=nb_frames, nb_rows=nb_rows, nb_cols=nb_cols,
-                                       material_index=0)
+                                               material_index=0)
             bpy.context.scene.frame_set(nb_frames)
             #random_camera_pos(np.random.randint(5, 200), np.random.randint(360), np.random.randint(360))
             #andom_gp_material()
 
-            render(str(render_dir / f"run_{run}"), animation=False)
-            #render(str(render_dir / f"run_{run}"), animation=True)
-
-            f.write(f"p_freeze:{p_freeze}-")
-            f.write(f"p_melt:{p_melt}\n")
+            #render(str(render_dir / f"run_{run}"), animation=False)
+            render(str(render_dir / f"run_{run}"), animation=True)
+            run += 1
 
 
-#for nb_frames in range(10, 20):
-#    explore_hexagonal_automata(nb_frames, nb_runs=30, nb_rows=120, nb_cols=120)
+explore_hexagonal_automata(120, nb_runs=30, nb_rows=280, nb_cols=280)
