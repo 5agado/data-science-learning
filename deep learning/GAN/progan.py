@@ -1,7 +1,8 @@
 import os
 from tqdm import tqdm
 import numpy as np
-from tensorflow.python.keras.layers import Add, Layer, Conv2D, AveragePooling2D, UpSampling2D
+from typing import List
+from tensorflow.python.keras.layers import Add, Layer, Conv2D, AveragePooling2D, UpSampling2D, merge
 from tensorflow.python.keras.layers import Dense, Flatten, Input, Reshape
 from tensorflow.python.keras import Model, Sequential
 from tensorflow.python.keras.optimizers import Adam, RMSprop
@@ -18,6 +19,8 @@ class ProGan:
     def __init__(self, config):
         self.config = config
         self.config['model']['generator']['z_size'] = self.config['data']['z_size']
+        self.config['model']['generator']['num_blocks'] = self.config['data']['num_blocks']
+        self.config['model']['discriminator']['num_blocks'] = self.config['data']['num_blocks']
 
         self._build_model()
 
@@ -29,10 +32,9 @@ class ProGan:
         self.discriminators = ProGan._build_discriminator(self.config['model']['discriminator'])
 
         # define composite models
-        self.gan_models = ProGan._define_composite(self.generators, self.discriminators)
+        self.gan_models = self._define_composite(self.generators, self.discriminators)
 
-    @staticmethod
-    def _define_composite(generators, discriminators):
+    def _define_composite(self, generators, discriminators):
         model_list = []
         for i in range(len(discriminators)):
             g_models, d_models = generators[i], discriminators[i]
@@ -41,13 +43,13 @@ class ProGan:
             model1 = Sequential()
             model1.add(g_models[0])
             model1.add(d_models[0])
-            model1.compile(loss=wasserstein_loss, optimizer=Adam(lr=0.001, beta_1=0, beta_2=0.99, epsilon=10e-8))
+            model1.compile(loss=wasserstein_loss, optimizer=ProGan.get_optimizer(self.config['model']['generator']))
             # fade-in model
             d_models[1].trainable = False
             model2 = Sequential()
             model2.add(g_models[1])
             model2.add(d_models[1])
-            model2.compile(loss=wasserstein_loss, optimizer=Adam(lr=0.001, beta_1=0, beta_2=0.99, epsilon=10e-8))
+            model2.compile(loss=wasserstein_loss, optimizer=ProGan.get_optimizer(self.config['model']['generator']))
             # store
             model_list.append([model1, model2])
         return model_list
@@ -103,15 +105,17 @@ class ProGan:
         # conv layers
         x = upsampling
         for i, strides in enumerate([3, 3]):
+            # TODO should half filters every new block (and start with more than 128)
             x = Conv2D(config['filters'], strides, padding='same',
                        kernel_initializer=w_init, kernel_constraint=w_const)(x)
             x = PixelNormalization()(x)
             x = LeakyReLU(alpha=0.2)(x)
 
         # add new output layer
-        out_image = Conv2D(config['n_channels'], 1, padding='same')(x)
-        # define model
+        out_image = Conv2D(config['n_channels'], 1, padding='same', activation='tanh')(x)
+        # define upsampled straight-through     model
         model1 = Model(old_model.input, out_image)
+
         # get the output layer from old model
         out_old = old_model.layers[-1]
         # connect the upsampling to the old output layer
@@ -120,6 +124,7 @@ class ProGan:
         merged = WeightedSum()([out_image2, out_image])
         # define model
         model2 = Model(old_model.input, merged)
+
         return [model1, model2]
 
     @staticmethod
@@ -146,10 +151,7 @@ class ProGan:
 
         # compile model
         model = Model(model_input, model_output)
-        model.compile(loss=wasserstein_loss, optimizer=Adam(lr=config['learning_rate'],
-                                                            beta_1=config['beta_1'],
-                                                            beta_2=config['beta_2'],
-                                                            epsilon=config['epsilon']))
+        model.compile(loss=wasserstein_loss, optimizer=ProGan.get_optimizer(config))
 
         # store model
         model_list = [[model, model]]
@@ -192,10 +194,7 @@ class ProGan:
         model1 = Model(model_input, x)
 
         # compile model
-        model1.compile(loss=wasserstein_loss, optimizer=Adam(lr=config['learning_rate'],
-                                                             beta_1=config['beta_1'],
-                                                             beta_2=config['beta_2'],
-                                                             epsilon=config['epsilon']))
+        model1.compile(loss=wasserstein_loss, optimizer=ProGan.get_optimizer(config))
 
         # downsample the new larger image
         downsample = AveragePooling2D()(model_input)
@@ -214,14 +213,11 @@ class ProGan:
         model2 = Model(model_input, x)
 
         # compile model
-        model2.compile(loss=wasserstein_loss, optimizer=Adam(lr=config['learning_rate'],
-                                                             beta_1=config['beta_1'],
-                                                             beta_2=config['beta_2'],
-                                                             epsilon=config['epsilon']))
+        model2.compile(loss=wasserstein_loss, optimizer=ProGan.get_optimizer(config))
 
         return [model1, model2]
 
-    def train(self, train_ds, validation_ds, nb_epochs: int, log_dir, checkpoint_dir, is_tfdataset=False,
+    def train(self, train_ds, validation_ds, nb_epochs: List[int], log_dir, checkpoint_dir, is_tfdataset=False,
                restore_latest_checkpoint=True):
         plot_summary_writer = tf.summary.create_file_writer(str(log_dir / 'plot'))
         train_summary_writer = tf.summary.create_file_writer(str(log_dir / 'train'))
@@ -237,7 +233,7 @@ class ProGan:
 
         gen_shape = gen_normal.output_shape[1:-1]
         scaled_ds = self.setup_dataset(train_ds.map(lambda img: tf.image.resize(img, gen_shape)))
-        self._train_step(gen_normal, dis_normal, gan_normal, scaled_ds, nb_epochs, 0,
+        self._train_step(gen_normal, dis_normal, gan_normal, scaled_ds, nb_epochs[0], 0,
                          plot_summary_writer, train_summary_writer)
 
         # train loop
@@ -252,11 +248,11 @@ class ProGan:
             scaled_ds = self.setup_dataset(train_ds.map(lambda img: tf.image.resize(img, gen_shape, 'nearest')))
 
             # train fade-in models for next level of growth
-            self._train_step(g_fadein, d_fadein, gan_fadein, scaled_ds, nb_epochs, i,
+            self._train_step(g_fadein, d_fadein, gan_fadein, scaled_ds, nb_epochs[i], i,
                              plot_summary_writer, train_summary_writer, True)
 
             # train normal or straight-through models
-            self._train_step(g_normal, d_normal, gan_normal, scaled_ds, nb_epochs, i,
+            self._train_step(g_normal, d_normal, gan_normal, scaled_ds, nb_epochs[i], i,
                              plot_summary_writer, train_summary_writer, False)
 
             # checkpoint
@@ -277,13 +273,20 @@ class ProGan:
             gen_losses = []
             disc_losses = []
             for ds_batch in dataset:
-                # update discriminator model
+                # train discriminator
                 generated_images = gen.predict(tf.random.normal([batch_size, z_dim]))
 
                 d_loss1 = dis.train_on_batch(ds_batch, np.ones((batch_size, 1)))
                 d_loss2 = dis.train_on_batch(generated_images, -np.ones((batch_size, 1)))
 
-                # update the generator via the discriminator's error
+                # weight clipping to enforce Lipschitz constraint
+                clip_threshold = self.config['model']['discriminator']['clip_threshold']
+                for l in dis.layers:
+                    weights = l.get_weights()
+                    weights = [np.clip(w, -clip_threshold, clip_threshold) for w in weights]
+                    l.set_weights(weights)
+
+                # train generator via the discriminator's error
                 # ??should GAN train on double batch size given that discriminator
                 # trains on batch-size real + batch-size fake
                 g_loss = gan.train_on_batch(tf.random.normal([batch_size, z_dim]), np.ones((batch_size, 1)))
@@ -314,6 +317,11 @@ class ProGan:
                             .batch(self.config['training']['batch_size'], drop_remainder=True) \
                             .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
+    @staticmethod
+    def get_optimizer(config):
+        return Adam(lr=config['learning_rate'], beta_1=config['beta_1'], beta_2=config['beta_2'],
+                    epsilon=config['epsilon'])
+
 
 # update the alpha value on each instance of WeightedSum
 def update_fadein(models, step, n_steps):
@@ -329,6 +337,14 @@ def update_fadein(models, step, n_steps):
 # calculate wasserstein loss
 def wasserstein_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
+
+
+def gradient_penalty_loss(y_true, y_pred, interpolated_samples):
+    gradients = K.gradients(y_pred, interpolated_samples)[0]
+
+    gradient_l2_norm = K.sqrt(K.sum(K.square(gradients), axis=[range(1, len(gradients.shape))]))
+    gradient_penalty = K.square(1 - gradient_l2_norm)
+    return K.mean(gradient_penalty)
 
 
 class WeightedSum(Add):
@@ -410,3 +426,18 @@ class PixelNormalization(Layer):
 
     def compute_output_signature(self, input_signature):
         return input_signature
+
+
+class RandomWeightedAverage(merge._Merge):
+    def __init__(self, batch_size):
+        """
+        Used for Gradient Penalty.
+        Calculates interpolated images that lie at random points between the batch of real and fake images
+        :param batch_size:
+        """
+        super().__init__()
+        self.batch_size = batch_size
+
+    def _merge_function(self, inputs):
+        alpha = K.random_uniform((self.batch_size, 1, 1, 1))
+        return (alpha * inputs[0]) + ((1 - alpha) * inputs[1])

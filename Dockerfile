@@ -17,4 +17,7 @@ WORKDIR $DS_DIR
 RUN python setup.py develop
 RUN rm -Rf $DS_DIR
 
+# Jupyter notebook extensions
+RUN pip3 install jupyter_contrib_nbextensions
+
 WORKDIR $HOME_PATH

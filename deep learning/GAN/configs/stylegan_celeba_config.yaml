@@ -1,10 +1,15 @@
 data:
   input_shape: [218, 178, 3]
-  z_size: 128
+  z_size: 512
   buffer_size: 50000
   num_blocks: 6
 model:
   generator:
+    dlatent_size: 512
+    nb_mapping_layers: 8
+    mapping_fmaps: 512
+    mapping_lrmul: 0.01
+    resolution: 1024
     filters: 128
     n_channels: 3
     leaky_relu_slope: 0.2
@@ -13,15 +18,9 @@ model:
     beta_2: 0.99
     epsilon: 0.0000001
   discriminator:
-    input_shape: [4, 4, 3]
-    filters: 128
-    num_input_layers: 3
-    leaky_relu_slope: 0.2
-    learning_rate: 0.001
-    beta_1: 0
-    beta_2: 0.99
-    epsilon: 0.0000001
-    clip_threshold: 0.01
+    resolution: 1024
+    mbstd_group_size: 4
+    mbstd_num_features: 1
 training:
   nb_epochs: [5, 8, 8, 10, 10, 10]
   batch_size: 128

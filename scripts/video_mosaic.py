@@ -46,7 +46,7 @@ def main(_=None):
               f'{entries_line}; '\
               f'{pos_line}" '\
               f'-c:v libx264 {args.out}'
-
+    
     subprocess.call(command, shell=True)
 
 
