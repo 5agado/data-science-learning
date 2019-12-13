@@ -32,14 +32,14 @@ def set_trainable(net, val, loss=None, optimizer=None):
 
 def animate_latent_transition(latent_vectors, gen_image_fun, gen_latent_fun,
                               img_size: tuple, nb_frames: int,
-                              img_is_bw=False, render_dir: Path = None,
+                              img_is_bw=False, render_dir: Path = None, file_prefix="",
                               fps=30):
     # setup plot
     dpi = 100
     fig, ax = plt.subplots(dpi=dpi, figsize=(img_size[0] / dpi, img_size[1] / dpi))
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     # Need first gen, otherwise if filled with zeros/ones can't see results (probably different dtype init)
-    im = ax.imshow(gen_image_fun(latent_vectors), cmap='gray' if img_is_bw else 'jet')
+    im = ax.imshow(gen_image_fun(gen_latent_fun(latent_vectors, 0)), cmap='gray' if img_is_bw else 'jet')
     plt.axis('off')
 
     def animate(i, latent_vectors, gen_image_fun, gen_latent_fun):
@@ -51,7 +51,7 @@ def animate_latent_transition(latent_vectors, gen_image_fun, gen_latent_fun,
 
     if render_dir:
         render_dir.mkdir(parents=True, exist_ok=True)
-        ani.save(str(render_dir / (datetime.now().strftime("%Y%m%d-%H%M%S") + '.mp4')),
+        ani.save(str(render_dir / (file_prefix + datetime.now().strftime("%Y%m%d-%H%M%S") + '.mp4')),
                  animation.FFMpegFileWriter(fps=fps))
 
 
