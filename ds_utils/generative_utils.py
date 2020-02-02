@@ -82,3 +82,14 @@ def gen_latent_idx(latent_vectors, frame_idx, vec_idx, vals):
     latent_vec = latent_vectors[0].copy()
     latent_vec[vec_idx] = vals[frame_idx]
     return np.array([latent_vec])
+
+
+def morph_latent(latent_vectors, frame_idx, nb_points):
+    """
+    Morphing. Equivalent in results to the gen_latent_linear linear interpolation
+    """
+    latent_start = latent_vectors[frame_idx // nb_points]
+    latent_end = latent_vectors[frame_idx // nb_points + 1]
+    alpha = np.linspace(0, 1, nb_points)[frame_idx % nb_points]
+    latent_vec = alpha * latent_end + (1-alpha) * latent_start
+    return np.array([latent_vec])

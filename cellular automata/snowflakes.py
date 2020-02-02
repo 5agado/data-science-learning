@@ -48,22 +48,21 @@ def single_run(automaton, nb_frames: int, render_path=None):
 
         vertices = []
         negatives = []
-        z = 0
+        z = -frame
         for row in range(nb_rows):
             for col in range(nb_cols):
-                    x, y = calculate_hexagonal_cell_position(row, col, nb_rows, nb_cols, cell_size)
+                x, y = calculate_hexagonal_cell_position(row, col, nb_rows, nb_cols, cell_size)
 
-                    if automaton.grid[row, col]:
-                        vertices.append((x, y, z))
-                    else:
-                        negatives.append((x, y, z))
+                if automaton.grid[row, col]:
+                    vertices.append((x, y, z))
+                else:
+                    negatives.append((x, y, z))
 
         vertices = np.array(vertices)
-        vertices += [0.0, 0.0, frame]
         objs_verts.append(vertices)
 
-    anim_objs(objs_verts)
-    return
+    #anim_objs(objs_verts)
+    #return
 
     obj_name = 'snowflake'
     if obj_name not in bpy.context.scene.objects:
@@ -160,23 +159,23 @@ def load_good_configs(dir):
     with open(dir / 'logs.txt') as f:
         for i, line in enumerate(f):
             if i in good_runs:
-                print(i)
                 p_freeze, p_melt = line.split('-')
                 p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
                 p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
                 confs.append((p_freeze, p_melt))
     print(len(confs))
-    print(confs[0])
     return confs
 
 
 def main(nb_rows, nb_cols):
+    print("-------------------------------------")
+
     p_freeze = [0, 1, 0., 0., 0, 0., 0., 1., 0, 0., 0., 0., 0., 0]
     p_melt = [0, 0, 0., 0., 0., 0, 1, 0, 0., 1., 0, 1., 0., 0]
     # p_freeze = np.random.choice([1., 0.], 14)
     # p_melt = np.random.choice([1., 0.], 14)
-    configs = load_good_configs(Path.home() / "Downloads/flat_hexa_logo/9")
-    p_freeze, p_melt = configs[np.random.randint(len(configs))]
+    configs = load_good_configs(Path.home() / "Documents/graphics/generative_art_output/snowflakes/flat_hexa_logo/19")
+    p_freeze, p_melt = configs[7]
 
     automaton = HexagonalAutomaton(nb_rows=nb_rows, nb_cols=nb_cols, p_melt=p_melt, p_freeze=p_freeze)
 
@@ -184,11 +183,11 @@ def main(nb_rows, nb_cols):
     automaton.grid = np.zeros((nb_rows, nb_cols), dtype=np.uint8)
     automaton.grid[(nb_rows // 2, nb_cols // 2)] = 1
 
-    single_run(automaton, nb_frames=15)
+    single_run(automaton, nb_frames=19)
 
     #for i in range(1):
     #    single_run(automaton, nb_frames=10
     #              render_path=str(render_dir / f"run_{i}.png"))
 
 
-main(70, 70)
+main(50, 50)
