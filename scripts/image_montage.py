@@ -15,12 +15,16 @@ def main(_=None):
     parser.add_argument('-o', '--out', required=True, help="output path")
     parser.add_argument('-r', '--rows', default=0, help="number of rows in the montage")
     parser.add_argument('-c', '--cols', default=0, help="number of columns in the montage")
+    parser.add_argument('--width', help="width of a single image")
+    parser.add_argument('--height', help="height of a single image")
 
     # Parse args
     args = parser.parse_args()
     input_dir = Path(args.inp)
     nb_rows = int(args.rows)
     nb_cols = int(args.cols)
+    width = int(args.width) if args.width else (int(args.height) if args.height else None)
+    height = int(args.height) if args.height else (width if width else None)
 
     # Validate mosaic size against number of videos
     image_paths = get_imgs_paths(input_dir)
@@ -40,10 +44,13 @@ def main(_=None):
     # Generate commands parts
     input_line = " ".join([f"{path}" for path in image_paths])
 
+    geometry = f'-geometry {width}x{height}+0+0 ' if width else ''
+
     # Run command
-    command = f'montage '\
+    command = f'magick montage '\
               f'{input_line} '\
-              f'-geometry +{nb_rows}+{nb_cols} '\
+              f'-tile {nb_cols}x{nb_rows} '\
+              f'{geometry}' \
               f'{args.out}'
 
     subprocess.call(command, shell=True)

@@ -40,6 +40,14 @@ Install [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
 Current theme setup
 
     jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 90%
+    
+Manage kernels
+
+    conda install ipykernel
+    python -m ipykernel install --user --name <NAME> --display-name="<NAME>"
+    
+    # previously done via
+    conda install nb_conda
 
 # Basic libraries import
 ```
