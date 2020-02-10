@@ -72,7 +72,7 @@ def render(state: List[str], draw_fun,
         elif val == ']':
             return
         # control growth (no drawing)
-        elif val == 'X':
+        elif val in ['X', 'Y']:
             continue
         else:
             raise Exception(f"No such value for rendering: {val}")
