@@ -21,6 +21,8 @@ setup(
         'opencv-python',
         'scipy',
         'tqdm',
-        'pyyaml'
+        'pyyaml',
+        'plotly',
+        'cufflinks'
     ],
 )

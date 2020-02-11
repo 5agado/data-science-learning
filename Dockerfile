@@ -1,7 +1,7 @@
 FROM tensorflow/tensorflow:2.0.0b1-gpu-py3-jupyter
 
 # Install ffmpeg
-RUN add-apt-repository ppa:jonathonf/ffmpeg-4
+#RUN add-apt-repository ppa:jonathonf/ffmpeg-4
 RUN apt-get update \
     && apt-get install -y ffmpeg
 

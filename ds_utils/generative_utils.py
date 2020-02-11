@@ -93,3 +93,10 @@ def morph_latent(latent_vectors, frame_idx, nb_points):
     alpha = np.linspace(0, 1, nb_points)[frame_idx % nb_points]
     latent_vec = alpha * latent_end + (1-alpha) * latent_start
     return np.array([latent_vec])
+
+
+def get_mean_vector(vectors_dir: Path):
+    vectors = [
+        np.load(v) for v in vectors_dir.glob("*.npy")
+    ]
+    return np.array([np.mean(vectors, axis=0)])

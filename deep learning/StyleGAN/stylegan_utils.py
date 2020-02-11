@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import pickle
 import PIL.Image
 from PIL import Image, ImageDraw
 import imageio
@@ -16,6 +17,11 @@ import pretrained_networks
 import dnnlib
 import dnnlib.tflib as tflib
 
+#####################################
+#            Version 2
+#####################################
+
+
 def load_network(network_pkl):
     print(f'Loading networks from {network_pkl}...')
     _G, _D, Gs = pretrained_networks.load_networks(network_pkl)
@@ -29,20 +35,54 @@ def load_network(network_pkl):
     return Gs, Gs_kwargs, noise_vars
 
 
-# generate image from z-latents (uses mapping network
+# generate image from z-latents (uses mapping network)
 def gen_image_fun(Gs, z_latents, noise_vars, Gs_kwargs):
-    tflib.set_vars({var: np.random.rand(*var.shape.as_list()) for var in noise_vars}) # [height, width]
-    images = Gs.run(z_latents, None, **Gs_kwargs) # [minibatch, height, width, channel]
+    tflib.set_vars({var: np.random.rand(*var.shape.as_list()) for var in noise_vars})  # [height, width]
+    images = Gs.run(z_latents, None, **Gs_kwargs)  # [minibatch, height, width, channel]
     return images[0]
+
 
 # synthesize image from dlatents
 def synth_image_fun(Gs, dlatens, randomize_noise=False):
-    images = Gs.components.synthesis.run(dlatens,
-                                      randomize_noise=randomize_noise,
-                                      output_transform=dict(func=tflib.convert_images_to_uint8,
-                                                            nchw_to_nhwc=True))
+    images = Gs.components.synthesis.run(dlatens, randomize_noise=randomize_noise)
     return images[0]
 
+
+#####################################
+#            Version 1
+#####################################
+
+def load_network_v1(network_pkl):
+    print(f'Loading networks from {network_pkl}...')
+    with open(network_pkl, 'rb') as f:
+        _G, _D, Gs = pickle.load(f)
+
+    Gs_kwargs = dict(output_transform=dict(func=tflib.convert_images_to_uint8, nchw_to_nhwc=True),
+                     minibatch_size=8)
+
+    return Gs, Gs_kwargs, None
+
+
+# generate image from z-latents (uses mapping network)
+def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise, truncation_psi):
+    images = Gs.run(z_latents, None,
+                    randomize_noise=randomize_noise,
+                    truncation_psi=truncation_psi,
+                    **Gs_kwargs)
+    return images[0]
+
+
+# synthesize image from dlatents
+def synth_image_fun_v1(Gs, dlatens, Gs_kwargs, randomize_noise=False, ):
+    images = Gs.components.synthesis.run(dlatens,
+                                         randomize_noise=randomize_noise,
+                                         **Gs_kwargs)
+    return images[0]
+
+
+#####################################
+#            Generic
+#####################################
 
 # Create video for projection progress
 def create_video(input_dir, out_path):
