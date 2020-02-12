@@ -53,6 +53,8 @@ def synth_image_fun(Gs, dlatens, randomize_noise=False):
 #####################################
 
 def load_network_v1(network_pkl):
+    tflib.init_tf()
+
     print(f'Loading networks from {network_pkl}...')
     with open(network_pkl, 'rb') as f:
         _G, _D, Gs = pickle.load(f)
@@ -64,7 +66,7 @@ def load_network_v1(network_pkl):
 
 
 # generate image from z-latents (uses mapping network)
-def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise, truncation_psi):
+def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise=False, truncation_psi):
     images = Gs.run(z_latents, None,
                     randomize_noise=randomize_noise,
                     truncation_psi=truncation_psi,
@@ -73,8 +75,8 @@ def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise, truncation_psi):
 
 
 # synthesize image from dlatents
-def synth_image_fun_v1(Gs, dlatens, Gs_kwargs, randomize_noise=False, ):
-    images = Gs.components.synthesis.run(dlatens,
+def synth_image_fun_v1(Gs, dlatents, Gs_kwargs, randomize_noise=False):
+    images = Gs.components.synthesis.run(dlatents,
                                          randomize_noise=randomize_noise,
                                          **Gs_kwargs)
     return images[0]
