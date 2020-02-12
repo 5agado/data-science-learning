@@ -66,7 +66,7 @@ def load_network_v1(network_pkl):
 
 
 # generate image from z-latents (uses mapping network)
-def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise=False, truncation_psi):
+def gen_image_fun_v1(Gs, z_latents, Gs_kwargs, randomize_noise=False, truncation_psi=1.0):
     images = Gs.run(z_latents, None,
                     randomize_noise=randomize_noise,
                     truncation_psi=truncation_psi,
