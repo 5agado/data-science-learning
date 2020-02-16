@@ -36,15 +36,19 @@ def load_network(network_pkl):
 
 
 # generate image from z-latents (uses mapping network)
-def gen_image_fun(Gs, z_latents, noise_vars, Gs_kwargs):
+def gen_image_fun(Gs, z_latents, Gs_kwargs, noise_vars, truncation_psi=1.0):
     tflib.set_vars({var: np.random.rand(*var.shape.as_list()) for var in noise_vars})  # [height, width]
+
+    Gs_kwargs.truncation_psi = truncation_psi
+
     images = Gs.run(z_latents, None, **Gs_kwargs)  # [minibatch, height, width, channel]
     return images[0]
 
 
 # synthesize image from dlatents
-def synth_image_fun(Gs, dlatens, randomize_noise=False):
-    images = Gs.components.synthesis.run(dlatens, randomize_noise=randomize_noise)
+def synth_image_fun(Gs, dlatens, Gs_kwargs, randomize_noise=False):
+    Gs_kwargs.randomize_noise = randomize_noise
+    images = Gs.components.synthesis.run(dlatens, **Gs_kwargs)
     return images[0]
 
 
