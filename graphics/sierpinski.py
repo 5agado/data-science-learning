@@ -88,12 +88,13 @@ class Object(ABC):
 
         sub_objs = [obj]
         for i in range(max_depth):
+            print(f"Depth {i}")
             new_sub_objs = []
             for sub_obj in sub_objs:
                 new_sub_objs.extend(cls.replicate_shrink_step(sub_obj, i + 1))
                 # delete original
                 objs = bpy.data.objects
-                objs.remove(sub_obj['object'], True)
+                objs.remove(sub_obj['object'], do_unlink=True)
 
             sub_objs = new_sub_objs
             # Scale mesh data (all copies should follow)

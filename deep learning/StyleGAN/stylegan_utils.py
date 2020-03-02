@@ -8,7 +8,8 @@ import imageio
 
 # Add StyleGAN2 Repo to sys path
 # use the original or one of the forks
-# I mostly rely on https://github.com/rolux/stylegan2encoder
+# I mostly rely on my fork of the stylegan2encoder
+# https://github.com/5agado/stylegan2encoder
 sys.path.append(os.path.join(*[os.pardir]*3, 'stylegan2encoder'))
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
