@@ -101,7 +101,7 @@ def convert_video(video_path: str, out_path: str, frame_edit_fun,
 def main(_=None):
     logging.getLogger().setLevel(logging.INFO)
 
-    parser = argparse.ArgumentParser(description='Deep-Faceswap. Generative based method')
+    parser = argparse.ArgumentParser(description='Selective Sampling')
 
     parser.add_argument('-i', metavar='input_path', dest='input_path', required=True)
     parser.add_argument('-o', metavar='output_path', dest='output_path', required=True)
