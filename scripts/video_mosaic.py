@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 import subprocess
 from pathlib import Path
 
@@ -16,6 +17,8 @@ def main(_=None):
     parser.add_argument('--height', required=True, help="height of a single video cell")
     parser.add_argument('-r', '--rows', required=True, help="number of rows in the mosaic")
     parser.add_argument('-c', '--cols', required=True, help="number of columns in the mosaic")
+    parser.add_argument('--time-sort', action='store_true', help='Sort videos by created time')
+    parser.set_defaults(time_srt=False)
 
     # Parse args
     args = parser.parse_args()
@@ -24,9 +27,11 @@ def main(_=None):
     height = int(args.height)
     nb_rows = int(args.rows)
     nb_cols = int(args.cols)
+    time_sort = args.time_sort
 
     # Validate mosaic size against number of videos
-    video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv'))[:(nb_rows*nb_cols)]
+    video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv'),
+                                 sort_by=os.path.getmtime if time_sort else None)[:(nb_rows*nb_cols)]
     nb_videos = len(video_paths)
     assert (nb_cols*nb_rows) <= nb_videos
 

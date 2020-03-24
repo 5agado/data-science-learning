@@ -23,6 +23,9 @@ setup(
         'tqdm',
         'pyyaml',
         'plotly',
-        'cufflinks'
+        'cufflinks',
+        'imageio',
+        'imageio-ffmpeg',
+        'pillow'
     ],
 )
