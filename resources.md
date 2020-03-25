@@ -20,7 +20,6 @@
 	- [NLP](#nlp)
 	- [Big Data](#big-data)
 	- [Art and Graphics](#art-and-graphics)
-- [Online Platforms](#online-platforms)
 
 <!-- /MarkdownTOC -->
 
@@ -62,6 +61,7 @@
 * [Model-Based Machine Learning](http://mbmlbook.com/index.html) TOCHECK
 * [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
 * [Hands-On Machine Learning with Scikit-Learn and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781491962282/) TOCHECK
+* [The Hundred-Page Machine Learning Book ](https://www.goodreads.com/book/show/43190851-the-hundred-page-machine-learning-book) TOREAD
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
@@ -70,7 +70,7 @@
 * [deeplearningbook](http://www.deeplearningbook.org/) (highly technical, also overview and details about many prerequisites to machine learning, like linear algebra and probability)
 * [neuralnetworksanddeeplearning - Michael Nielsen (online)](http://neuralnetworksanddeeplearning.com/) (great intuitive look into neural-networks properties and deep-learning models working mechanisms)
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
-* [Generative Deep Learning](https://www.goodreads.com/book/show/44144492-generative-deep-learning) TOREAD
+* [Generative Deep Learning](https://www.goodreads.com/book/show/44144492-generative-deep-learning) (good high-level coverage of generative models, supported by code examples in Tensorflow 2.0)
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
@@ -80,7 +80,8 @@
 
 
 # [Courses](https://www.class-central.com/)
-[3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
+* [3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
+* [Advanced Machine-Learning Courses](https://www.reddit.com/r/MachineLearning/comments/fdw0ax/d_advanced_courses_update)
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)
@@ -96,6 +97,7 @@
 * [Deep Learning A-Z™: Hands-On Artificial Neural Networks](https://www.udemy.com/deeplearning/) TODO
 * [Machine Learning For Coders @ Fast.ai](http://course18.fast.ai/ml) TODO
 * [AWS Machine Learning Course](https://aws.amazon.com/training/learning-paths/machine-learning/) TODO
+* [TensorFlow Developer Certificate program](https://www.tensorflow.org/certificate) TOCHECK
 
 ## Reinforcement Learning
 * [David Silver’s Reinforcement Learning Course](http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html) TOCHECK
@@ -127,7 +129,3 @@
 * [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) (clear overview and exploration of relevant artistic artifacts for different major topic: chaos theory, rule-based system, grammars, markov chains, agents, artificial-life. Coverage of both visual and audio media. Assignments in MAX)
 * [Interactive 3D Graphics @ Udacity](https://classroom.udacity.com/courses/cs291) (introductions to many fundamentals of 3D Graphics while playing around with concrete examples and code in three.js)
 * [Introduction to Programming for the Visual Arts @ Kadenze](https://www.kadenze.com/courses/introduction-to-programming-for-the-visual-arts-with-p5-js-vi/info) TODO
-
-# Online Platforms
-* [Hackerrank](https://www.hackerrank.com/)
-* [Kaggle](https://kaggle.com)
