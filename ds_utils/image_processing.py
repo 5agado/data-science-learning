@@ -5,22 +5,47 @@ import cv2
 import numpy as np
 #from PIL import Image
 
+####################################
+#  Libraries
+####################################
+# matplotlib
+#import matplotlib.pyplot as plt
+#img = plt.imread(img_path)
 
-def get_imgs_paths(basepath: Path, img_types=('*.jpg', '*.jpeg', '*.png'), as_str=True):
+# cv2
+#import cv2
+#img = cv2.imread(img_path)
+
+# PIL (consider also Pillow-SIMD https://github.com/uploadcare/pillow-simd)
+#from PIL import Image
+#img = Image.open(img_path)
+#img = img.resize((width, height), Image.ANTIALIAS)
+#np.array(img) #  convert to np
+
+# Skimage
+#import skimage
+#from skimage import io
+#img = io.imread(img_path)
+
+#####################################
+
+
+def get_imgs_paths(basepath: Path, img_types=('*.jpg', '*.jpeg', '*.png'), as_str=True, sort_by=None):
     imgs_paths = []
     for img_type in img_types:
         imgs_paths.extend(basepath.glob(img_type))
+    if sort_by is not None:
+        imgs_paths.sort(key=os.path.getmtime)
     if as_str:
         imgs_paths = list(map(str, imgs_paths))
     if len(imgs_paths) == 0:
         raise Exception("No images found")
-    return sorted(imgs_paths)
+    return imgs_paths
 
 
 # load image from filepath and optionally resize
 def load_image(filepath, img_size=None, convert_fun=None):
     img = cv2.imread(filepath)
-    #img = plt.imread(filepath)
     if img_size:
         img = cv2.resize(img, img_size, interpolation=cv2.INTER_CUBIC)
     if convert_fun:

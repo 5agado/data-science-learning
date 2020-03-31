@@ -197,11 +197,13 @@ for e in tqdm(range(nb_epochs))
     ffmpeg -i in.mov -filter:v "setpts=0.65*PTS,scale=2000:-1" out.gif
 
 From video to frames
-
+    
     ffmpeg -i input_path/video.gif output_path/frame_%d.png
 
 From frames to video
 
+    ffmpeg -i frames_path/frame_%*.png output_path/filename.mp4
+    
     ffmpeg -i frames_path/frame_%d.png output_path/filename.gif
 
 See also [Video Conversion Script](scripts/convert_video.py)

@@ -34,6 +34,48 @@ def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_pa
         raise
 
 
+def extract_faces(input_path: Path, output_path: Path, config_path: Path, process_images: bool, step_mod: int):
+    assert input_path.exists(), f"No such path: {input_path}"
+    assert config_path.exists(), f"No such config file: {config_path}"
+
+    if not output_path.exists():
+        logging.info(f"Creating output dir: {output_path}")
+        output_path.mkdir()
+
+    with open(str(config_path), 'r') as ymlfile:
+        cfg = yaml.load(ymlfile, yaml.SafeLoader)
+
+    face_detector = FaceDetector(cfg)
+    frame_count = 0
+
+    if process_images:
+        # collected all image paths
+        img_paths = image_processing.get_imgs_paths(input_path, as_str=False)
+
+        logging.info("Running Face Extraction over images")
+        # iterate over all collected image paths
+        for img_path in tqdm(img_paths):
+            frame_count += 1
+            img = cv2.imread(str(img_path))
+            frame_extract_fun(img, frame_count, face_detector, output_path, step_mod)
+    # process video
+    else:
+        # get a valid file from given directory
+        if input_path.is_dir():
+            video_files = image_processing.get_imgs_paths(input_path, img_types=('*.gif', '*.webm', '*.mp4'),
+                                                          as_str=True)
+            if not video_files:
+                logging.error(f"No valid video files in: {input_path}")
+                sys.exit(1)
+            # for now just pick first one
+            input_path = Path(video_files[0])
+
+        logging.info("Running Face Extraction over video")
+
+        video_utils.process_video(str(input_path), lambda frame, frame_count:
+                                  frame_extract_fun(frame, frame_count, face_detector, output_path, step_mod))
+
+
 def main(_=None):
     logging.getLogger().setLevel(logging.INFO)
 
@@ -60,44 +102,7 @@ def main(_=None):
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    assert input_path.exists(), f"No such path: {input_path}"
-    assert config_path.exists(), f"No such config file: {config_path}"
-
-    if not output_path.exists():
-        logging.info(f"Creating output dir: {output_path}")
-        output_path.mkdir()
-
-    with open(str(config_path), 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-
-    face_detector = FaceDetector(cfg)
-    frame_count = 0
-
-    if process_images:
-        # collected all image paths
-        img_paths = image_processing.get_imgs_paths(input_path, as_str=False)
-
-        logging.info("Running Face Extraction over images")
-        # iterate over all collected image paths
-        for img_path in tqdm(img_paths):
-            frame_count += 1
-            img = cv2.imread(str(img_path))
-            frame_extract_fun(img, frame_count, face_detector, output_path, step_mod)
-    # process video
-    else:
-        # get a valid file from given directory
-        if input_path.is_dir():
-            video_files = image_processing.get_imgs_paths(input_path, img_types=('*.gif', '*.webm', '*.mp4'), as_str=True)
-            if not video_files:
-                logging.error(f"No valid video files in: {input_path}")
-                sys.exit(1)
-            # for now just pick first one
-            input_path = Path(video_files[0])
-
-        logging.info("Running Face Extraction over video")
-
-        video_utils.process_video(str(input_path), lambda frame, frame_count:
-                                  frame_extract_fun(frame, frame_count, face_detector, output_path, step_mod))
+    extract_faces(input_path, output_path, config_path, process_images, step_mod)
 
 
 if __name__ == "__main__":
