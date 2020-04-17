@@ -25,7 +25,7 @@ class Face:
                 y += self.rect.top
             return x, y
 
-    def get_face_img(self, boundary_resize_factor: tuple=None):
+    def get_face_img(self, boundary_resize_factor: tuple = None):
         """
         Return image bounded to target face (boundary is defined by rect attribute)
         :return:
@@ -44,7 +44,7 @@ class Face:
         Return size of face as (width, height)
         :return: (w, h)
         """
-        #w, h = self.rect.get_size()
+        # w, h = self.rect.get_size()
         # Consider image cause rect might exceed actual image boundaries
         face_img = self.get_face_img()
         w, h = face_img.shape[:2][::-1]
@@ -54,7 +54,6 @@ class Face:
         face_copy = Face(self.img.copy(), copy.copy(self.rect))
         face_copy.landmarks = self.landmarks.copy()
         return face_copy
-
 
     class Rectangle:
         def __init__(self, top, right, bottom, left):
@@ -107,6 +106,5 @@ class Face:
             return Face.Rectangle(self.top, self.right, self.bottom, self.left)
 
         def __str__(self):
-            return "top: {}, left: {}, bottom: {}, right: {}".format(
-                self.top, self.left, self.bottom, self.right)
+            return f'top: {self.top}, left: {self.left}, bottom: {self.bottom}, right: {self.right}'
 

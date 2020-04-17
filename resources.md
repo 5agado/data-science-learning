@@ -31,13 +31,16 @@
 ## Mathematics
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
-* [Calculus Made Easy - Silvanus P. Thompson]()
+* [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
 * [A Programmer's Introduction to Mathematics](https://jeremykun.com/2018/12/01/a-programmers-introduction-to-mathematics/) TOCHECK
-* [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf)
-* [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617)
-* [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229)
-* https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192 TOCHECK
-* https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877 TOCHECK
+* [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf) TOCHECK
+* [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617) TOCHECK
+* [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229) TOCHECK
+* [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
+* [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
+* [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) TOCHECK
+* [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
+* [Interpolation in Conformal Geometric Algebra](https://esc.fnwi.uva.nl/thesis/centraal/files/f2011008442.pdf) TOCHECK
 
 ## Statistics
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python, good intuitive explanation of basic concepts, often from a different POV compared to other more technical books about statistics)
@@ -71,6 +74,7 @@
 * [neuralnetworksanddeeplearning - Michael Nielsen (online)](http://neuralnetworksanddeeplearning.com/) (great intuitive look into neural-networks properties and deep-learning models working mechanisms)
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
 * [Generative Deep Learning](https://www.goodreads.com/book/show/44144492-generative-deep-learning) (good high-level coverage of generative models, supported by code examples in Tensorflow 2.0)
+* [Dive into Deep Learning - An interactive deep learning book](http://d2l.ai/) TOCHECK
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
@@ -129,3 +133,4 @@
 * [Generative Art and Computational Creativity @ Kadenze](https://www.kadenze.com/courses/generative-art-and-computational-creativity/info) (clear overview and exploration of relevant artistic artifacts for different major topic: chaos theory, rule-based system, grammars, markov chains, agents, artificial-life. Coverage of both visual and audio media. Assignments in MAX)
 * [Interactive 3D Graphics @ Udacity](https://classroom.udacity.com/courses/cs291) (introductions to many fundamentals of 3D Graphics while playing around with concrete examples and code in three.js)
 * [Introduction to Programming for the Visual Arts @ Kadenze](https://www.kadenze.com/courses/introduction-to-programming-for-the-visual-arts-with-p5-js-vi/info) TODO
+* [Procedural Modelling @ edx](https://www.edx.org/course/procedural-modelling) TOCHECK

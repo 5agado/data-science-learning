@@ -39,17 +39,17 @@ A third type of content is about notebooks where I simply play around with code 
 
 ### Computer Vision
 * [Image Processing - Basics](image%20processing/Image%20Processing%20-%20Basics.ipynb) [DEV]
-* [Face Extract + Alignment](face_utils) [FINAL]
+* [Face Extract + Alignment](face_utils)
 * [Face Swap (Dedicated Repository)](https://github.com/5agado/face-swap)
 
 ### NLP
-* [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%20with%20Keras%20-%20Text%20Generation.ipynb) [FINAL]
+* [RNN with Keras - Text Generation (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%20with%20Keras%20-%20Text%20Generation.ipynb) 
 * [Text Clustering](nlp/Text%20Clustering.ipynb)
 * [RNN Text Generation - Advanced (Dedicated Repository)](https://github.com/5agado/recurrent-neural-networks-intro/blob/master/RNN%Text%20Generation%20-%20Advanced.ipynb)
 * [Words Embedding](nlp/Words%20Embeddings.ipynb) [DEV]
 
 ### Miscellaneous
-* [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](data%20analysis/Pandas%20and%20Seaborn.ipynb) [FINAL]
+* [Data Manipulation and Visualization with Pandas and Seaborn — A Practical Introduction](data%20analysis/Pandas%20and%20Seaborn.ipynb) 
 * [Sorting](miscellaneous/Sorting.ipynb)
 * [Data Viz](data%20analysis/Data%20Viz%20-%20Intro.ipynb)
 * [Advanced Python](miscellaneous/Advanced%20Python.ipynb) [DEV]

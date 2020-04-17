@@ -1,14 +1,13 @@
 import argparse
 import sys
 from pathlib import Path
-
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 import cv2
 import yaml
 from tqdm import tqdm
 import logging
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 from ds_utils import image_processing
 from ds_utils import video_utils
@@ -19,7 +18,7 @@ from face_utils.FaceDetector import FaceDetector, FaceExtractException
 
 def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path, step_mod: int):
     try:
-        faces = face_detector.detect_faces(frame)
+        faces = face_detector.detect_faces(frame, min_width=face_detector.config['extract']['min_width'])
         for face_count, face in enumerate(faces):
             extracted_face = face_detector.extract_face(face)
 
@@ -28,7 +27,7 @@ def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_pa
                             extracted_face)
                 frame_count += 1
     except FaceExtractException as e:
-        logging.debug("Frame {}: {}".format(frame_count, e))
+        logging.debug(f"Frame {frame_count}: {e}")
     except Exception as e:
         logging.error(e)
         raise

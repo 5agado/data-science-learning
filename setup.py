@@ -18,14 +18,15 @@ setup(
         'pandas',
         'matplotlib',
         'seaborn',
+        'imageio',
         'opencv-python',
         'scipy',
         'tqdm',
         'pyyaml',
         'plotly',
         'cufflinks',
-        'imageio',
         'imageio-ffmpeg',
-        'pillow'
+        'pillow',
+        'jupyter_contrib_nbextensions',
     ],
 )

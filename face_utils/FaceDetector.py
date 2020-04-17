@@ -55,7 +55,7 @@ class FaceDetector:
 
         return faces
 
-    def detect_faces(self, img):
+    def detect_faces(self, img, min_width=0):
         if self.mtcnn_model_path:
             faces = self._mtcnn_detect_faces(img)
         else:
@@ -66,10 +66,15 @@ class FaceDetector:
             faces = [Face(img.copy(), Face.Rectangle(top=max(r.top(), 0), right=max(r.right(), 0),
                                                      bottom=max(r.bottom(), 0), left=max(r.left(), 0))) for r in rects]
 
+        # if specified, skip faces smaller than the given size
+        if min_width:
+            # for now compare only face width
+            faces = [f for f in faces if f.get_face_size()[0] >= min_width]
+
         # continue only if we detected at least one face
         if len(faces) == 0:
-            logging.debug("No face detected")
-            raise FaceExtractException("No face detected.")
+            logging.debug('No face detected')
+            raise FaceExtractException('No face detected')
 
         for face in faces:
             face.landmarks = self.get_landmarks(face)
