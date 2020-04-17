@@ -61,9 +61,7 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
-
-import itertools
-import collections
+from pathlib import Path
 ```
 
 # Arguments Parser

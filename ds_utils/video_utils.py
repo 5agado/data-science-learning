@@ -3,8 +3,8 @@ import cv2
 from typing import Tuple
 from tqdm import tqdm
 
+# REMINDER: cv2 inverts the order of frame shape
 # Option of relying on MoviePy (http://zulko.github.io/moviepy/index.html)
-
 
 def generate_video(out_path: str, shape: Tuple[int], frame_gen_fun, nb_frames: int,
                    codec='mp4v', fps=24, is_color=False):
@@ -58,26 +58,34 @@ def process_video(input_video_path: str, frame_fun):
             else:
                 break
 
+    input_video.release()
+
 
 def convert_video_to_video(input_video_path: str, out_path: str, frame_edit_fun,
-                           codec='mp4v', is_color=True):
+                           codec='mp4v', is_color=True, fps=None, new_size=None):
     """
     Convert video by applying given function to each frame. Resulting video of equal height x width is
     written to the given output path.
     :param input_video_path:
     :param out_path:
     :param frame_edit_fun:
+    :param new_size: size of the output video, if not given use size of input video
     :param codec:
     """
     # "Load" input video
     input_video = cv2.VideoCapture(input_video_path)
 
-    # Match source video features.
-    fps = input_video.get(cv2.CAP_PROP_FPS)
-    size = (
-        int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
-        int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-    )
+    # Match source video features unless specified
+    if fps is None:
+        fps = input_video.get(cv2.CAP_PROP_FPS)
+
+    if new_size is None:
+        size = (
+            int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
+    else:
+        size = new_size
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*codec)
