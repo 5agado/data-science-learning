@@ -5,7 +5,7 @@
 
 import numpy as np
 from typing import Tuple
-from scipy import signal
+from scipy import signal, ndimage
 
 # Some sample tested configs
 
@@ -77,28 +77,53 @@ class ReactionDiffusionSystem:
             self.update(delta_t=delta_t)
 
 
-def discrete_laplacian(M: np.ndarray):
+def discrete_laplacian(M: np.ndarray, kernel: np.ndarray):
     """Get the discrete Laplacian of matrix M"""
 
-    L = -4 * M
-    L += np.roll(M, (0, -1), (0, 1))  # right neighbor
-    L += np.roll(M, (0, +1), (0, 1))  # left neighbor
-    L += np.roll(M, (-1, 0), (0, 1))  # top neighbor
-    L += np.roll(M, (+1, 0), (0, 1))  # bottom neighbor
+    m_dims = len(M.shape)
+
+    if m_dims == 2:
+        axis = (0, 1)
+        L = (
+                (-2*m_dims) * M              # remove center 4x when 2D, 6 when 3D, etc.
+                + np.roll(M, (0, -1), axis)  # right neighbor
+                + np.roll(M, (0, +1), axis)  # left neighbor
+                + np.roll(M, (-1, 0), axis)  # top neighbor
+                + np.roll(M, (+1, 0), axis)  # bottom neighbor
+             )
+    elif m_dims == 3:
+        axis = (0, 1, 2)
+        L = (
+                (-2*m_dims) * M                 # remove center 4x when 2D, 6 when 3D, etc.
+                + np.roll(M, (0, -1, 0), axis)  # right neighbor
+                + np.roll(M, (0, +1, 0), axis)  # left neighbor
+                + np.roll(M, (-1, 0, 0), axis)  # top neighbor
+                + np.roll(M, (+1, 0, 0), axis)  # bottom neighbor
+                + np.roll(M, (0, 0, +1), axis)  # below neighbor
+                + np.roll(M, (0, 0, -1), axis)  # above neighbor
+             )
+    else:
+        raise NotImplementedError(f'discrete Laplacian not implemented for {m_dims} dimensions')
 
     return L
 
 
-kernel = np.array([
+kernel_2d = np.array([
     [0, 1, 0],
     [1, -4, 1],
     [0, 1, 0]
 ])
-def discrete_laplacian_convolve(M: np.ndarray):
+kernel_2d_2 = np.array([
+    [.05, .2, .05],
+    [.2, -1, .2],
+    [.05, .2, .05]
+])
+def discrete_laplacian_convolve(M: np.ndarray, kernel: np.ndarray):
     """Get the discrete Laplacian of matrix M via a 2D convolution operation
     Seems to perform way worse then the purely numpy implementation
     """
     return signal.convolve2d(M, kernel, mode='same', boundary='wrap')
+    #return ndimage.filters.laplace(M, mode='wrap')
 
 
 def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delta_t):
@@ -115,8 +140,8 @@ def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delt
     """
 
     # compute Laplacian of the two concentrations
-    lA = discrete_laplacian(A)
-    lB = discrete_laplacian(B)
+    lA = discrete_laplacian_convolve(A, kernel_2d_2)
+    lB = discrete_laplacian_convolve(B, kernel_2d_2)
 
     # apply the update formula
     AB_squared = A * B ** 2
@@ -134,7 +159,7 @@ def get_init_state(shape, init_type='DEFAULT', random_influence=0.2):
     Initialize a grid concentration state
     :param init_type: specify initialization mechanism
     :param shape: shape of the grid
-    :param random_influence: describes how much noise is added
+    :param random_influence: describes how much noise is added (value between 1 and 0)
     :return: two initialized grids (one for each system component)
     """
 
@@ -149,7 +174,21 @@ def get_init_state(shape, init_type='DEFAULT', random_influence=0.2):
         center = np.array(shape) // 2
         r = np.array(shape) // 10
 
-        A[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.50
-        B[center[0] - r[0]:center[0] + r[0], center[1] - r[1]:center[1] + r[1]] = 0.25
+        left = center[0] - r[0]
+        right = center[0] + r[0]
+        bottom = center[1] - r[1]
+        top = center[1] + r[1]
+
+        m_dims = len(center)
+        if m_dims == 2:
+            A[left:right, bottom:top] = 0.50
+            B[left:right, bottom:top] = 0.25
+        elif m_dims == 3:
+            below = center[2] - r[1]
+            above = center[2] + r[1]
+            A[left:right, bottom:top, below:above] = 0.50
+            B[left:right, bottom:top, below:above] = 0.25
+        else:
+            raise NotImplementedError(f'discrete Laplacian not implemented for {m_dims} dimensions')
 
     return A, B

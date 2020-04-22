@@ -57,7 +57,7 @@ A third type of content is about notebooks where I simply play around with code 
 ### Graphics
 * [Generative Art Intro](graphics/Generative%20Art%20-%20Intro.ipynb)
 * [Cellular Automata](cellular%20automata/Cellular%20Automata.ipynb)
-* [Dynamical Systems](graphics/Dynamical%20Systems.ipynb)
+* [Reaction Diffusion](graphics/reaction_diffusion/Reaction%20Diffusion.ipynb)
 * [Morphogenesis](graphics/morphogenesis)
 * [Reaction Diffusion](graphics/reaction_diffusion)
 	
