@@ -202,7 +202,7 @@ From video to frames
 
 From frames to video
 
-    ffmpeg -i frames_path/frame_%*.png output_path/filename.mp4
+    ffmpeg -i frames_path/frame_%*.png -pix_fmt yuv420p output_path/filename.mp4
     
     ffmpeg -i frames_path/frame_%d.png output_path/filename.gif
 

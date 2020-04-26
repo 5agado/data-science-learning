@@ -7,7 +7,7 @@ from tqdm import tqdm
 # Option of relying on MoviePy (http://zulko.github.io/moviepy/index.html)
 
 def generate_video(out_path: str, shape: Tuple[int], frame_gen_fun, nb_frames: int,
-                   codec='mp4v', fps=24, is_color=False):
+                   codec='mp4v', fps=24, is_color=True):
     """
     Write generated frames to file
     :param out_path:
