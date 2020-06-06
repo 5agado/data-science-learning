@@ -3,6 +3,16 @@ import cv2
 from typing import Tuple
 from tqdm import tqdm
 
+####################################
+#  Libraries
+####################################
+
+# ImageIO
+#import imageio
+#video = imageio.mimread(video_path)
+
+#####################################
+
 # REMINDER: cv2 inverts the order of frame shape
 # Option of relying on MoviePy (http://zulko.github.io/moviepy/index.html)
 
@@ -97,11 +107,13 @@ def convert_video_to_video(input_video_path: str, out_path: str, frame_edit_fun,
     nb_frames = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
     if nb_frames and nb_frames > 0:
         for _ in tqdm(range(nb_frames)):
-            _, frame = input_video.read()
-
-            frame = frame_edit_fun(frame)
-            if frame is not None:
-                out.write(frame)
+            ret, frame = input_video.read()
+            if ret:
+                frame = frame_edit_fun(frame)
+                if frame is not None:
+                    out.write(frame)
+            else:
+                break
     else:
         while input_video.isOpened():
             ret, frame = input_video.read()

@@ -36,7 +36,7 @@
 * [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf) TOCHECK
 * [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617) TOCHECK
 * [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229) TOCHECK
-* [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
+* [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (Beyond Euclidean spaces and matrices, focusing on abstract vector spaces and linear maps. Pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
 * [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
 * [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) TOCHECK
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
