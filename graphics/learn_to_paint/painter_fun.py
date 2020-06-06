@@ -417,7 +417,7 @@ def main(_=None):
     main_config = {
         'max_radius_to_image_factor': 1/10,
         'min_radius_to_image_factor': 1 / 80,  # option of (50 + nb_epochs)
-        'salience_img_weights': [0.] * 2 + list(np.linspace(0.3, 1.0, nb_epochs-3)),
+        'salience_img_weights': [0.] * 2 + list(np.linspace(0.3, 1.0, nb_epochs-2)) + [1.] * nb_epochs,
         'check_error': [False] * 2 + [True] * nb_epochs,
         'nb_strokes': [100] * 2 + [256] * 3 + [300] * 4 + [300] * nb_epochs,
         'radius_diff_factor': 20,
