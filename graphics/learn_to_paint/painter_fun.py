@@ -1,12 +1,11 @@
 import numpy as np
 import argparse
 import cv2
+import os
 import sys
-import math
 from tqdm import tqdm
 import logging
 from pathlib import Path
-import os
 
 import brush_utils as rb
 import image_utils
@@ -25,7 +24,7 @@ def positive_sharpen(i, overblur=False, coeff=8.): #no darken to original image
     return cv2.blur(np.maximum(sharpened,i),(3,3))
 
 
-def diff(i1,i2,overblur=False):
+def diff(i1,i2, overblur=False):
     # calculate the difference of 2 float32 BGR images.
 
     # use rgb
@@ -37,20 +36,12 @@ def diff(i1,i2,overblur=False):
     return d
 
 
-def wherediff(i1=None, i2=None):
-    # find out where max difference point is.
-    d = diff(i1, i2, overblur=True)
-
-    i, j = np.unravel_index(d.argmax(), d.shape)
-    return i, j, d
-
-
 def limit(x, minimum, maximum):
     return min(max(x, minimum), maximum)
 
 
 def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=True, useoil=False):
-    fatness = 1/(1+magnitude*6)
+    fatness = 1/(1+magnitude)
 
     def intrad(orad):
         #obtain integer radius and shorter-radius
@@ -102,13 +93,6 @@ def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=T
         radius, srad = intrad(nr)
 
         rb.compose(canvas, brush, x=x, y=y, rad=radius, srad=srad, angle=angle, color=color, usefloat=True, useoil=useoil)
-        # enable oil effects on final paint.
-
-        # np.float64 will cause problems
-        #rec = [x,y,radius,srad,angle,color[0],color[1],color[2],brushname]
-        #rec = [float(r) if type(r)==np.float64 or type(r)==np.float32 else r for r in rec]
-        #record(rec)
-        # log it!
 
     # given err, calculate gradient of parameters wrt to it
     def calc_gradient(err):
@@ -142,7 +126,7 @@ def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=T
 
     # max and min steps for gradient descent
     tryfor = 12
-    mintry = 3
+    mintry = 2
 
     for i in range(tryfor):
         try: # might have error
@@ -163,8 +147,8 @@ def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=T
             grad, anglegrad, gx, gy, gradius, err = calc_gradient(err)
 
         except NameError as e:
-            print(e)
-            print('error within calc_gradient')
+            logging.error('Error within calc_gradient')
+            logging.error(e)
             return False, i
 
         #if printgrad: #debug purpose.
@@ -200,13 +184,14 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
         # sample a lot of points from one error image - save computation cost
 
         point_list = []
-        y, x, d = wherediff(canvas, img)
+        d = diff(canvas, img)
         phase_map, magnitude_map = image_utils.get_phase_and_magnitude(img)
         d = d/d.sum()  # normalize probabilities
 
         # compose error-map and salience-map
         if salience_img is not None:
-            sample_map = (d * (1.-salience_img_weight)) + (salience_img * salience_img_weight)
+            #sample_map = (d * (1.-salience_img_weight)) + (salience_img * salience_img_weight)
+            sample_map = d + (d * (salience_img * salience_img_weight)) + (salience_img * salience_img_weight)
         else:
             sample_map = d
 
@@ -232,18 +217,11 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
             # as sample map have been scaled down, recompute the indexes for original image
             ry, rx = int(ry / sample_map_scale_factor), int(rx / sample_map_scale_factor)
 
-            # get gradient orientation info from phase map (phase should be between [0,2pi))
-            # compute an average phase around the point, for an area proportional to brush size
-            phase = phase_map[max(0, ry-phase_neighbor_size):ry+phase_neighbor_size,
-                              max(0, rx-phase_neighbor_size):rx+phase_neighbor_size].mean()
+            angle, magnitude = image_utils.get_point_angle_and_magnitude(rx, ry, phase_map, magnitude_map,
+                                                                         phase_neighbor_size=phase_neighbor_size,
+                                                                         magnitude_neighbor_size=phase_neighbor_size)
 
-            # choose direction perpendicular to gradient
-            angle = (((phase/math.pi)*180)+90) % 360
-
-            magnitude = magnitude_map[max(0, ry-phase_neighbor_size):ry+phase_neighbor_size,
-                                      max(0, rx-phase_neighbor_size):rx+phase_neighbor_size].mean()
-
-            point_list.append((ry, rx, angle, rn()*rn()))
+            point_list.append((ry, rx, angle, magnitude))
         return point_list
 
     def pcasync(point_data):
@@ -258,44 +236,29 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
     res = {}
     for idx, item in enumerate(point_list):
         res[idx] = pcasync(item)
-        #cv2.imwrite(str(out_dir) + f'{idx:04d}.png', canvas * 255)
     return res
 
 
-def load_salience_img(salience_path: Path, salience_img_name: str, shape, test_border=False):
+def load_salience_img(salience_path: Path, salience_img_name: str):
     # if given load salience image
     salience_img = None
     if salience_path:
         # get imagepath and extension
         salience_img_ext = None
-        for ext in ['.jpg', '.png', '.npy']:
+        for ext in ['.jpg', '.png']:
             if (salience_path / (salience_img_name + ext)).exists():
                 salience_img_ext = ext
                 break
         if salience_img_ext is None:
+            logging.error(f'No salience image for {salience_img_name}')
+            #return salience_img
             raise Exception(f'No salience image for {salience_img_name}')
+
+        # load salience image
         salience_img_path = str(salience_path / (salience_img_name + ext))
-
-        # if numpy file
-        if salience_img_ext == '.npy':
-            with open(salience_img_path) as f:
-                salience_img = np.load(salience_img_path)
-            salience_img = cv2.resize(salience_img, shape)
-            cv2.imwrite(str(salience_path / f'salience_{salience_img_name}.png'), salience_img * 255)
-        else:
-            salience_img = cv2.imread(salience_img_path, cv2.IMREAD_GRAYSCALE)
-            salience_img = salience_img.astype('float32') / 255  # convert to float32
+        salience_img = cv2.imread(salience_img_path, cv2.IMREAD_GRAYSCALE)
+        salience_img = salience_img.astype('float32') / 255  # convert to float32
         salience_img = salience_img.clip(0.)
-        salience_img = salience_img / salience_img.sum()  # normalizing probability
-
-    # secondary experiments with fixed mask
-    if test_border:
-        mask = np.ones((shape[1], shape[0]), np.uint8) * 255
-        cv2.rectangle(mask, (120, 100), (shape[0]-120, shape[1]-60), (0, 0, 0), -1, cv2.LINE_AA)
-        #cv2.oval(mask, (shape[1]//2, shape[0]//2), int(shape[1]/2), (0, 0, 0), -1, cv2.LINE_AA)
-        mask = cv2.blur(mask, (201, 201))
-
-        salience_img = mask.astype('float32') / 255  # convert to float32
         salience_img = salience_img / salience_img.sum()  # normalizing probability
 
     return salience_img
@@ -304,10 +267,26 @@ def load_salience_img(salience_path: Path, salience_img_name: str, shape, test_b
 def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: dict, nb_epochs: int, salience_path=None):
     brushes = rb.load_brushes(brush_dir)
 
-    imgs_paths = list(input_path.glob('*.png'))
-    imgs_paths.extend(list(input_path.glob('*.jpg')))
+    imgs_paths = list(input_path.glob('*.png')) + list(input_path.glob('*.jpg'))
     for img_path in tqdm(imgs_paths):
         logging.info(f'Painting {img_path}')
+
+        # load image
+        img = cv2.imread(str(img_path))
+
+        # init canvas
+        img = img.astype('float32') / 255  # convert to float32
+        canvas = img.copy()
+        canvas[:, :] = 0.5
+
+        # load salience img and edges
+        salience_img = load_salience_img(salience_path, img_path.stem)
+        if salience_img is not None:
+            edges = image_utils.get_edges(img)
+            salience_plus_edges = salience_img + edges
+            salience_plus_edges /= salience_plus_edges.sum()  # normalizing probability
+
+        # log some data
         if output_path:
             img_out_path = output_path / img_path.stem
             img_out_path.mkdir(exist_ok=True, parents=True)
@@ -316,30 +295,7 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
             with open(str(img_out_path / 'config.txt'), 'w+') as f:
                 f.write(str(config) + '\n')
 
-        # load image
-        img = cv2.imread(str(img_path))
-
-        test_border = config.get('test_border', False)
-        if test_border:
-            border_size = 100
-            border_img = cv2.copyMakeBorder(img, border_size, border_size, border_size, border_size, cv2.BORDER_CONSTANT, value=[255]*3)
-            border_img = border_img.astype('float32') / 255  # convert to float32
-            img = cv2.copyMakeBorder(img, border_size//2, border_size//2, border_size//2, border_size//2, cv2.BORDER_CONSTANT, value=[255]*3)
-            img = cv2.resize(img, border_img.shape[:2][::-1])
-
-        img = img.astype('float32') / 255  # convert to float32
-        if output_path:
             cv2.imwrite(str(img_out_path / 'original.png'), img * 255)
-
-        # load salience img
-        salience_img = load_salience_img(salience_path, img_path.stem, img.shape[:2][::-1],  test_border=test_border)
-
-        # init canvas
-        if test_border:
-            canvas = border_img.copy()
-        else:
-            canvas = img.copy()
-            canvas[:, :] = 1.
 
         # set brush radius
         minrad = max(img.shape[:2]) * config['min_radius_to_image_factor']
@@ -348,10 +304,9 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
         max_radii = np.linspace(minrad, maxrad, nb_epochs, dtype=int)[::-1] if nb_epochs > 1 else [maxrad]
         min_radii = [r - r//config['radius_diff_factor'] for r in max_radii]
 
-        nb_strokes = config['nb_strokes']
-        # number of stroke tries per batch, sent to thread pool
-        # smaller number decreases efficiency
+        nb_strokes = config['nb_strokes']  # number of stroke tries per epoch
 
+        # paint
         for i in tqdm(range(nb_epochs)):
             succeeded = 0  # how many strokes being placed
             avg_step = 0.  # average step of gradient descent performed
@@ -360,20 +315,17 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
             #kernel_size = max(2, (10 // (i + 1)))
             #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
             #blurred_img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
-            kernel_size = max(50, (150 // (i + 1)))
+            #kernel_size = max(20, (150 // (i + 1)))
+            kernel_size = 5
             blurred_img = cv2.bilateralFilter(img, 9, kernel_size, kernel_size)
 
-            # save progress
-            #if output_path:
-            #    cv2.imwrite(str(img_out_path / f'blurred_{i:04d}.png'), blurred_img * 255)
-
             # paint strokes
-            res = put_strokes(blurred_img, canvas, nb_strokes[i], min_radii[i], max_radii[i],
-                              brushes=brushes,
-                              salience_img=salience_img, salience_img_weight=config['salience_img_weights'][i],
+            res = put_strokes(blurred_img, canvas, nb_strokes[i], min_radii[i], max_radii[i], brushes=brushes,
+                              salience_img=salience_img if not config['refine_edges'][i] else salience_plus_edges,
+                              salience_img_weight=config['salience_img_weights'][i],
                               sample_map_scale_factor=config['sample_map_scale_factor'],
                               phase_neighbor_size=int(config['phase_neighbor_size'][i]),
-                              out_dir=output_path / img_path.stem, iter_idx=i, # img_out_path / f'{i:04d}')
+                              out_dir=output_path / img_path.stem, iter_idx=i,
                               check_error=config['check_error'][i],
                               useoil=config['use_oil'])
 
@@ -383,7 +335,7 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
                 avg_step += step
                 succeeded += 1 if status else 0
             avg_step /= nb_strokes[i]
-            logging.info(f'succeeded: {succeeded}, avg step: {avg_step}')
+            logging.debug(f'succeeded: {succeeded}, avg step: {avg_step}')
 
             # save progress
             if output_path:
@@ -416,27 +368,15 @@ def main(_=None):
 
     main_config = {
         'max_radius_to_image_factor': 1/10,
-        'min_radius_to_image_factor': 1 / 80,  # option of (50 + nb_epochs)
-        'salience_img_weights': [0.] * 2 + list(np.linspace(0.3, 1.0, nb_epochs-2)) + [1.] * nb_epochs,
+        'min_radius_to_image_factor': 1 / 100,
+        'salience_img_weights': [0.] * 2 + list(np.linspace(0.2, 1.0, nb_epochs-4)) + [1.] * nb_epochs,
         'check_error': [False] * 2 + [True] * nb_epochs,
-        'nb_strokes': [100] * 2 + [256] * 3 + [300] * 4 + [300] * nb_epochs,
+        'nb_strokes': [150] * 2 + [300] * 4 + [360] * nb_epochs,
         'radius_diff_factor': 20,
         'sample_map_scale_factor': 0.5,
         'use_oil': True,
-        'phase_neighbor_size': np.linspace(5, 10, num=nb_epochs)[::-1],
-    }
-
-    border_config = {
-        'max_radius_to_image_factor': 1/20,
-        'min_radius_to_image_factor': 1/60,  # option of (50 + nb_epochs)
-        'salience_img_weights': [1.] * nb_epochs,
-        'check_error': [False] * nb_epochs,
-        'nb_strokes': [360] * nb_epochs,
-        'radius_diff_factor': 20,
-        'sample_map_scale_factor': 0.5,
-        'use_oil': True,
-        'phase_neighbor_size': np.linspace(5, 10, num=nb_epochs)[::-1],
-        'test_border': True,
+        'phase_neighbor_size': np.linspace(2, 7, num=nb_epochs)[::-1],
+        'refine_edges': [False] * (nb_epochs - 1) + [True] * nb_epochs,
     }
 
     test_config = {
@@ -449,6 +389,7 @@ def main(_=None):
         'sample_map_scale_factor': 1.,
         'use_oil': False,
         'phase_neighbor_size': [5] * nb_epochs,
+        'refine_edges': [False] * nb_epochs,
     }
 
     paint_images(input_path, output_path, brush_dir, main_config, nb_epochs, salience_path)

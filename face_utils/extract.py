@@ -5,6 +5,8 @@ import cv2
 import yaml
 from tqdm import tqdm
 import logging
+import numpy as np
+import cv2
 
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -13,7 +15,24 @@ from ds_utils import image_processing
 from ds_utils import video_utils
 
 from face_utils import CONFIG_PATH
+from face_extract_utils import get_face_mask
 from face_utils.FaceDetector import FaceDetector, FaceExtractException
+
+
+def face_mask_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path):
+    try:
+        faces = face_detector.detect_faces(frame, min_width=face_detector.config['extract']['min_width'])
+        mask = np.zeros(frame.shape, np.uint8)
+
+        for face in faces:
+            mask = get_face_mask(face, mask_type='hull', blur_size=30)
+        cv2.imwrite(str(output_path), mask)
+        frame_count += 1
+    except FaceExtractException as e:
+        logging.debug(f"Frame {frame_count}: {e}")
+    except Exception as e:
+        logging.error(e)
+        raise
 
 
 def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path, step_mod: int):
@@ -33,7 +52,8 @@ def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_pa
         raise
 
 
-def extract_faces(input_path: Path, output_path: Path, config_path: Path, process_images: bool, step_mod: int):
+def extract_faces(input_path: Path, output_path: Path, config_path: Path, process_images: bool, extract_mask: bool,
+                  step_mod: int):
     assert input_path.exists(), f"No such path: {input_path}"
     assert config_path.exists(), f"No such config file: {config_path}"
 
@@ -56,7 +76,10 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
         for img_path in tqdm(img_paths):
             frame_count += 1
             img = cv2.imread(str(img_path))
-            frame_extract_fun(img, frame_count, face_detector, output_path, step_mod)
+            if extract_mask:
+                face_mask_fun(img, frame_count, face_detector, output_path / f"{img_path.stem}.jpg")
+            else:
+                frame_extract_fun(img, frame_count, face_detector, output_path, step_mod)
     # process video
     else:
         # get a valid file from given directory
@@ -89,6 +112,9 @@ def main(_=None):
     parser.add_argument('--process-images', dest='process_images', action='store_true',
                         help="Run extraction on images in the given input dir")
     parser.set_defaults(process_images=False)
+    parser.add_argument('--extract-mask', action='store_true',
+                        help="Output the masked results")
+    parser.set_defaults(extract_mask=False)
     parser.add_argument('-s', metavar='step_mod', dest='step_mod', default=1,
                         help="Save only face for frame where frame_num%step_mod == 0")
 
@@ -96,12 +122,13 @@ def main(_=None):
     input_path = Path(args.input_path)
     output_path = Path(args.output_path)
     process_images = args.process_images
+    extract_mask = args.extract_mask
     config_path = Path(args.config_path)
     step_mod = int(args.step_mod)
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    extract_faces(input_path, output_path, config_path, process_images, step_mod)
+    extract_faces(input_path, output_path, config_path, process_images, extract_mask, step_mod)
 
 
 if __name__ == "__main__":

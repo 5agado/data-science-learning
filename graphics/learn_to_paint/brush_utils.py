@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 import math
 import random
-import os
 from pathlib import Path
 
 
@@ -10,10 +9,9 @@ def rn():
     return random.random()
 
 
-# load brushes from ./brushes directory
 def load_brushes(brush_dir: Path):
     brushes = {}
-    for brush_path in brush_dir.glob('*.png'):
+    for brush_path in list(brush_dir.glob('*.png')) + list(brush_dir.glob('*.jpg')):
         brush = cv2.imread(str(brush_path), 0)
         if brush is not None:
             brushes[brush_path.name] = brush
@@ -61,7 +59,6 @@ def rotate_brush(brush, rad, srad, angle):
 
     # 3. combine 2 affine transform
     cb = np.dot(rm,at)
-    # print(cb)
 
     # 4. do the transform
     res = cv2.warpAffine(brush,cb[0:2,:],(rad*2,rad*2))

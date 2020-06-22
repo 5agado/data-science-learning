@@ -1,7 +1,14 @@
+import sys
 import cv2
+import math
+import numpy as np
+from typing import List
+from pathlib import Path
+import logging
+import argparse
 
 
-def get_phase_and_magnitude(img, sobel_kernel_size=7):
+def get_phase_and_magnitude(img, sobel_kernel_size=7, magnitude_power=0.3):
     """
     Calculate phase/rotation angle from image gradient
     :param img: image to compute phase from
@@ -22,4 +29,113 @@ def get_phase_and_magnitude(img, sobel_kernel_size=7):
     magnitude = cv2.magnitude(xg, yg)
     magnitude = magnitude / magnitude.max()  # normalize to [0, 1] range
 
+    # make magnitude more uniform
+    magnitude = np.power(magnitude, magnitude_power)
+
     return phase, magnitude
+
+
+def get_point_angle_and_magnitude(x, y, phase_map, magnitude_map,
+                                  phase_neighbor_size: int, magnitude_neighbor_size: int):
+    # get gradient orientation info from phase map (phase should be between [0,2pi))
+    # compute an average phase around the point, for an area proportional to brush size
+    phase = phase_map[max(0, y - phase_neighbor_size):y + phase_neighbor_size,
+            max(0, x - phase_neighbor_size):x + phase_neighbor_size].mean()
+
+    # choose direction perpendicular to gradient
+    angle = (((phase / math.pi) * 180) + 90) % 360
+
+    magnitude = magnitude_map[max(0, y - magnitude_neighbor_size):y + magnitude_neighbor_size,
+                max(0, x - magnitude_neighbor_size):x + magnitude_neighbor_size].mean()
+
+    return angle, magnitude
+
+
+def get_edges(img, img_blur_size=5, min_hyst_val=100, max_hyst_val=200, edges_blur_size=5):
+    """
+    Detect image edges
+    :param img:
+    :param img_blur_size: kernel for gaussian-blur on image
+    :param min_hyst_val: hysteresis min threshold (canny edge detection)
+    :param max_hyst_val: hysteresis max threshold (canny edge detection)
+    :param edges_blur_size: blur size applied to edge results
+    :return:
+    """
+    # remove noise to improve edge detection results
+    blurred_img = cv2.GaussianBlur(img, (img_blur_size, img_blur_size), 0)
+
+    # canny edge detection
+    edges = cv2.Canny((blurred_img * 255).astype('uint8'), min_hyst_val, max_hyst_val)
+
+    # blur edges
+    edges = cv2.blur(edges, (edges_blur_size, edges_blur_size)).astype('float32') / 255
+
+    edges = edges / edges.sum() # normalize to probabilities
+
+    return edges
+
+
+def add_border_to_img(img, border_size: int):
+    border_img = cv2.copyMakeBorder(img, border_size, border_size, border_size, border_size, cv2.BORDER_CONSTANT,
+                                    value=[255] * 3)
+    border_img = border_img.astype('float32') / 255  # convert to float32
+
+    img = cv2.copyMakeBorder(img, border_size // 2, border_size // 2, border_size // 2, border_size // 2,
+                             cv2.BORDER_CONSTANT, value=[255] * 3)
+    img = cv2.resize(img, border_img.shape[:2][::-1])
+    img = img.astype('float32') / 255  # convert to float32
+
+    return img, border_img
+
+
+def combine_salience_images(input_dir: Path, salience_paths: List[Path], weights: List[float], output_dir: Path):
+    main_imgs = list(input_dir.glob('*.png')) + list(input_dir.glob('*.jpg'))
+
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    # for each image in out target input folder, compute composed salience image
+    for img_path in main_imgs:
+        main_img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE).astype('float32') / 255
+        composed_salience_img = np.zeros(main_img.shape, dtype='float32')
+
+        salience_img_name = img_path.stem
+        for i, salience_path in enumerate(salience_paths):
+            salience_img_ext = None
+            for ext in ['.jpg', '.png']:
+                if (salience_path / (salience_img_name + ext)).exists():
+                    salience_img_ext = ext
+                    break
+            if salience_img_ext is None:
+                continue
+
+            salience_img_path = str(salience_path / (salience_img_name + ext))
+            salience_img = cv2.imread(str(salience_img_path), cv2.IMREAD_GRAYSCALE)
+            salience_img = salience_img.astype('float32') / 255  # convert to float32
+            salience_img = salience_img.clip(0.)
+            composed_salience_img = composed_salience_img + (weights[i] * salience_img)
+
+        composed_salience_img = composed_salience_img / composed_salience_img.max()
+
+        cv2.imwrite(str(output_dir / f'{salience_img_name}.png'), composed_salience_img * 255)
+
+
+def main(_=None):
+    logging.getLogger().setLevel(logging.INFO)
+
+    parser = argparse.ArgumentParser(description='Image Utils')
+
+    parser.add_argument('-i', '--input-path', required=True)
+    parser.add_argument('-o', '--output-path', required=True)
+    parser.add_argument('-s', '--salience-paths', type=str, nargs='+',)
+
+    args = parser.parse_args()
+    input_path = Path(args.input_path)
+    output_path = Path(args.output_path)
+    salience_paths = [Path(p) for p in args.salience_paths]
+    weights = [1. for p in salience_paths]
+
+    combine_salience_images(input_path, salience_paths=salience_paths, weights=weights, output_dir=output_path)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
