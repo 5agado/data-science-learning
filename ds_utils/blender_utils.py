@@ -31,6 +31,16 @@ from <cls_example> import <cls_example>
 from ds_utils.blender_utils import delete_all
 """
 
+"""
+# Install Dependency
+
+# check Blender python location
+import sys
+print(sys.exec_prefix)
+
+$ /path/to/blender/python/bin/python -m pip install scipy
+"""
+
 
 # TODO validate
 def delete_all(obj_type: str='MESH'):

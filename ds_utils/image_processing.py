@@ -24,8 +24,13 @@ import numpy as np
 
 # Skimage
 #import skimage
-#from skimage import io
+#from skimage import io, transform
 #img = io.imread(img_path)
+#img = transform.resize(img, (width, height))
+
+# ImageIO
+#import imageio
+#img = imageio.imread(img_path)
 
 #####################################
 
