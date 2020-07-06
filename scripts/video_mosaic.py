@@ -40,9 +40,9 @@ def main(_=None):
     entries_line = "; ".join([f"[{i}:v] setpts=PTS-STARTPTS, scale={width}x{height} [vid{i}]"
                               for i in range(nb_videos)])
     pos_line = "; ".join([f"[tmp{nb_cols*row+col}][vid{nb_cols*row+col}] "
-                          f"overlay=shortest=1:x={width*col}:y={height*row} [tmp{nb_cols*row+col+1}]"
+                          f"overlay=repeatlast=1:x={width*col}:y={height*row} [tmp{nb_cols*row+col+1}]"
                           for col in range(nb_cols) for row in range(nb_rows)])[:-7]
-    pos_line = "[base]" + pos_line[6:]
+    pos_line = "[base][vid0] overlay=shortest=1:x=0:y=0 [tmp1]; " + pos_line.split(';', 1)[-1]
 
     # Run command
     command = f'ffmpeg '\
