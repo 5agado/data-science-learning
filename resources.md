@@ -86,6 +86,7 @@
 # [Courses](https://www.class-central.com/)
 * [3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
 * [Advanced Machine-Learning Courses](https://www.reddit.com/r/MachineLearning/comments/fdw0ax/d_advanced_courses_update)
+* [AI Curriculum](https://github.com/Machine-Learning-Tokyo/AI_Curriculum)
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)
@@ -115,6 +116,9 @@
 * [Creative Applications of Deep Learning with TensorFlow II](https://www.kadenze.com/courses/creative-applications-of-deep-learning-with-tensorflow-ii/info)
 * [Deep Learning by Andrew Ng @ Coursera](https://www.deeplearning.ai/) TODO
 * [TensorFlow in Practice Specialization @ Coursera](https://www.coursera.org/specializations/tensorflow-in-practice) TODO
+* [Standford Deep Generative Models CS236 - Fall 2019](https://deepgenerativemodels.github.io/syllabus.html)
+* [GANs in computer vision - Introduction to generative learning](https://theaisummer.com/gan-computer-vision/)
+* [Berkeley Deep Unsupervised Learning Spring 2020](https://sites.google.com/view/berkeley-cs294-158-sp20/home)
 
 ## Computer Vision
 * [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)

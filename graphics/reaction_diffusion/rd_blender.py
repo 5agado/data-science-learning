@@ -25,6 +25,10 @@ from ds_utils.blender_utils import render
 from ds_utils.video_utils import generate_video
 
 
+# Current setup works only with preset Blender file.
+# To use script need to add needed components to the scene and use same names
+
+
 # update Blender image with the given content
 def update_img(img_name: str, system: ReactionDiffusionSystem):
     content = system.B
@@ -90,7 +94,7 @@ if __name__ == "__main__":
     NUM_FRAMES = 240
     NUM_FRAMES_CHANGE = 1
     min_frames = 40
-    do_render = True
+    do_render = False
 
     img_name = 'canvas'
     out_path = Path.home() / 'Documents/graphics/generative_art_output/reaction_diffusion/2020_04'
@@ -108,11 +112,12 @@ if __name__ == "__main__":
     #config['FEED_RATE'] = 0.055
     #config['KILL_RATE'] = 0.062
 
-    system_init_fun = lambda shape: get_init_state(shape, random_influence=config['random_influence'], mask=mask)
-
     # mask
     mask_name = 'square2'
-    mask = get_polygon_mask(system_shape, 4, system_shape[0] // 10, np.array(system_shape) // 2)
+    #mask = cv2.resize(cv2.imread('', cv2.IMREAD_GRAYSCALE), system_shape)
+    mask = get_polygon_mask(system_shape, segments=4, radius=system_shape[0] // 10, center=np.array(system_shape) // 2)
+
+    system_init_fun = lambda shape: get_init_state(shape, random_influence=config['random_influence'], mask=mask)
 
     # remove and create image to start from a clean state and match change in canvas size
     assert img_name in bpy.data.images, 'Target image not present'
