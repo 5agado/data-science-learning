@@ -65,6 +65,7 @@
 * [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
 * [Hands-On Machine Learning with Scikit-Learn and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781491962282/) TOCHECK
 * [The Hundred-Page Machine Learning Book ](https://www.goodreads.com/book/show/43190851-the-hundred-page-machine-learning-book) TOREAD
+* [Machine Learning Engineering by Andriy Burkov](http://www.mlebook.com) TOCHECK
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
@@ -87,6 +88,7 @@
 * [3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
 * [Advanced Machine-Learning Courses](https://www.reddit.com/r/MachineLearning/comments/fdw0ax/d_advanced_courses_update)
 * [AI Curriculum](https://github.com/Machine-Learning-Tokyo/AI_Curriculum)
+* [fastai - courses, books, library](https://www.fast.ai/)
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)
@@ -119,6 +121,7 @@
 * [Standford Deep Generative Models CS236 - Fall 2019](https://deepgenerativemodels.github.io/syllabus.html)
 * [GANs in computer vision - Introduction to generative learning](https://theaisummer.com/gan-computer-vision/)
 * [Berkeley Deep Unsupervised Learning Spring 2020](https://sites.google.com/view/berkeley-cs294-158-sp20/home)
+* [Generative Adversarial Networks (GANs) @ Coursera](https://www.coursera.org/specializations/generative-adversarial-networks-gans?utm_source=deeplearningai) TODO
 
 ## Computer Vision
 * [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)
