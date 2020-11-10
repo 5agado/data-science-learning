@@ -1,6 +1,7 @@
 import sys
 import cv2
 import math
+from skimage import draw
 import numpy as np
 from typing import List
 from pathlib import Path
@@ -59,7 +60,7 @@ def get_edges(img, img_blur_size=5, min_hyst_val=100, max_hyst_val=200, edges_bl
     :param min_hyst_val: hysteresis min threshold (canny edge detection)
     :param max_hyst_val: hysteresis max threshold (canny edge detection)
     :param edges_blur_size: blur size applied to edge results
-    :return:
+    :return: edges image
     """
     # remove noise to improve edge detection results
     blurred_img = cv2.GaussianBlur(img, (img_blur_size, img_blur_size), 0)
@@ -70,9 +71,36 @@ def get_edges(img, img_blur_size=5, min_hyst_val=100, max_hyst_val=200, edges_bl
     # blur edges
     edges = cv2.blur(edges, (edges_blur_size, edges_blur_size)).astype('float32') / 255
 
-    edges = edges / edges.sum() # normalize to probabilities
+    edges = edges / edges.sum()  # normalize to probabilities
 
     return edges
+
+
+def get_distance_map(src_img):
+    """
+    Get distance values for given image. Distance is the closest zero pixel for each pixel of the source image.
+    :param src_img: grayscale image
+    :return: distance map
+    """
+    # use simple euclidean distance and a 3×3 mask for a fast, coarse distance estimation
+    dist = cv2.distanceTransform(255 - src_img, cv2.DIST_L2, 3)
+
+    # normalize distance image between 0.0 and 1.0
+    cv2.normalize(dist, dist, 0, 1.0, cv2.NORM_MINMAX)
+
+    return dist
+
+
+def get_min_radius_to_edge(dist_img, start_pos, end_pos, dist_threshold=0.01):
+    # get lines coordinates
+    line = np.transpose(np.array(draw.line(start_pos[0], start_pos[1], end_pos[0], end_pos[1])))
+    # get dist values overlapping the line
+    data = dist_img[line[:, 1], line[:, 0]]
+
+    # find first index below threshold
+    radius = np.argmax(data < dist_threshold)
+
+    return radius
 
 
 def add_border_to_img(img, border_size: int):
