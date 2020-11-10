@@ -27,7 +27,9 @@ def main(_=None):
     height = int(args.height) if args.height else (width if width else None)
 
     # Validate mosaic size against number of videos
+    import random
     image_paths = get_imgs_paths(input_dir)
+    #random.shuffle(image_paths)
     nb_images = len(image_paths)
     assert (nb_cols*nb_rows) <= nb_images
 
@@ -40,6 +42,11 @@ def main(_=None):
             nb_rows = int(nb_images/nb_cols)
 
     image_paths = image_paths[:(nb_cols * nb_rows)]
+
+    #for i, p in enumerate(image_paths):
+    #    command = f'magick {p} -gravity center -extent "%[fx:h<w?h:w]x%[fx:h<w?h:w]" {input_dir}/cropped/{i}_.png'
+    #    subprocess.call(command, shell=True)
+    #return
 
     # Generate commands parts
     input_line = " ".join([f"{path}" for path in image_paths])

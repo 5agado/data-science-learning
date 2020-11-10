@@ -32,6 +32,8 @@ def get_face_mask(face: Face, mask_type,
     elif mask_type == 'rect':
         face_img = face.get_face_img()
         mask = np.zeros(face_img.shape, dtype=face_img.dtype)+255
+    elif mask_type == 'landmarks':
+        mask = get_landmarks_mask(face, 255)
     else:
         logging.error("No such mask type: {}".format(mask_type))
         raise Exception("No such mask type: {}".format(mask_type))
@@ -65,6 +67,27 @@ def get_hull_mask(from_face: Face, fill_val=1):
 
     return mask
 
+
+def get_landmarks_mask(face: Face, fill_val=1):
+    """
+    Return the mask for target landmarks, filling their respective areas with the given value
+    :param face:
+    :param fill_val:
+    :return:
+    """
+    mask = np.zeros(face.img.shape, dtype=face.img.dtype)
+
+    target_landmarks = list(face.get_eyes())
+    target_landmarks.extend([face.landmarks[Face.nose_points]])
+    target_landmarks.extend([face.landmarks[Face.mouth]])
+
+    for landmarks in target_landmarks:
+        landmark_hull = cv2.convexHull(np.array(landmarks).reshape((-1, 2)).astype(int)).flatten().reshape((-1, 2))
+        hull = [(p[0], p[1]) for p in landmark_hull]
+
+        cv2.fillConvexPoly(mask, np.int32(hull), (fill_val, fill_val, fill_val))
+
+    return mask
 
 #################################
 #           ALIGNMENT           #

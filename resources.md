@@ -81,12 +81,15 @@
 
 ## Programming
 * [The Pragmatic Programmer: From Journeyman to Master](https://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X) (fantastic overview of best practices and mindset to make life as a programmer as easy, fruitful and pain-free as possible)
+* [Practical Python Programming (Online)](https://dabeaz-course.github.io/practical-python/Notes/Contents.html)
 
 
 # [Courses](https://www.class-central.com/)
 * [3blue1brown (Video Series)](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) (Pure math entertainment. Stunning visuals and explanations for many concepts, from linear algebra to physics)
 * [Advanced Machine-Learning Courses](https://www.reddit.com/r/MachineLearning/comments/fdw0ax/d_advanced_courses_update)
+* [AtHomeWithAI - DeepMind Curated Resource List](https://storage.googleapis.com/deepmind-media/research/New_AtHomeWithAI%20resources.pdf)
 * [AI Curriculum](https://github.com/Machine-Learning-Tokyo/AI_Curriculum)
+* [End-to-End Machine Learning Library](https://e2eml.school/blog.html) a rich list of resources and links for multiple DS related topics
 
 ## Mathematics
 * [Computational Linear Algebra for Coders](https://github.com/fastai/numerical-linear-algebra/blob/master/README.md) (Jupyter, actual implementation + optimization considerations for many major statistical procedures like PCA, SVD, etc.)

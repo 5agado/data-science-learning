@@ -36,7 +36,7 @@ def main(_=None):
     assert (nb_cols*nb_rows) <= nb_videos
 
     # Generate commands parts
-    input_line = " ".join([f"-i {path}" for path in video_paths])
+    input_line = " ".join([f'-i "{path}"' for path in video_paths])
     entries_line = "; ".join([f"[{i}:v] setpts=PTS-STARTPTS, scale={width}x{height} [vid{i}]"
                               for i in range(nb_videos)])
     pos_line = "; ".join([f"[tmp{nb_cols*row+col}][vid{nb_cols*row+col}] "

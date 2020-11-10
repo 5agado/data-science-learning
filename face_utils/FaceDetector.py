@@ -15,15 +15,6 @@ class FaceExtractException(Exception):
 
 
 class FaceDetector:
-    # constant locators for landmarks
-    jaw_points = np.arange(0, 17) # face contour points
-    eyebrow_dx_points = np.arange(17, 22)
-    eyebrow_sx_points = np.arange(22, 27)
-    nose_points = np.arange(27, 36)
-    nosecenter_points = np.array([30, 33])
-    right_eye = np.arange(36, 42)
-    left_eye = np.arange(42, 48)
-
     def __init__(self, config):
         self.config = config
 
@@ -91,21 +82,6 @@ class FaceDetector:
                                        right=face.rect.right, bottom=face.rect.bottom)
             shape = self.predictor(face.img, dlib_rect)
             return np.array([(p.x, p.y) for p in shape.parts()])
-
-    @staticmethod
-    def get_eyes(face: Face):
-        lx_eye = face.landmarks[FaceDetector.left_eye]
-        rx_eye = face.landmarks[FaceDetector.right_eye]
-        return lx_eye, rx_eye
-
-    @staticmethod
-    def get_contour_points(shape):
-        # shape to numpy
-        points = np.array([(p.x, p.y) for p in shape.parts()])
-        face_boundary = points[np.concatenate([FaceDetector.jaw_points,
-                                               FaceDetector.eyebrow_dx_points,
-                                               FaceDetector.eyebrow_sx_points])]
-        return face_boundary, shape.rect
 
     def extract_face(self, face: Face):
         """

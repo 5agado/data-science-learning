@@ -40,7 +40,22 @@ def limit(x, minimum, maximum):
     return min(max(x, minimum), maximum)
 
 
-def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=True, useoil=False):
+def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error, useoil, tryfor, mintry):
+    """
+    :param img:
+    :param canvas:
+    :param x:
+    :param y:
+    :param angle:
+    :param oradius:
+    :param magnitude:
+    :param brush:
+    :param check_error:
+    :param useoil:
+    :param tryfor: min steps for gradient descent
+    :param mintry: max steps for gradient descent
+    :return:
+    """
     fatness = 1/(1+magnitude)
 
     def intrad(orad):
@@ -124,10 +139,6 @@ def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=T
 
         return np.array([gb,gg,gr])/delta,ga/5,gx/2,gy/2,gradius/3,err
 
-    # max and min steps for gradient descent
-    tryfor = 12
-    mintry = 2
-
     for i in range(tryfor):
         try: # might have error
             # what is the error at ROI?
@@ -176,7 +187,7 @@ def paint_one(img, canvas, x, y, angle, oradius, magnitude, brush, check_error=T
 def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes: dict,
                 salience_img, salience_img_weight: float,
                 sample_map_scale_factor: float, phase_neighbor_size: int,
-                out_dir, iter_idx, check_error=True, useoil=False):
+                out_dir, iter_idx, check_error: bool, useoil: bool, tryfor: int, mintry: int):
     logging.debug(f'minrad {minrad}')
     logging.debug(f'maxrad {maxrad}')
 
@@ -191,7 +202,8 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
         # compose error-map and salience-map
         if salience_img is not None:
             #sample_map = (d * (1.-salience_img_weight)) + (salience_img * salience_img_weight)
-            sample_map = d + (d * (salience_img * salience_img_weight)) + (salience_img * salience_img_weight)
+            # error map weight by 1-alpha + salience image weight by alpha + combination of full error multiplied by salience image
+            sample_map = (d * (1.-salience_img_weight)) + (d * (salience_img * salience_img_weight)) + (salience_img * salience_img_weight)
         else:
             sample_map = d
 
@@ -230,7 +242,7 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
         radius = (rn() * maxrad) + minrad
         brush, key = rb.get_brush(brushes, 'random')
         return paint_one(img, canvas, x, y, oradius=radius, magnitude=magnitude, brush=brush, angle=angle,
-                         check_error=check_error, useoil=useoil) # retun num of epoch
+                         check_error=check_error, useoil=useoil, tryfor=tryfor, mintry=mintry) # retun num of epoch
 
     point_list = sample_points()
     res = {}
@@ -251,8 +263,8 @@ def load_salience_img(salience_path: Path, salience_img_name: str):
                 break
         if salience_img_ext is None:
             logging.error(f'No salience image for {salience_img_name}')
-            #return salience_img
-            raise Exception(f'No salience image for {salience_img_name}')
+            return salience_img
+            #raise Exception(f'No salience image for {salience_img_name}')
 
         # load salience image
         salience_img_path = str(salience_path / (salience_img_name + ext))
@@ -264,7 +276,8 @@ def load_salience_img(salience_path: Path, salience_img_name: str):
     return salience_img
 
 
-def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: dict, nb_epochs: int, salience_path=None):
+def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: dict, nb_epochs: int,
+                 salience_path=None, img_postfix=''):
     brushes = rb.load_brushes(brush_dir)
 
     imgs_paths = list(input_path.glob('*.png')) + list(input_path.glob('*.jpg'))
@@ -281,14 +294,16 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
 
         # load salience img and edges
         salience_img = load_salience_img(salience_path, img_path.stem)
+        edges = image_utils.get_edges(img)
         if salience_img is not None:
-            edges = image_utils.get_edges(img)
-            salience_plus_edges = salience_img + edges
+            salience_plus_edges = salience_img * edges
             salience_plus_edges /= salience_plus_edges.sum()  # normalizing probability
+        else:
+            salience_plus_edges = edges / edges.sum()
 
         # log some data
         if output_path:
-            img_out_path = output_path / img_path.stem
+            img_out_path = output_path / (img_path.stem + img_postfix)
             img_out_path.mkdir(exist_ok=True, parents=True)
 
             # write config
@@ -327,7 +342,9 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
                               phase_neighbor_size=int(config['phase_neighbor_size'][i]),
                               out_dir=output_path / img_path.stem, iter_idx=i,
                               check_error=config['check_error'][i],
-                              useoil=config['use_oil'])
+                              useoil=config['use_oil'],
+                              tryfor=config['gd_tryfor'],
+                              mintry=config['gd_mintry'])
 
             # some running stats
             for r in res:
@@ -369,13 +386,15 @@ def main(_=None):
     main_config = {
         'max_radius_to_image_factor': 1/10,
         'min_radius_to_image_factor': 1 / 100,
-        'salience_img_weights': [0.] * 2 + list(np.linspace(0.2, 1.0, nb_epochs-4)) + [1.] * nb_epochs,
+        'salience_img_weights': [0.] * 2 + list(np.linspace(0.2, 1.0, 6)) + [1.] * nb_epochs,
         'check_error': [False] * 2 + [True] * nb_epochs,
-        'nb_strokes': [150] * 2 + [300] * 4 + [360] * nb_epochs,
+        'gd_tryfor': 7,
+        'gd_mintry': 1,
+        'nb_strokes': [150] * 3 + [300] * 4 + [390] * nb_epochs,
         'radius_diff_factor': 20,
         'sample_map_scale_factor': 0.5,
         'use_oil': True,
-        'phase_neighbor_size': np.linspace(2, 7, num=nb_epochs)[::-1],
+        'phase_neighbor_size': [1] * nb_epochs, #np.linspace(2, 7, num=nb_epochs)[::-1],
         'refine_edges': [False] * (nb_epochs - 1) + [True] * nb_epochs,
     }
 
@@ -384,6 +403,8 @@ def main(_=None):
         'min_radius_to_image_factor': 1 / 100,
         'salience_img_weights': [1.] * nb_epochs,
         'check_error': [False] * nb_epochs,
+        'gd_tryfor': 0,
+        'gd_minfor': 0,
         'nb_strokes': [300] * nb_epochs,
         'radius_diff_factor': 1,
         'sample_map_scale_factor': 1.,
@@ -393,6 +414,22 @@ def main(_=None):
     }
 
     paint_images(input_path, output_path, brush_dir, main_config, nb_epochs, salience_path)
+    return
+
+    config_gs = {
+        #'sample_map_scale_factor': np.linspace(0.1, 1.5, 5)
+        #'max_radius_to_image_factor': [1/v for v in np.linspace(5, 50, 10)]
+        #'min_radius_to_image_factor': [1/v for v in np.linspace(50, 200, 10)]
+        #'check_error': [[False] * nb_epochs, [True] * nb_epochs],
+        #'phase_neighbor_size': [[val] * nb_epochs for val in np.linspace(1, 15, 10)],
+        #'nb_strokes': [[val] * nb_epochs for val in np.arange(50, 401, 70)]
+        #'gd_tryfor': np.arange(1, 32, 6)
+    }
+    for param, values in config_gs.items():
+        for i, val in enumerate(values):
+            main_config[param] = val
+            paint_images(input_path, output_path, brush_dir, main_config, nb_epochs, salience_path,
+                         img_postfix= f'_{param}_{i}')
 
 
 if __name__ == "__main__":

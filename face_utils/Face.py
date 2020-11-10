@@ -1,7 +1,18 @@
 import copy
+import numpy as np
 
 
 class Face:
+    # constant locators for landmarks
+    jaw_points = np.arange(0, 17) # face contour points
+    eyebrow_dx_points = np.arange(17, 22)
+    eyebrow_sx_points = np.arange(22, 27)
+    nose_points = np.arange(27, 36)
+    nosecenter_points = np.array([30, 33])
+    right_eye = np.arange(36, 42)
+    left_eye = np.arange(42, 48)
+    mouth = np.arange(48, 68)
+
     def __init__(self, img, rect=None):
         """
         Utility class for a face
@@ -49,6 +60,19 @@ class Face:
         face_img = self.get_face_img()
         w, h = face_img.shape[:2][::-1]
         return w, h
+
+    def get_eyes(self):
+        lx_eye = self.landmarks[Face.left_eye]
+        rx_eye = self.landmarks[Face.right_eye]
+        return lx_eye, rx_eye
+
+    def get_contour_points(self):
+        # shape to numpy
+        points = np.array([(p.x, p.y) for p in self.parts()])
+        face_boundary = points[np.concatenate([Face.jaw_points,
+                                               Face.eyebrow_dx_points,
+                                               Face.eyebrow_sx_points])]
+        return face_boundary, self.rect
 
     def __copy__(self):
         face_copy = Face(self.img.copy(), copy.copy(self.rect))
