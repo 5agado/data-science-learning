@@ -13,11 +13,11 @@ from keras.models import Model
 
 class CPPN:
     # TODO try Python 3.7 data class
-    def __init__(self, img_width: int, img_height: int,
+    def __init__(self, img_width: int, img_height: int, img_depth: int,
                  hidden_dim: int = 32,
                  batch_size: int = 1,
                  nb_hidden_layers: int = 3,
-                 z_dim: int = 32,
+                 latent_dim: int = 32,
                  nb_channels: int = 1,
                  scale_factor: float = 1.0,
                  kernel_init_mean: float = 0.,
@@ -26,15 +26,17 @@ class CPPN:
                  inner_architecture_key: str = 'base',
                  **kargs):
 
+        # image has 3D coordinates (width, height and depth)
         self.img_width = img_width
         self.img_height = img_height
-        self.nb_points = img_height * img_width
-        self.img_size = (img_height, img_width)
-        self.img_shape = (img_height, img_width, nb_channels)
+        self.img_depth = img_depth
+        self.nb_points = img_height * img_width * img_depth
+        self.img_size = (img_height, img_width, img_depth)
+        self.img_shape = (img_height, img_width, img_depth, nb_channels)
 
         self.hidden_dim = hidden_dim
         self.nb_hidden_layers = nb_hidden_layers
-        self.z_dim = z_dim
+        self.latent_dim = latent_dim
         self.nb_channels = nb_channels
         self.scale_factor = scale_factor
 
@@ -73,14 +75,15 @@ class CPPN:
         # Inputs
         x_vec = Input(shape=(self.nb_points, 1), name='in_x')
         y_vec = Input(shape=(self.nb_points, 1), name='in_y')
+        z_vec = Input(shape=(self.nb_points, 1), name='in_z')
         r_vec = Input(shape=(self.nb_points, 1), name='in_r')
         e_vec = Input(shape=(self.nb_points, 1), name='in_e')
-        z_vec = Input(shape=(self.z_dim,), name='in_z')
+        latent_vec = Input(shape=(self.latent_dim,), name='in_latent')
 
         # Repeat z for each point and scale
-        z_unroll = RepeatVector(self.nb_points)(z_vec)
+        latent_unroll = RepeatVector(self.nb_points)(latent_vec)
         # TODO compare scaling of z with scaling data
-        z_scaled = Lambda(lambda x: x * self.scale_factor)(z_unroll)
+        latent_scaled = Lambda(lambda x: x * self.scale_factor)(latent_unroll)
 
         # Input dense
         x = concatenate([
@@ -90,7 +93,7 @@ class CPPN:
             Dense(units=self.hidden_dim, use_bias=False, kernel_initializer=kernel_initializer)(e_vec),
             Dense(units=self.hidden_dim, kernel_initializer=kernel_initializer,
                   bias_initializer=kernel_initializer,
-                  )(z_scaled)
+                  )(latent_scaled)
         ])
 
         x = Activation(self.inner_activation)(x)
@@ -99,7 +102,7 @@ class CPPN:
         output = self._get_internal_output('base', x)
 
         # Build model
-        cppn = Model([x_vec, y_vec, r_vec, e_vec, z_vec], output)
+        cppn = Model([x_vec, y_vec, z_vec, r_vec, e_vec, latent_vec], output)
 
         return cppn
 
@@ -155,7 +158,7 @@ class CPPN:
         return output
 
     def get_data(self, scale: float = 1., translation: float = 0., rotation: float = 0.,
-                 extra_fun=lambda x, y: x*y):
+                 extra_fun=lambda x, y, z: x*y*z):
         """
         Get data to feed to the model, based on the batch_size and img_size defined initially.
         For pixel coordinates, values are scaled down in the range [-1, 1].
@@ -170,10 +173,12 @@ class CPPN:
         # this would be equivalent to explicitly operating min-max normalization
         x_range = scale * np.linspace(-1., 1., self.img_width) + translation
         y_range = scale * np.linspace(-1., 1., self.img_height) + translation
+        z_range = scale * np.linspace(-1., 1., self.img_depth) + translation
 
         # repeat each range along the opposite axis
-        x_mat, y_mat = np.meshgrid(x_range, y_range)
+        x_mat, y_mat, z_mat = np.meshgrid(x_range, y_range, z_range)
 
+        # TODO do 3d rotation
         # if give, rotate coords via rotation matrix
         if rotation != 0:
             theta = math.radians(rotation)
@@ -184,38 +189,40 @@ class CPPN:
             y_mat = new_mat.transpose()[1]
 
         # compute radius matrix
-        r_mat = np.sqrt(x_mat * x_mat + y_mat * y_mat)
+        r_mat = np.sqrt(x_mat * x_mat + y_mat * y_mat + z_mat * z_mat)
 
         # computer additional arbitrary matrix based on given key
-        extra_mat = extra_fun(x_mat, y_mat)
+        extra_mat = extra_fun(x_mat, y_mat, z_mat)
 
         # flatten matrices and reshape based on batch size
         x = np.tile(x_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
         y = np.tile(y_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
+        z = np.tile(z_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
         r = np.tile(r_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
         extra = np.tile(extra_mat.flatten(), self.batch_size).reshape(self.batch_size, self.nb_points, 1)
 
-        return x, y, r, extra
+        return x, y, z, r, extra
 
-    def get_z(self):
+    def get_latent(self):
         """
         Sample batch_size random vectors from uniform distribution
         :return:
         """
-        z = np.random.uniform(-1.0, 1.0, size=(self.batch_size, self.z_dim)).astype(np.float32)
-        return z
+        latent_vec = np.random.uniform(-1.0, 1.0, size=(self.batch_size, self.latent_dim)).astype(np.float32)
+        return latent_vec
 
-    def generate_imgs(self, x, y, r, e, z):
+    def generate_imgs(self, x, y, z, r, e, latent):
         """
         Generate batch_size images feeding the given data to the model.
         :param x:
         :param y:
+        :param z:
         :param r:
         :param e:
-        :param z:
+        :param latent:
         :return: batch_size images already reshaped to be displayed or saved
         """
-        prediction = self.model.predict([x, y, r, e, z])
+        prediction = self.model.predict([x, y, z, r, e, latent])
         if self.nb_channels == 1:
             return prediction.reshape([self.batch_size, *self.img_size])
         else:
