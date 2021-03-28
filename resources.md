@@ -50,6 +50,7 @@
 * [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
 * [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (highly technical)
+* [Bayesian Data AnalysisThird edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) TOCHECK
 
 ### Time-Series TOCHECK
 * [Time Series Analysis - Hamilton](https://www.amazon.com/gp/product/0691042896)
@@ -64,9 +65,10 @@
 * [Model-Based Machine Learning](http://mbmlbook.com/index.html) TOCHECK
 * [Python Machine Learning - Sebastian Raschka](https://www.amazon.com/Python-Machine-Learning-scikit-learn-TensorFlow/dp/1787125939) TOREAD
 * [Hands-On Machine Learning with Scikit-Learn and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781491962282/) TOCHECK
-* [The Hundred-Page Machine Learning Book ](https://www.goodreads.com/book/show/43190851-the-hundred-page-machine-learning-book) TOREAD
+* [The Hundred-Page Machine Learning Book ](https://www.goodreads.com/book/show/43190851-the-hundred-page-machine-learning-book) (very well written, with extensive coverage of relevant topics while being succinct and intuitive. A bit less organized in the last chapters.)
 * [Machine Learning Engineering by Andriy Burkov](http://www.mlebook.com) TOCHECK
 * [Probabilistic Machine Learning: An Introduction](https://probml.github.io/pml-book/book1.html) TOREAD
+* [Patterns, predictions, and actions: A story about machine learning](https://mlstory.org/) TOREAD
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
