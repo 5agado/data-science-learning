@@ -32,7 +32,7 @@
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
 * [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
 * [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
-* [A Programmer's Introduction to Mathematics](https://jeremykun.com/2018/12/01/a-programmers-introduction-to-mathematics/) TOCHECK
+* [A Programmer's Introduction to Mathematics](https://jeremykun.com/2018/12/01/a-programmers-introduction-to-mathematics/) (good introduction to several topics, but I personally see too little relation with a programming approach and mindset)
 * [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf) TOCHECK
 * [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617) TOCHECK
 * [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229) TOCHECK
@@ -66,6 +66,7 @@
 * [Hands-On Machine Learning with Scikit-Learn and TensorFlow](https://www.oreilly.com/library/view/hands-on-machine-learning/9781491962282/) TOCHECK
 * [The Hundred-Page Machine Learning Book ](https://www.goodreads.com/book/show/43190851-the-hundred-page-machine-learning-book) TOREAD
 * [Machine Learning Engineering by Andriy Burkov](http://www.mlebook.com) TOCHECK
+* [Probabilistic Machine Learning: An Introduction](https://probml.github.io/pml-book/book1.html) TOREAD
 
 ## Reinforcement Learning
 * [Reinforcement Learning: An Introduction - Sutton and Barto](http://incompleteideas.net/sutton/book/the-book-2nd.html) TOREAD
@@ -76,6 +77,8 @@
 * [Deep Learning with Python - François Chollet](https://github.com/fchollet/deep-learning-with-python-notebooks) (great intuitive description of the fundamentals of deep learning, both in term of methods and components. Relevant Keras code and references for each section)
 * [Generative Deep Learning](https://www.goodreads.com/book/show/44144492-generative-deep-learning) (good high-level coverage of generative models, supported by code examples in Tensorflow 2.0)
 * [Dive into Deep Learning - An interactive deep learning book](http://d2l.ai/) TOCHECK
+* [Deep Learning with PyTorch](https://pytorch.org/assets/deep-learning/Deep-Learning-with-PyTorch.pdf) see also [Sebastian Raschka review](https://sebastianraschka.com/blog/2021/pytorch-deeplearning-review.html) TOCHECK
+* [The Mathematical Engineering of Deep Learning](https://deeplearningmath.org/) TOCHECK
 
 ## Python
 * [Python Cookbook, 3rd Edition by David Beazley; Brian K. Jone](http://shop.oreilly.com/product/0636920027072.do) (great collection of advanced recipes, tips and techniques)
@@ -125,6 +128,7 @@
 * [GANs in computer vision - Introduction to generative learning](https://theaisummer.com/gan-computer-vision/)
 * [Berkeley Deep Unsupervised Learning Spring 2020](https://sites.google.com/view/berkeley-cs294-158-sp20/home)
 * [Generative Adversarial Networks (GANs) @ Coursera](https://www.coursera.org/specializations/generative-adversarial-networks-gans?utm_source=deeplearningai) TODO
+* [Deep Learning for Computer Vision - Michigan Online](https://www.youtube.com/playlist?list=PL5-TkQAfAZFbzxjBHtzdVCWE0Zbhomg7r) TOCHECK
 
 ## Computer Vision
 * [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)

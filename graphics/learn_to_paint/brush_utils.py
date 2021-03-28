@@ -120,7 +120,7 @@ def sigmoid_array(x):
     return np.clip(sgm * 1.2 - .1,a_max=1.,a_min=0.)
 
 # the brush process
-def compose(orig,brush,x,y,rad,srad,angle,color,usefloat=False,useoil=False,lock=None):
+def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
     # generate, scale and rotate the brush as needed
     brush_image = rotated = rotate_brush(brush,rad,srad,angle) # as alpha
     brush_image = np.reshape(brush_image,brush_image.shape+(1,)) # cast alpha into (h,w,1)
@@ -180,12 +180,6 @@ def compose(orig,brush,x,y,rad,srad,angle,color,usefloat=False,useoil=False,lock
         # to simulate oil painting mixing:
         # color should blend in some fasion from given color to bg color
         if useoil:
-            if usefloat: # to 0,1
-                pass
-            else:
-                # roi = roi.astype('float32')/255.
-                color = np.array(color).astype('float32')/255.
-
             alpha = alpha.astype('float32')/255.
 
             # convert into oilpaint space
@@ -238,11 +232,6 @@ def compose(orig,brush,x,y,rad,srad,angle,color,usefloat=False,useoil=False,lock
             # roi loading moved downwards, for optimization
             roi = orig[ym:yp,xm:xp]
 
-            if usefloat: # roi to 0,1
-                pass
-            else:
-                roi = roi.astype('float32')/255.
-
             roi = b2p(roi)
 
             if n>0:
@@ -285,32 +274,17 @@ def compose(orig,brush,x,y,rad,srad,angle,color,usefloat=False,useoil=False,lock
             #final loading of roi.
             roi=orig[ym:yp,xm:xp]
 
-            if usefloat:
-                roi = b2p(roi)
-                orig[ym:yp,xm:xp] = p2b(roi*ia+ca)
-            else:
-                roi = b2p(roi.astype('float32')/255.)
-                orig[ym:yp,xm:xp] = p2b(roi*ia+ca)*255.
+            roi = b2p(roi)
+            orig[ym:yp,xm:xp] = p2b(roi*ia+ca)
         else:
             # no oil painting
             colormap = np.array(color).astype('float32') # don't blend with bg, just paint fg
 
-            if usefloat:
-                alpha = alpha.astype('float32')/255.
-                ia = 1-alpha
-                ca = colormap*alpha
-            else:
-                # integer version
-                colormap = colormap.astype('uint32')
-                ia = 255-alpha
-                ca = colormap*alpha
+            alpha = alpha.astype('float32')/255.
+            ia = 1-alpha
+            ca = colormap*alpha
 
             roi = orig[ym:yp,xm:xp]
 
-            if usefloat:
-                # if original image is float
-                orig[ym:yp,xm:xp] = roi * ia + ca
-            else:
-                roi = roi.astype('uint32')
-                # use uint32 to prevent multiplication overflow
-                orig[ym:yp,xm:xp] = (roi * ia + ca)/255
+            # if original image is float
+            orig[ym:yp,xm:xp] = roi * ia + ca

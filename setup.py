@@ -27,7 +27,7 @@ setup(
         'cufflinks',
         'imageio-ffmpeg',
         'pillow',
-        'ipywidgets'
+        'ipywidgets',
         'jupyter_contrib_nbextensions',
     ],
 )

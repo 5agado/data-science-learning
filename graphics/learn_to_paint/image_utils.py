@@ -9,6 +9,41 @@ import logging
 import argparse
 
 
+def alpha_blur(img, alpha_mask, kernel_size=10):
+    """
+    Blur image proportional to the given mask
+    :param img:
+    :param alpha_mask:
+    :param kernel_size:
+    :return:
+    """
+    # apply morphology open to smooth the outline
+    # kernel_size = max(2, (10 // (i + 1)))
+    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+    # blurred_img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+    # kernel_size = max(20, (150 // (i + 1)))
+
+    #blurred_img = cv2.bilateralFilter(img, 9, 5, 5)
+    blurred_img = cv2.GaussianBlur(img, (21, 21), 11)
+
+    if alpha_mask is not None:
+        if alpha_mask.ndim == 3 and alpha_mask.shape[-1] == 3:
+            alpha = alpha_mask / 255.0
+        else:
+            alpha = cv2.cvtColor(alpha_mask, cv2.COLOR_GRAY2BGR) / 255.0
+        blurred_img = cv2.convertScaleAbs(blurred_img * (1 - alpha) + img * alpha)
+
+    return blurred_img
+
+
+def sample_color(img, x, y, neighbor_size):
+    # sample color from image => converges faster.
+    color = img[max(0, y - neighbor_size):y + neighbor_size,
+               max(0, x - neighbor_size):x + neighbor_size].mean(axis=(0,1))
+
+    return color
+
+
 def get_phase_and_magnitude(img, sobel_kernel_size=7, magnitude_power=0.3):
     """
     Calculate phase/rotation angle from image gradient
@@ -17,7 +52,7 @@ def get_phase_and_magnitude(img, sobel_kernel_size=7, magnitude_power=0.3):
     :return: phase in float32 radian
     """
     # grayify
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype('float32')
+    img_gray = img.astype('float32') #cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype('float32')
 
     # gradient (along x and y axis)
     xg = cv2.Sobel(img_gray, cv2.CV_32F, 1, 0, ksize=sobel_kernel_size)
@@ -60,7 +95,7 @@ def get_edges(img, img_blur_size=5, min_hyst_val=100, max_hyst_val=200, edges_bl
     :param min_hyst_val: hysteresis min threshold (canny edge detection)
     :param max_hyst_val: hysteresis max threshold (canny edge detection)
     :param edges_blur_size: blur size applied to edge results
-    :return: edges image
+    :return: norm blurred edges and uint8 original edges images
     """
     # remove noise to improve edge detection results
     blurred_img = cv2.GaussianBlur(img, (img_blur_size, img_blur_size), 0)
@@ -69,11 +104,11 @@ def get_edges(img, img_blur_size=5, min_hyst_val=100, max_hyst_val=200, edges_bl
     edges = cv2.Canny((blurred_img * 255).astype('uint8'), min_hyst_val, max_hyst_val)
 
     # blur edges
-    edges = cv2.blur(edges, (edges_blur_size, edges_blur_size)).astype('float32') / 255
+    blurred_edges = cv2.blur(edges, (edges_blur_size, edges_blur_size)).astype('float32') / 255
 
-    edges = edges / edges.sum()  # normalize to probabilities
+    norm_edges = blurred_edges / blurred_edges.sum()  # normalize to probabilities
 
-    return edges
+    return norm_edges, edges
 
 
 def get_distance_map(src_img):
@@ -94,6 +129,7 @@ def get_distance_map(src_img):
 def get_min_radius_to_edge(dist_img, start_pos, end_pos, dist_threshold=0.01):
     # get lines coordinates
     line = np.transpose(np.array(draw.line(start_pos[0], start_pos[1], end_pos[0], end_pos[1])))
+    line = np.array([[x, y] for [x, y] in line if (0 <= x < dist_img.shape[1] and 0<= y < dist_img.shape[0])])
     # get dist values overlapping the line
     data = dist_img[line[:, 1], line[:, 0]]
 

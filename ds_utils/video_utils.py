@@ -16,8 +16,8 @@ from tqdm import tqdm
 # REMINDER: cv2 inverts the order of frame shape
 # Option of relying on MoviePy (http://zulko.github.io/moviepy/index.html)
 
-def generate_video(out_path: str, shape: Tuple[int], frame_gen_fun, nb_frames: int,
-                   codec='mp4v', fps=24, is_color=True):
+def generate_video(out_path: str, shape: Tuple[int, int], frame_gen_fun, nb_frames: int,
+                   codec='mp4v', fps=24, is_color=True, disable_tqdm=False):
     """
     Write generated frames to file
     :param out_path:
@@ -33,7 +33,7 @@ def generate_video(out_path: str, shape: Tuple[int], frame_gen_fun, nb_frames: i
     fourcc = cv2.VideoWriter_fourcc(*codec)
     out = cv2.VideoWriter(out_path, fourcc, fps, shape, is_color)
 
-    for frame_count in tqdm(range(nb_frames)):
+    for frame_count in tqdm(range(nb_frames), disable=disable_tqdm):
         frame = frame_gen_fun(frame_count)
         out.write(frame)
 
