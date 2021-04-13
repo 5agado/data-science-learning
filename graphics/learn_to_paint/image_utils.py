@@ -36,6 +36,15 @@ def alpha_blur(img, alpha_mask, kernel_size=10):
     return blurred_img
 
 
+def positive_sharpen(i, overblur=False, coeff=8.):
+    # emphasize the edges
+    blurred = cv2.blur(i,(5,5))
+    sharpened = i + (i - blurred) * coeff
+    if overblur:
+        return cv2.blur(np.maximum(sharpened,i),(11,11))
+    return cv2.blur(np.maximum(sharpened,i),(3,3))
+
+
 def sample_color(img, x, y, neighbor_size):
     # sample color from image => converges faster.
     color = img[max(0, y - neighbor_size):y + neighbor_size,

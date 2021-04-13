@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from typing import Tuple
 from tqdm import tqdm
+import imageio
 
 ####################################
 #  Libraries
@@ -127,3 +128,10 @@ def convert_video_to_video(input_video_path: str, out_path: str, frame_edit_fun,
     # Release everything if job is finished
     input_video.release()
     out.release()
+
+
+def imageio_generate_video(out_path: str, images, format="mp4", fps=24, loop=False):
+    if loop:
+        images += images.copy().reverse()
+
+    imageio.mimsave(out_path, images, format=format, fps=fps)

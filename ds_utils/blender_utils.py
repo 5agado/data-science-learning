@@ -150,6 +150,12 @@ bpy.context.view_layer.objects.active
 bpy.context.scene.objects['object_name']
 bpy.data.objects['Camera'] ??difference with context
 
+# Copy object
+obj = src_obj.copy()  # linked copy
+# new object
+obj = bpy.data.objects.new(f"{src_obj.name}_{i}", src_obj.data.copy())
+bpy.data.collections[collection_name].objects.link(obj)
+
 # Frame handlers
 bpy.app.handlers.frame_change_pre.clear()
 bpy.app.handlers.frame_change_pre.append(lambda scene : scene.frame_current)
