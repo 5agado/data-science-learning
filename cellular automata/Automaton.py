@@ -2,6 +2,8 @@ from typing import List, Tuple
 import numpy as np
 from abc import ABC, abstractmethod
 
+from scipy import signal, ndimage
+
 
 class AbstractAutomaton(ABC):
     def __init__(self, shape: Tuple, nb_states=2, seed=None):
@@ -18,32 +20,40 @@ class AbstractAutomaton(ABC):
         """
         Update automaton grid
         """
-        # use temporary grid as cell updates are applied simultaneously
-        tmp_grid = self.grid.copy()
+        # with the given kernel is equivalent to count the neighbors (diagonal included)
+        if len(self.grid.shape) == 2:
+            neighbors_count = discrete_laplacian_convolve(self.grid, kernel_2d)
+        else:
+            neighbors_count = discrete_laplacian_nd_convolve(self.grid)
 
-        # iterate over grid of arbitrary dimensions
-        for idx, val in np.ndenumerate(self.grid):
-            neighbors = self.get_neighbors(idx)
-            tmp_grid[idx] = self.get_new_cell_state(self.grid[idx], neighbors)
-
-        # replace automaton grid with new one
-        self.grid = tmp_grid
+        # vectorize get-new-cell function and apply
+        update_grid_func = np.vectorize(self.get_new_cell_state)
+        self.grid = update_grid_func(self.grid, neighbors_count)
 
     def get_neighbors(self, index: Tuple[int]):
-        neighbors = self.grid
-        # TODO condense in single operation
-        for i, idx in enumerate(index):
-            neighbors = neighbors.take(range(idx - 1, idx + 2), mode='wrap', axis=i)
-
-        # TODO remove cell itself
-        # can use np.delete, but this returns a new array, which might be computationally expensive
-
-        return neighbors
+        pass
 
     @abstractmethod
     def get_new_cell_state(self, cell_current_state, neighbors):
         pass
 
+kernel_2d = np.array([
+    [1., 1., 1.],
+    [1., 0., 1.],
+    [1., 1., 1.]
+])
+
+def discrete_laplacian_convolve(M: np.ndarray, kernel: np.ndarray):
+    """Get the discrete Laplacian of matrix M via a 2D convolution operation
+    Seems to perform way worse then the purely numpy implementation
+    """
+    return signal.convolve2d(M, kernel, mode='same', boundary='wrap')
+
+
+def discrete_laplacian_nd_convolve(M: np.ndarray):
+    """Get the discrete Laplacian of matrix M
+    """
+    return ndimage.filters.laplace(M, mode='wrap')
 
 class Automaton1D(AbstractAutomaton):
     def __init__(self, n: int, rule, states: int=2, seed=None):
@@ -68,40 +78,16 @@ class Automaton1D(AbstractAutomaton):
     def get_new_cell_state(self, cell_current_state, neighbors):
         return self.rule["".join([str(s) for s in neighbors])]
 
-
-# TODO test full vectorization for update (use roll for 8 directions)
-class Automaton2D(AbstractAutomaton):
-    def __init__(self, nb_rows: int, nb_cols: int, config, seed=None):
-        """
-        """
-        super().__init__((nb_rows, nb_cols), seed=seed)
-
-        self.config = config
-
-    def get_new_cell_state(self, cell_current_state, neighbors):
-        neighbors_count = neighbors.sum()
-        neighbors_count -= cell_current_state
-
-        if neighbors_count == self.config['neighbours_count_born']:
-            return 1
-        if (neighbors_count < self.config['neighbours_mincount_survive']
-                        or neighbors_count > self.config['neighbours_maxcount_survive']):
-            return 0
-        return cell_current_state
-
-
+# Works for 2D and above
 class AutomatonND(AbstractAutomaton):
     def __init__(self, shape: Tuple, config, seed=None):
         """
         """
-        super().__init__((shape, config, seed))
+        super().__init__(shape, seed=seed)
 
         self.config = config
 
-    def get_new_cell_state(self, cell_current_state, neighbors):
-        neighbors_count = neighbors.sum()
-        neighbors_count -= cell_current_state
-
+    def get_new_cell_state(self, cell_current_state, neighbors_count):
         if neighbors_count == self.config['neighbours_count_born']:
             return 1
         if (neighbors_count < self.config['neighbours_mincount_survive']
@@ -183,3 +169,11 @@ class HexagonalAutomaton(AbstractAutomaton):
         else:
             change_state_prob = self.p_freeze[state_idx]
             return 1 if np.random.rand() <= change_state_prob else 0
+
+
+gol_rule = {'neighbours_count_born': 3,  # count required to make a cell alive
+            'neighbours_maxcount_survive': 3,
+            # max number (inclusive) of neighbours that a cell can handle before dying
+            'neighbours_mincount_survive': 2,
+            # min number (inclusive) of neighbours that a cell needs in order to stay alive
+            }

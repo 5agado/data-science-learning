@@ -134,3 +134,21 @@ def calculate_hexagonal_cell_position(row, col, nb_rows, nb_cols, size):
         x += hex_size
 
     return y, x
+
+
+# Dummy method to load some good configs from the exploratory generations
+def load_good_configs(dir):
+    imgs = dir.glob('*.png')
+    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
+    confs = []
+    with open(dir / 'logs.txt') as f:
+        for i, line in enumerate(f):
+            if i in good_runs:
+                print(i)
+                p_freeze, p_melt = line.split('-')
+                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
+                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
+                confs.append((p_freeze, p_melt))
+    print(len(confs))
+    print(confs[0])
+    return confs

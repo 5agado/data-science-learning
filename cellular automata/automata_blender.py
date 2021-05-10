@@ -242,31 +242,13 @@ p_melt = [0, 0, 0., 0., 0., 0, 1, 0, 0., 1., 0, 1., 0., 0]
 #animate_hexagonal_automata(p_freeze, p_melt, 10, nb_rows=120, nb_cols=120)
 
 
-# Dummy method to load some good configs from the exploratory generations
-def load_good_configs(dir):
-    imgs = dir.glob('*.png')
-    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
-    confs = []
-    with open(dir / 'logs.txt') as f:
-        for i, line in enumerate(f):
-            if i in good_runs:
-                print(i)
-                p_freeze, p_melt = line.split('-')
-                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
-                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
-                confs.append((p_freeze, p_melt))
-    print(len(confs))
-    print(confs[0])
-    return confs
-
-
 def explore_hexagonal_automata(nb_frames: int, nb_runs: int, nb_rows: int, nb_cols: int):
     render_dir = Path.home() / f"Documents/videos/cellular_automata/automaton_hexagonal/flat_hexa_good_extended"
     render_dir.mkdir(exist_ok=True)
 
     run = 0
     for i in range(5, 20):
-        configs = load_good_configs(Path.home() / "Documents/videos/cellular_automata/automaton_hexagonal/flat_hexa_logo/{}".format(i))
+        configs = automata_blender_utils.load_good_configs(Path.home() / "Documents/videos/cellular_automata/automaton_hexagonal/flat_hexa_logo/{}".format(i))
         for config in configs:
             p_freeze, p_melt = config
 

@@ -25,6 +25,7 @@ def main(_=None):
        subprocess.call(command, shell=True)
 
        img = Image.open(p)
+       img = img.convert('RGB')
        converter = ImageEnhance.Color(img)
        edited_img = converter.enhance(1.3)
        #edited_img = ImageEnhance.Contrast(edited_img).enhance(2)

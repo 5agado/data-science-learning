@@ -1,19 +1,35 @@
-from math import cos, sin, pi
+from math import cos, sin, pi, exp, sqrt
 import numpy as np
 
 positions = []
 rotations = []
 scales = []
+shift_factor = np.array(shift_factor)
+
+spiral_types = ['archimedean', 'hyperbolic', 'fermat', 'lituus', 'log']
+
+if spiral_type not in spiral_types:
+    spiral_type = 'archimedean'
 
 # iterate through each element
 for i in range(nb):
     # angle increases constantly for each new element
     angle = angle_shift * i  # angle is in radians
     
+    # transformation shift
+    if spiral_type == 'archimedean':
+        trans_shift = shift_factor * (angle/(2*pi))
+    elif spiral_type == 'log':
+        trans_shift = shift_factor * exp(angle/(2*pi))
+    elif spiral_type == 'hyperbolic':
+        trans_shift = shift_factor / (angle/(2*pi))
+    elif spiral_type == 'fermat':
+        trans_shift = shift_factor * sqrt(angle/(2*pi))
+    elif spiral_type == 'lituus':
+        trans_shift = shift_factor / sqrt(angle/(2*pi))
+    
     # radius, scale and rotation 
-    # add to starting value the given shift multiplied by how many times we
-    # completed a full round
-    trans_shift = np.array(shift_factor) * (angle//(2*pi))
+    # add to starting value the given shift proportional to the angle
     radius = np.array(base_radius) + (radius_shift * trans_shift[0])
     scale = np.array(base_scale) + (scale_shift * trans_shift[1])
     rotation = np.array(base_rotation) + (rotation_shift * trans_shift[2])

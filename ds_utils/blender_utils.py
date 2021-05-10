@@ -375,9 +375,9 @@ def rotate_stroke(stroke, angle, axis='z'):
                                      [0, cos(angle), -sin(angle)],
                                      [0, sin(angle), cos(angle)]])
     elif axis.lower() == 'y':
-        transform_matrix = np.array([[cos(angle), 0, -sin(angle)],
+        transform_matrix = np.array([[cos(angle), 0, sin(angle)],
                                      [0, 1, 0],
-                                     [sin(angle), 0, cos(angle)]])
+                                     [-sin(angle), 0, cos(angle)]])
     # default on z
     else:
         transform_matrix = np.array([[cos(angle), -sin(angle), 0],

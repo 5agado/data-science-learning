@@ -150,23 +150,6 @@ def growth(automaton):
                     element.hide = True
                     element.keyframe_insert("hide")
 
-
-# Dummy method to load some good configs from the exploratory generations
-def load_good_configs(dir):
-    imgs = dir.glob('*.png')
-    good_runs = [int(img.stem.split('_')[1]) for img in imgs]
-    confs = []
-    with open(dir / 'logs.txt') as f:
-        for i, line in enumerate(f):
-            if i in good_runs:
-                p_freeze, p_melt = line.split('-')
-                p_freeze = list(map(float, p_freeze.split(':')[1][1:-2].split(' ')))
-                p_melt = list(map(float, p_melt.split(':')[1][1:-2].split(' ')))
-                confs.append((p_freeze, p_melt))
-    print(len(confs))
-    return confs
-
-
 def main(nb_rows, nb_cols):
     print("-------------------------------------")
 
@@ -174,7 +157,7 @@ def main(nb_rows, nb_cols):
     p_melt = [0, 0, 0., 0., 0., 0, 1, 0, 0., 1., 0, 1., 0., 0]
     # p_freeze = np.random.choice([1., 0.], 14)
     # p_melt = np.random.choice([1., 0.], 14)
-    configs = load_good_configs(Path.home() / "Documents/graphics/generative_art_output/snowflakes/flat_hexa_logo/19")
+    configs = automata_blender_utils.load_good_configs(Path.home() / "Documents/graphics/generative_art_output/snowflakes/flat_hexa_logo/19")
     p_freeze, p_melt = configs[7]
 
     automaton = HexagonalAutomaton(nb_rows=nb_rows, nb_cols=nb_cols, p_melt=p_melt, p_freeze=p_freeze)

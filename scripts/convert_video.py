@@ -19,7 +19,7 @@ def main(_=None):
 
     palette_path = "/tmp/palette.png"
     filters = f"setpts={args.pts}*PTS,fps={args.fps},scale={args.width}:{args.height}:flags=lanczos"
-    # define start and time args is a value has been passed
+    # define start and time args if a value has been passed
     cropping = f"-ss {args.ss}" if args.ss else "" + f"-t {args.t}" if args.t else ""
 
     subprocess.call(f'ffmpeg -v warning -i "{args.inp}" -vf "{filters},palettegen" -y "{palette_path}"', shell=True)
