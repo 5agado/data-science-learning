@@ -138,8 +138,14 @@ def discrete_laplacian_convolve(M: np.ndarray, kernel: np.ndarray):
     Seems to perform way worse then the purely numpy implementation
     """
     return signal.convolve2d(M, kernel, mode='same', boundary='wrap')
-    #return ndimage.filters.laplace(M, mode='wrap')
     #return ndimage.filters.convolve(M, kernel, mode='wrap')
+
+
+def discrete_laplacian_nd_convolve(M: np.ndarray):
+    """Get the discrete Laplacian of matrix M
+    """
+    #return discrete_laplacian(M, None)
+    return ndimage.filters.laplace(M, mode='wrap')
 
 
 def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delta_t):
@@ -156,8 +162,12 @@ def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delt
     """
 
     # compute Laplacian of the two concentrations
-    lA = discrete_laplacian_convolve(A, kernel_2d)
-    lB = discrete_laplacian_convolve(B, kernel_2d)
+    if len(A.shape) == 2:
+        lA = discrete_laplacian_convolve(A, kernel_2d)
+        lB = discrete_laplacian_convolve(B, kernel_2d)
+    else:
+        lA = discrete_laplacian_nd_convolve(A)
+        lB = discrete_laplacian_nd_convolve(B)
 
     # apply the update formula
     AB_squared = A * B ** 2
@@ -212,4 +222,16 @@ def get_polygon_mask(shape: tuple, segments: int, radius: int, center=(0,0)):
     img = Image.new('L', (shape[0], shape[1]), 0)
     ImageDraw.Draw(img).polygon(polygon, outline=1, fill=1)
     mask = np.array(img)
+    return mask
+
+
+def get_cube_mask(shape: tuple, side: int, center=(0,0,0)):
+    assert len(shape) == 3, 'Mask should be 3D'
+
+    mask = np.zeros(shape, dtype=np.int)
+    s = side//2
+    mask[max(0, center[0] - s):center[0] + s,
+         max(0, center[1] - s):center[1] + s,
+         max(0, center[2] - s):center[2] + s] = 1
+
     return mask

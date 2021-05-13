@@ -50,7 +50,7 @@ class Physarum:
         self.shape = shape
 
         # population is represented as a set of locations (where the organisms are)
-        self.population = init_fun(self.shape)
+        self.population = init_fun(self.shape).astype(np.float16)
         self.pop_size = len(self.population)
 
         self.horizon_sense = horizon_sense
@@ -60,13 +60,13 @@ class Physarum:
         self.walk_range = walk_range
 
         # as we treat population heading angles in radians, convert the given theta value from degree
-        self.angles = np.random.rand(self.pop_size).reshape(-1, 1) * (2 * np.pi)
+        self.angles = (np.random.rand(self.pop_size).reshape(-1, 1) * (2 * np.pi)).astype(np.float16)
         self.theta_walk = math.radians(theta_walk)
         self.theta_sense = math.radians(theta_sense)
 
         self.horizon_walk = horizon_walk
-        self.trail_map = np.zeros(self.shape)
-        self.template = np.zeros(self.shape) if template is None else np.asarray(template)
+        self.trail_map = np.zeros(self.shape).astype(np.float16)
+        self.template = None if template is None else np.asarray(template)
 
     @staticmethod
     def cupy_unique_axis0(array, return_counts=False):
@@ -101,6 +101,7 @@ class Physarum:
         if additive:
             organisms_pos = np.floor(np.remainder(self.population, np.array(self.trail_map.shape))).astype(int)
             vals, count = Physarum.cupy_unique_axis0(organisms_pos, return_counts=True)
+            count = count.clip(0, 10000)
             self.trail_map[vals[:, 0], vals[:, 1]] = self.trail_map[vals[:, 0], vals[:, 1]] + (count * trace_strength)
         else:
             self.trail_map[np.remainder(self.population, self.trail_map.shape)] = trace_strength
@@ -112,8 +113,7 @@ class Physarum:
         self.trail_map = gaussian_filter(self.trail_map, sigma=sigma, mode=mode, truncate=truncate)
 
     def diffuse_uniform(self, size=3, mode="wrap"):
-        """Pheromones get distributed using uniform smoothing. This can lead to nice artefacts,
-        but also to diagonal drift at high values for size (?)"""
+        """Pheromones get distributed using uniform smoothing. """
         self.trail_map = uniform_filter(self.trail_map, size=size, mode=mode)
 
     def diffuse_median(self, size=3, mode="wrap"):
@@ -121,54 +121,57 @@ class Physarum:
 
     def update_positions(self, other_populations):
         """Intermediate function, to get everything in order for optimized method"""
-        angle = self.angles
-        theta_sense =  np.float64(self.theta_sense)
-        horizon_sense =  np.float64(self.horizon_sense)
-        theta_walk =  np.float64(self.theta_walk)
-        horizon_walk =  np.float64(self.horizon_walk)
+        angles = self.angles
+        theta_sense =  self.theta_sense
+        horizon_sense =  self.horizon_sense
+        theta_walk =  self.theta_walk
+        horizon_walk =  self.horizon_walk
         population = self.population
 
-        adapted_trail = self.trail_map + (self.template * self.template_strength)
+        if self.template is not None:
+            adapted_trail = self.trail_map * (self.template * self.template_strength)
+        else:
+            adapted_trail = self.trail_map
 
         # include the other species-patterns in the present ones feeding-behaviour
         for this_pop in other_populations:
             adapted_trail = adapted_trail + (this_pop * self.social_behaviour)
 
-        new_population, new_angles = Physarum.optimized_update_positions(population, angle,
-                                                                  theta_sense, horizon_sense,
-                                                                  theta_walk, horizon_walk,
+        new_population, new_angles = Physarum.optimized_update_positions(population, angles,
+                                                                  theta_sense=theta_sense, horizon_sense=horizon_sense,
+                                                                  theta_walk=theta_walk, horizon_walk=horizon_walk,
                                                                   trace_array=adapted_trail)
         self.population = new_population
         self.angles = new_angles
 
     @staticmethod
-    def optimized_update_positions(positions, angle, theta_sense, horizon_sense, theta_walk,
-                               horizon_walk, trace_array):
+    def optimized_update_positions(positions, angles, theta_sense, horizon_sense, theta_walk,
+                                   horizon_walk, trace_array):
         """Returns the adapted physarum-positions, given initial coordinates and constants.
         This function is optimized by using Cupy (implementation of NumPy-compatible multi-dimensional array on CUDA)"""
 
         ### Get all possible positions to test
         # get the new 3 angles to test for each organism
-        angles_to_test = np.hstack(((angle - theta_sense) % (2 * np.pi),
-                                    angle,
-                                    (angle + theta_sense) % (2 * np.pi),)).reshape(-1, 3)
+        angles_to_test = np.hstack(((angles - theta_sense) % (2 * np.pi),
+                                    angles,
+                                    (angles + theta_sense) % (2 * np.pi),)).reshape(-1, 3)
         # get positions to test based on current positions and angles
         pos_to_test = positions.reshape(-1, 1, 2) + np.stack((horizon_sense * np.cos(angles_to_test),
                                                               horizon_sense * np.sin(angles_to_test)), axis=-1)
         pos_to_test = np.remainder(pos_to_test, np.array(trace_array.shape))
+        pos_to_test = np.floor(pos_to_test).astype(np.int16)
 
         ### Get all possible positions to walk to
         # get the new 3 angles to walk to for each organism
-        angles_to_walk = np.hstack(((angle - theta_walk) % (2 * np.pi),
-                                    angle,
-                                    (angle + theta_walk) % (2 * np.pi),)).reshape(-1, 3)
+        angles_to_walk = np.hstack(((angles - theta_walk) % (2 * np.pi),
+                                    angles,
+                                    (angles + theta_walk) % (2 * np.pi),)).reshape(-1, 3)
         # get positions to walk to based on current positions and angles
         pos_to_walk = positions.reshape(-1, 1, 2) + np.stack((horizon_walk * np.cos(angles_to_walk),
                                                               horizon_walk * np.sin(angles_to_walk)), axis=-1)
         pos_to_walk = np.remainder(pos_to_walk, np.array(trace_array.shape))
 
         ### Get the positions to walk too based on the best positions out of the tested ones
-        pos_to_test = np.floor(pos_to_test).astype(np.int64) - 1
         # TODO notice argmax will always return first when multiple entries are equal
         best_indexes = trace_array[pos_to_test[:, :, 0], pos_to_test[:, :, 1]].argmax(axis=-1)
         new_positions = pos_to_walk[np.arange(len(pos_to_test)), best_indexes]
@@ -178,7 +181,8 @@ class Physarum:
 
 
 # TODO refactor diffusion and decay process, maybe into the class itself
-def run_physarum_simulation(populations, steps, additive_trace=True, diffusion="uniform", mask=None, decay=0.9):
+def run_physarum_simulation(populations, steps, additive_trace=True, diffusion="uniform", decay=0.9,
+                            mask=None, mask_factor=.0):
     image_list = []
 
     for step in tqdm.tqdm_notebook(range(0, steps)):
@@ -195,7 +199,7 @@ def run_physarum_simulation(populations, steps, additive_trace=True, diffusion="
 
             # We can set a predifined mask, e.g. for labyrinths:
             if mask is not None:
-                this_species.trail_map[mask] = 0.0
+                this_species.trail_map[mask] *= mask_factor
 
             other_populations = [x for i, x in enumerate(populations) if i != ix]
             other_populations = [species.trail_map for species in other_populations]
@@ -210,7 +214,13 @@ def run_physarum_simulation(populations, steps, additive_trace=True, diffusion="
         #    im = IMG.alpha_composite(im, image_to_concat)
 
         image_list.append(im)
-    return np.asnumpy(np.array(image_list))
+
+    # images fix for rendering
+    fix_images = np.array(image_list)
+    fix_images = np.sqrt(fix_images + 0.1) - np.sqrt(0.1)
+    fix_images = np.log(fix_images + 1)
+
+    return fix_images
 
 
 ###############	INIT FUNCTIONS	##################
@@ -326,23 +336,27 @@ def get_uniform_init(n: int, shape: Tuple[int]):
     return np.hstack([x, y])
 
 
-def get_image_init_positions(image, shape: Tuple[int], n: int, flip=False):
-    init_image = IMG.open(image).convert("L")
-    init_image = init_image.resize(tuple(np.flip(shape)))
+def get_image_init_positions(image_path, shape: Tuple[int], n: int, invert=False):
+    import numpy as np
+    import cupy as cp
+    init_image = IMG.open(image_path).convert("L")
+    init_image = init_image.resize(shape)
     init_image = np.array(init_image) / 255
-    if flip:
+    if invert:
         init_image = 1 - init_image
     linear_idx = np.random.choice(
-        init_image.size, size=n, p=init_image.ravel() / float(init_image.sum())
+        range(init_image.size), size=n, p=init_image.ravel() / init_image.sum()
     )
     x, y = np.unravel_index(linear_idx, shape)
-    x = x.reshape(-1, 1)
-    y = y.reshape(-1, 1)
-    return np.hstack([x, y])
+    return cp.asarray(np.hstack([x.reshape(-1, 1), y.reshape(-1, 1)]))
 
 
-def get_image_init_array(image, shape: Tuple[int]):
-    init_image = IMG.open(image).convert("L")
-    init_image = init_image.resize(tuple(np.flip(shape)))
-    init_image = np.array(init_image) / 255
-    return init_image
+def get_image_mask(image_path, shape: Tuple[int], threshold=None, invert=False):
+    init_image = IMG.open(image_path).convert("L")
+    init_image = init_image.resize(shape)
+    mask = np.array(init_image) / 255
+    if invert:
+        mask = 1 - mask
+    if threshold:
+        mask = (mask > threshold)
+    return mask
