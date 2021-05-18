@@ -15,6 +15,8 @@ import numpy as np
 # cv2
 #import cv2
 #img = cv2.imread(img_path)
+#cv2.resize(img, (width, height))
+#cv2.imwrite(out_img_path, img)
 
 # PIL (consider also Pillow-SIMD https://github.com/uploadcare/pillow-simd)
 #from PIL import Image
@@ -181,3 +183,51 @@ def crop(img, crop_factor=0.2):
     h_crop = int((h * crop_factor)//2)
     w_crop = int((w * crop_factor)//2)
     return img[h_crop:h-h_crop, w_crop:w-w_crop]
+
+
+def get_image_mask(img_path, canny_low=15, canny_high=150, min_area=0.001, max_area=0.95, blur=21):
+    img = cv2.imread(img_path)
+    # to grayscale
+    image_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # blur image
+    image_gray = cv2.GaussianBlur(image_gray, (5, 5), 0)
+
+    # canny edge dection
+    edges = cv2.Canny(image_gray, canny_low, canny_high)
+
+    # pad image to enable masking contours on border
+    #border_size = 1
+    #edges = cv2.copyMakeBorder(edges, border_size, border_size, border_size, border_size,
+    #                           cv2.BORDER_CONSTANT, (0))
+
+    # optional
+    edges = cv2.dilate(edges, np.ones((5, 5), np.uint8))
+    #edges = cv2.erode(edges, np.ones((5, 5), np.uint8))
+
+    # get the contours and their areas
+    contour_info = [(c, cv2.contourArea(c)) for c in cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]]
+
+    # limit to max/min areas based on original image size
+    image_area = img.shape[0] * img.shape[1]
+    max_area = max_area * image_area
+    min_area = min_area * image_area
+
+    mask = np.zeros(edges.shape, dtype=np.uint8)
+
+    # for each relevant countour apply mask
+    for contour in contour_info:
+        if min_area < contour[1] < max_area:
+            #mask = cv2.fillConvexPoly(mask, contour[0], (255))
+            mask = cv2.drawContours(mask, [contour[0]], -1, (255), -1)
+
+    # optional
+    #dilate_iter = 10
+    #erode_iter = 10
+    #mask = cv2.dilate(mask, None, iterations=3)
+    #mask = cv2.erode(mask, None, iterations=3)
+    mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+
+    # remove previously added border
+    #mask = mask[border_size:-border_size, border_size:-border_size]
+
+    return mask
