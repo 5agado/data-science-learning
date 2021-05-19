@@ -86,7 +86,6 @@ def get_point_angle_and_magnitude(x, y, phase_map, magnitude_map,
     # compute an average phase around the point, for an area proportional to brush size
     phase = phase_map[max(0, y - phase_neighbor_size):y + phase_neighbor_size,
             max(0, x - phase_neighbor_size):x + phase_neighbor_size].mean()
-
     # choose direction perpendicular to gradient
     angle = (((phase / math.pi) * 180) + 90) % 360
 

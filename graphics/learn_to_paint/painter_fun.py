@@ -16,24 +16,14 @@ def rn():
     return np.random.random()
 
 
-def positive_sharpen(i, overblur=False, coeff=8.): #no darken to original image
-    # emphasize the edges
-    blurred = cv2.blur(i,(5,5))
-    sharpened = i + (i - blurred) * coeff
-    if overblur:
-        return cv2.blur(np.maximum(sharpened,i),(11,11))
-    return cv2.blur(np.maximum(sharpened,i),(3,3))
-
-
 def diff(i1,i2, overblur=False):
     # calculate the difference of 2 float32 BGR images.
 
     # use rgb
-    d = (i1-i2)# * [0.2,1.5,1.3]
-    d = d*d
+    d = (i1-i2)**2  # * [0.2,1.5,1.3]
 
     #d = positive_sharpen(np.sum(d, -1), overblur=overblur)
-    d = np.sum(d, -1)
+    #d = np.sum(d, -1)
     return d
 
 
@@ -41,153 +31,176 @@ def limit(x, minimum, maximum):
     return min(max(x, minimum), maximum)
 
 
-def paint_one(img, canvas, distance_map, x, y, angle, oradius, magnitude, brush, check_error, useoil, tryfor, mintry,
-              color_neighbor_size):
+def intrad(orad, fatness):
+    #obtain integer radius and shorter-radius
+    radius = int(orad)
+    srad = int(orad*fatness+1)
+    return radius, srad
+
+
+# get copy of region-of-interest for both src image and canvas
+def get_roi(img, canvas, x, y, radius):
+    height, width = img.shape[0:2]
+
+    yp = int(min(y + radius, height-1))
+    ym = int(max(0, y - radius))
+    xp = int(min(x + radius, width-1))
+    xm = int(max(0, x - radius))
+
+    # if zero w or h
+    if yp<=ym or xp<=xm:
+        raise NameError(f'zero ROI at x={x}, y={y} and r={radius}')
+
+    img_roi = img[ym:yp, xm:xp]
+    canvas_roi = canvas[ym:yp,xm:xp]
+
+    return img_roi, canvas_roi
+
+
+# paint one stroke with given config and return the error.
+def add_stroke(img, canvas, brush, color, angle, fatness, x, y, r, is_final=False, useoil=False):
+    radius, srad = intrad(r, fatness)
+    # if brush placement is final, add to canvas and return
+    if is_final:
+        rb.compose(canvas, brush, x=x, y=y, rad=radius, srad=srad, angle=angle, color=color, useoil=useoil)
+        return None
+    # otherwise only run on ROI and get error
+    else:
+        # get ROI areas to calculate error
+        ref, before = get_roi(img, canvas, x, y, r)
+        after = np.array(before)
+
+        # if useoil here set to true: 2x slow down + instability
+        # we disable here, assuming is not influential on error estimation
+        rb.compose(after, brush, x=radius, y=radius, rad=radius, srad=srad, angle=angle, color=color, useoil=False)
+
+        err_aftr = np.mean(diff(after, ref))
+        return err_aftr
+
+
+# given err, calculate gradient of parameters wrt to it
+def calc_gradient(img, canvas, brush, color, angle, fatness, x, y, radius, gradient_config, err):
+    # Color
+    b,g,r = color[0],color[1],color[2]
+    color_delta = gradient_config['color_delta']
+    if color_delta > 0:
+        err_aftr = add_stroke(img, canvas, brush, (b+color_delta,g,r), angle, fatness, x, y, radius)
+        gb = err_aftr - err
+
+        err_aftr = add_stroke(img, canvas, brush, (b,g+color_delta,r), angle, fatness, x, y, radius)
+        gg = err_aftr - err
+
+        err_aftr = add_stroke(img, canvas, brush, (b,g,r+color_delta), angle, fatness, x, y, radius)
+        gr = err_aftr - err
+
+        color_gradient = np.array([gb,gg,gr])/color_delta
+    else:
+        color_gradient = np.array([0.,0.,0.])
+
+    ## Angle
+    angle_delta = gradient_config['angle_delta']
+    if angle_delta > 0:
+        err_aftr = add_stroke(img, canvas, brush, color, (angle+angle_delta)%360, fatness, x, y, radius)
+        angle_gradient = (err_aftr - err)/angle_delta
+    else:
+        angle_gradient = 0.
+
+    ## Position
+    pos_delta = gradient_config['pos_delta'] * radius
+    if pos_delta > 0:
+        err_aftr = add_stroke(img, canvas, brush, color, angle, fatness, x+pos_delta,y, radius)
+        x_gradient =  (err_aftr - err)/pos_delta
+
+        err_aftr = add_stroke(img, canvas, brush, color, angle, fatness, x,y+pos_delta, radius)
+        y_gradient =  (err_aftr - err)/pos_delta
+    else:
+        x_gradient = 0.
+        y_gradient = 0.
+
+    ## Radius
+    radius_delta = gradient_config['radius_delta']
+    if radius_delta > 0:
+        err_aftr = add_stroke(img, canvas, brush, color, angle, fatness, x,y, radius+radius_delta)
+        radius_gradient = (err_aftr - err)/radius_delta
+    else:
+        radius_gradient = 0.
+
+    return color_gradient, angle_gradient, x_gradient, y_gradient, radius_gradient
+
+
+def do_descent(color, angle, x, y, radius,
+               color_grad, angle_grad, x_grad, y_grad, radius_grad, gradient_config, img):
+    color_delta = gradient_config['color_delta']
+    color -= (color_grad * .3).clip(max=color_delta, min=-color_delta)
+    color = color.clip(max=1., min=0.).astype(np.float32)
+
+    angle_delta = gradient_config['angle_delta']
+    angle = (angle - limit(angle_grad * 1000, -angle_delta, angle_delta)) % 360
+
+    radius_delta = gradient_config['radius_delta']
+    radius *= (1-limit(radius_grad*20000, -radius_delta, radius_delta))
+    radius = limit(radius, 10, 300) # TODO externalize
+
+    pos_delta = gradient_config['pos_delta'] * radius
+    height, width = img.shape[0:2]
+    x -= limit(x_grad*1000*radius, -pos_delta, pos_delta)
+    y -= limit(y_grad*1000*radius, -pos_delta, pos_delta)
+    x = limit(x, (radius//2), width-(radius//2))
+    y = limit(y, (radius//2), height-(radius//2))
+
+    return color, angle, x, y, radius
+
+
+def paint_one(img, canvas, distance_map, x, y, angle, radius, magnitude, brush, check_error, useoil, color_neighbor_size,
+              gradient_config):
     """
     :param img:
     :param canvas:
     :param x:
     :param y:
     :param angle:
-    :param oradius:
+    :param radius:
     :param magnitude:
     :param brush:
     :param check_error:
     :param useoil:
-    :param tryfor: min steps for gradient descent
-    :param mintry: max steps for gradient descent
     :param color_neighbor_size:
     :return:
     """
     fatness = 1/(1+magnitude)
 
     # negate angle because of image coordinates
-    dest_x, dest_y =  (int(x+cos(radians(-angle))*oradius), int(y+sin(radians(-angle))*oradius))
-    min_radius_to_edge = image_utils.get_min_radius_to_edge(distance_map, (x, y), (dest_x, dest_y))
+    dest_x, dest_y =  (int(x + cos(radians(-angle)) * radius), int(y + sin(radians(-angle)) * radius))
+    if distance_map is not None:
+        min_radius_to_edge = image_utils.get_min_radius_to_edge(distance_map, (x, y), (dest_x, dest_y))
 
-    if min_radius_to_edge > 0:
-        oradius = min_radius_to_edge
-
-    def intrad(orad):
-        #obtain integer radius and shorter-radius
-        radius = int(orad)
-        srad = int(orad*fatness+1)
-        return radius, srad
+        if min_radius_to_edge > 0:
+            radius = min_radius_to_edge
 
     # set initial color
-    c = image_utils.sample_color(img, x=int(x), y=int(y), neighbor_size=color_neighbor_size)
+    color = image_utils.sample_color(img, x=int(x), y=int(y), neighbor_size=color_neighbor_size)
 
-    delta = 1e-4
-
-    # get copy of square ROI area, to do drawing and calculate error.
-    def get_roi(newx, newy, newrad):
-        radius, srad = intrad(newrad)
-
-        height, width = img.shape[0:2]
-
-        yp = int(min(newy+radius, height-1))
-        ym = int(max(0, newy-radius))
-        xp = int(min(newx+radius, width-1))
-        xm = int(max(0, newx-radius))
-
-        # if zero w or h
-        if yp<=ym or xp<=xm:
-            raise NameError('zero roi')
-
-        ref = img[ym:yp, xm:xp]
-        before = canvas[ym:yp,xm:xp]
-        after = np.array(before)
-
-        return ref, before, after
-
-    # paint one stroke with given config and return the error.
-    def paint_aftr_w(color, angle, nx, ny, nr, useoil=False):
-        ref, before, after = get_roi(nx, ny, nr)
-        radius, srad = intrad(nr)
-
-        rb.compose(after, brush, x=radius, y=radius, rad=radius, srad=srad, angle=angle, color=color, useoil=useoil)
-        # if useoil here set to true: 2x slow down + instability
-
-        err_aftr = np.mean(diff(after, ref))
-        return err_aftr
-
-    # finally paint the same stroke onto the canvas.
-    def paint_final_w(color, angle, nr, useoil=False):
-        radius, srad = intrad(nr)
-
-        rb.compose(canvas, brush, x=x, y=y, rad=radius, srad=srad, angle=angle, color=color, useoil=useoil)
-
-    # given err, calculate gradient of parameters wrt to it
-    def calc_gradient(err):
-        b,g,r = c[0],c[1],c[2]
-        cc = b,g,r
-
-        err_aftr = paint_aftr_w((b+delta,g,r),angle,x,y,oradius)
-        gb = err_aftr - err
-
-        err_aftr = paint_aftr_w((b,g+delta,r),angle,x,y,oradius)
-        gg = err_aftr - err
-
-        err_aftr = paint_aftr_w((b,g,r+delta),angle,x,y,oradius)
-        gr = err_aftr - err
-
-        err_aftr = paint_aftr_w(cc,(angle+5.)%360,x,y,oradius)
-        ga = err_aftr - err
-
-        #err_aftr = paint_aftr_w(cc,angle,x+2,y,oradius)
-        #gx =  err_aftr - err
-        gx = 0
-
-        #err_aftr = paint_aftr_w(cc,angle,x,y+2,oradius)
-        #gy =  err_aftr - err
-        gy = 0
-
-        err_aftr = paint_aftr_w(cc,angle,x,y,oradius+3)
-        gradius = err_aftr - err
-
-        return np.array([gb,gg,gr])/delta,ga/5,gx/2,gy/2,gradius/3,err
-
+    tryfor = gradient_config['tryfor']
+    mintry = gradient_config['mintry']
     for i in range(tryfor):
-        try: # might have error
-            # what is the error at ROI?
-            ref, bef, aftr = get_roi(x, y, oradius)
-            orig_err = np.mean(diff(bef, ref))
+        # get ROI areas to calculate error
+        ref, bef = get_roi(img, canvas, x, y, radius)
+        orig_err = np.mean(diff(bef, ref))
 
-            # do the painting
-            err = paint_aftr_w(c, angle, x, y, oradius)
+        # do the painting
+        err = add_stroke(img, canvas, brush, color, angle, fatness, x, y, radius)
 
-            # if error decreased:
-            if (not check_error) or (err < orig_err and i >= mintry):
-                paint_final_w(c, angle, oradius, useoil=useoil)
-                return True, i
+        # if error decreased:
+        if (not check_error) or (err < orig_err and i >= mintry):
+            add_stroke(img, canvas, brush, color, angle, fatness, x, y, radius, is_final=True, useoil=useoil)
+            return True, i
 
-            # if not satisfactory
-            # calculate gradient
-            grad, anglegrad, gx, gy, gradius, err = calc_gradient(err)
+        # if not satisfactory, run gradient-descent
+        color_grad, angle_grad, x_grad, y_grad, radius_grad = calc_gradient(img, canvas, brush, color, angle, fatness, x, y,
+                                                                            radius, gradient_config, err)
 
-        except NameError as e:
-            logging.error('Error within calc_gradient')
-            logging.error(e)
-            return False, i
-
-        #if printgrad: #debug purpose.
-        #    if i==0:
-        #        print('----------')
-        #        print('orig_err',orig_err)
-        #    print('ep:{}, err:{:3f}, color:{}, angle:{:2f}, xy:{:2f},{:2f}, radius:{:2f}'.format(i,err,c,angle,x,y,oradius))
-
-        # do descend
-        if i < tryfor-1:
-            c = c - (grad*.3).clip(max=0.3,min=-0.3)
-            c = c.clip(max=1.,min=0.)
-            angle = (angle - limit(anglegrad*100000,-5,5))%360
-            #x = x - limit(gx*1000*radius,-3,3)
-            #y = y - limit(gy*1000*radius,-3,3)
-            oradius = oradius* (1-limit(gradius*20000,-0.2,.2))
-            oradius = limit(oradius,7,100)
-
-            # print('after desc:x:{:2f},y:{:2f},angle:{:2f},oradius:{:5f}'
-            # .format(x,y,angle,oradius))
+        color, angle, x, y, radius = do_descent(color, angle, x, y, radius,
+                                                color_grad, angle_grad, x_grad, y_grad, radius_grad, gradient_config, img)
 
     return False, tryfor
 
@@ -197,15 +210,15 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
                 distance_map,
                 sample_map_scale_factor: float, phase_neighbor_size: int,
                 color_neighbor_size: int,
-                out_dir, iter_idx, check_error: bool, useoil: bool, tryfor: int, mintry: int):
-    logging.debug(f'minrad {minrad}')
-    logging.debug(f'maxrad {maxrad}')
+                out_dir, iter_idx, check_error: bool, useoil: bool,
+                gradient_config: dict,
+                border_pct: float):
 
     def sample_points():
         # sample a lot of points from one error image - save computation cost
 
         point_list = []
-        d = diff(canvas, img)
+        d = np.sum(diff(canvas, img), -1)
         phase_map, magnitude_map = image_utils.get_phase_and_magnitude(distance_map)
         d = d/d.sum()  # normalize probabilities
 
@@ -213,9 +226,17 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
         if salience_img is not None:
             #sample_map = (d * (1.-salience_img_weight)) + (salience_img * salience_img_weight)
             # error map weight by 1-alpha + salience image weight by alpha + combination of full error multiplied by salience image
-            sample_map = (d * (1.-salience_img_weight)) + (d * (salience_img * salience_img_weight)) + (salience_img * salience_img_weight)
+            sample_map = (d * (1.-salience_img_weight)) + (d * (salience_img * salience_img_weight)) #+ (salience_img * salience_img_weight)
         else:
             sample_map = d
+
+        # set border (based on radius) of salience map to 0
+        height, width = img.shape[0:2]
+        x_border_size, y_border_size = int(width*border_pct), int(height*border_pct)
+        sample_map[:x_border_size, :] = 0.
+        sample_map[-x_border_size:, :] = 0.
+        sample_map[:, :y_border_size] = 0.
+        sample_map[:, -y_border_size:] = 0.
 
         # scale down map
         sample_map = cv2.resize(sample_map, None, fx=sample_map_scale_factor, fy=sample_map_scale_factor,
@@ -233,8 +254,8 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
         selected_points = np.random.choice(sample_map_range, size=nb_strokes, p=sample_map_flat)
 
         # iterate through selected points
-        for yx in selected_points:
-            ry, rx = np.unravel_index(yx, sample_map.shape[:2])
+        y, x = np.unravel_index(selected_points, sample_map.shape[:2])
+        for rx, ry in zip(x, y):
 
             # as sample map have been scaled down, recompute the indexes for original image
             ry, rx = int(ry / sample_map_scale_factor), int(rx / sample_map_scale_factor)
@@ -242,7 +263,6 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
             angle, magnitude = image_utils.get_point_angle_and_magnitude(rx, ry, phase_map, magnitude_map,
                                                                          phase_neighbor_size=phase_neighbor_size,
                                                                          magnitude_neighbor_size=phase_neighbor_size)
-
             point_list.append((ry, rx, angle, magnitude))
         return point_list
 
@@ -251,9 +271,9 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
 
         radius = (rn() * maxrad) + minrad
         brush, key = rb.get_brush(brushes, 'random')
-        return paint_one(img, canvas, distance_map, x, y, oradius=radius, magnitude=magnitude, brush=brush, angle=angle,
-                         check_error=check_error, useoil=useoil, tryfor=tryfor, mintry=mintry,
-                         color_neighbor_size=color_neighbor_size) # return num of epoch
+        return paint_one(img, canvas, distance_map, x, y, radius=radius, magnitude=magnitude, brush=brush, angle=angle,
+                         check_error=check_error, useoil=useoil, color_neighbor_size=color_neighbor_size,
+                         gradient_config=gradient_config) # return num of epoch
 
     point_list = sample_points()
     res = {}
@@ -305,7 +325,7 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
 
         # init canvas
         canvas = processed_image.copy()
-        canvas[:, :] = 0.5
+        canvas[:, :] = 1.5 # initial color as special color (gives MAXINT for diff)
 
         # load salience img and edges
         salience_img, salience_img_proba = load_salience_img(salience_path, img_path.stem)
@@ -330,7 +350,8 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
             cv2.imwrite(str(img_out_path / 'original.png'), original_img)
             cv2.imwrite(str(img_out_path / 'distance.png'), distance_map * 255)
             cv2.imwrite(str(img_out_path / 'pre_process.png'), processed_image * 255)
-            cv2.imwrite(str(img_out_path / 'salience.png'), salience_img)
+            if salience_img is not None:
+                cv2.imwrite(str(img_out_path / 'salience.png'), salience_img)
             cv2.imwrite(str(img_out_path / 'edges.png'), uint_edges)
 
         # set brush radius
@@ -359,8 +380,8 @@ def paint_images(input_path: Path, output_path: Path, brush_dir: Path, config: d
                               out_dir=output_path / img_path.stem, iter_idx=i,
                               check_error=config['check_error'][i],
                               useoil=config['use_oil'],
-                              tryfor=config['gd_tryfor'],
-                              mintry=config['gd_mintry'])
+                              gradient_config=config['gradient_config'],
+                              border_pct=config['border_pct'])
 
             # some running stats
             for r in res:
@@ -383,7 +404,6 @@ def main(_=None):
     parser.add_argument('-i', '--input-path', required=True)
     parser.add_argument('-o', '--output-path', required=True)
     parser.add_argument('-e', '--nb-epochs', type=int, default=10)
-    parser.add_argument('-c', '--config-path', default='')
     parser.add_argument('-b', '--brush-dir', default=Path(os.path.dirname(__file__)) / 'brushes')
     parser.add_argument('--salience_path', default=None)
     parser.add_argument('-v', dest='verbose', action='store_true')
@@ -392,7 +412,6 @@ def main(_=None):
     args = parser.parse_args()
     input_path = Path(args.input_path)
     output_path = Path(args.output_path)
-    config_path = Path(args.config_path)
     brush_dir = Path(args.brush_dir)
     salience_path = None if args.salience_path is None else Path(args.salience_path)
     nb_epochs = args.nb_epochs
@@ -400,7 +419,7 @@ def main(_=None):
         logging.getLogger().setLevel(logging.DEBUG)
 
     main_config = {
-        'max_radius_to_image_factor': 1/10,
+        'max_radius_to_image_factor': 1/9,
         'min_radius_to_image_factor': 1/50,
         # for salience
         #'salience_img_weights': [0.] * 2 + list(np.linspace(0.2, 1.0, 6)) + [1.] * nb_epochs,
@@ -413,20 +432,54 @@ def main(_=None):
         'radius_diff_factor': 20,
         'sample_map_scale_factor': 0.3,
         'use_oil': True,
-        'phase_neighbor_size': [1] * nb_epochs, #np.linspace(2, 7, num=nb_epochs)[::-1],
+        'phase_neighbor_size': [2] * nb_epochs, #np.linspace(2, 7, num=nb_epochs)[::-1],
         'color_neighbor_size': [40] * 2 + [18] * 2 + [4] * nb_epochs,
         'refine_edges': [False] * (nb_epochs - 1) + [False] * nb_epochs,
         'edge_min_hyst': 80,
         'edge_max_hyst': 150,
+        'border_pct': 0.05,
+        'gradient_config': {
+            'color_delta': 0, #1e-4,
+            'angle_delta': 5,
+            'pos_delta': 0.2,   # proportional to radius
+            'radius_delta': 0.2,
+            'tryfor': 3,
+            'mintry': 1,
+        }
     }
+
+
+    details_config = {
+        'max_radius_to_image_factor': 1/20,
+        'min_radius_to_image_factor': 1/90,
+        'salience_img_weights': list(np.linspace(0.9, 1., 3)) + [1.] * nb_epochs,
+        'check_error': [True] * 2 + [True] * nb_epochs,
+        'nb_strokes': [50] * 2 + [150] * 2 + [200] * 2 + [250] * 2,
+        'radius_diff_factor': 20,
+        'sample_map_scale_factor': 0.3,
+        'use_oil': True,
+        'phase_neighbor_size': [2] * nb_epochs,
+        'color_neighbor_size': [40] * 2 + [18] * 2 + [4] * nb_epochs,
+        'refine_edges': [False] * nb_epochs,
+        'edge_min_hyst': 80,
+        'edge_max_hyst': 150,
+        'border_pct': 0.05,
+        'gradient_config': {
+            'color_delta': 0,
+            'angle_delta': 5,
+            'pos_delta': 0.2,   # proportional to radius
+            'radius_delta': 0.2,
+            'tryfor': 5,
+            'mintry': 1,
+        }
+    }
+
 
     test_config = {
         'max_radius_to_image_factor': 1 / 100,
         'min_radius_to_image_factor': 1 / 100,
         'salience_img_weights': [1.] * nb_epochs,
         'check_error': [False] * nb_epochs,
-        'gd_tryfor': 0,
-        'gd_minfor': 0,
         'nb_strokes': [300] * nb_epochs,
         'radius_diff_factor': 1,
         'sample_map_scale_factor': 1.,
@@ -436,6 +489,15 @@ def main(_=None):
         'refine_edges': [False] * nb_epochs,
         'edge_min_hyst': 100,
         'edge_max_hyst': 300,
+        'border_pct': 0.0,
+        'gradient_config': {
+            'color_delta': 0,
+            'angle_delta': 0,
+            'pos_delta': 0,
+            'radius_delta': 0,
+            'tryfor': 0,
+            'mintry': 0,
+        }
     }
 
     paint_images(input_path, output_path, brush_dir, main_config, nb_epochs, salience_path)
