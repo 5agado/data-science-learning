@@ -3,6 +3,8 @@ import sys
 import subprocess
 
 # see https://medium.com/abraia/basic-video-editing-for-social-media-with-ffmpeg-commands-1e873801659
+# also https://gist.github.com/jackrusher/8c8b9d98796bffc649c2b303383cd791
+# gifsicle -O3 --lossy=80 in.gif > out.gif
 
 def main(_=None):
     parser = argparse.ArgumentParser(description='Video Conversion via FFMPEG')

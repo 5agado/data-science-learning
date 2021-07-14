@@ -178,7 +178,8 @@ def paint_one(img, canvas, distance_map, x, y, angle, radius, magnitude, brush, 
             radius = min_radius_to_edge
 
     # set initial color
-    color = image_utils.sample_color(img, x=int(x), y=int(y), neighbor_size=color_neighbor_size)
+    color = image_utils.sample_color(img, x=int(x), y=int(y), neighbor_size=color_neighbor_size).astype('float32')
+
 
     tryfor = gradient_config['tryfor']
     mintry = gradient_config['mintry']
@@ -282,7 +283,7 @@ def put_strokes(img, canvas, nb_strokes: int, minrad: int, maxrad: int, brushes:
     return res
 
 
-def load_salience_img(salience_path: Path, salience_img_name: str):
+def load_salience_img(salience_path: Path, salience_img_name: str, proba_pow_exponent=5):
     # if given load salience image
     salience_img = None
     salience_img_proba = None
@@ -303,6 +304,7 @@ def load_salience_img(salience_path: Path, salience_img_name: str):
         salience_img = cv2.imread(salience_img_path, cv2.IMREAD_GRAYSCALE)
         salience_img_proba = salience_img.astype('float32') / 255  # convert to float32
         salience_img_proba = salience_img_proba.clip(0.)
+        salience_img_proba = np.power(salience_img_proba, proba_pow_exponent)  # push relevance to high salience areas
         salience_img_proba = salience_img_proba / salience_img_proba.sum()  # normalizing probability
 
     return salience_img, salience_img_proba
@@ -424,13 +426,13 @@ def main(_=None):
         # for salience
         #'salience_img_weights': [0.] * 2 + list(np.linspace(0.2, 1.0, 6)) + [1.] * nb_epochs,
         # for depth
-        'salience_img_weights': list(np.linspace(0.2, 0.8, 7)) + [0.9] * nb_epochs,
+        'salience_img_weights': list(np.linspace(.2, 1., 7)) + [1.] * nb_epochs,
         'check_error': [False] * 2 + [True] * nb_epochs,
         'gd_tryfor': 7,
         'gd_mintry': 1,
-        'nb_strokes': [150] * 3 + [300] * 4 + [390] * nb_epochs,
-        'radius_diff_factor': 20,
-        'sample_map_scale_factor': 0.3,
+        'nb_strokes': [150] * 3 + [250] * 4 + [300] * nb_epochs,
+        'radius_diff_factor': 5,
+        'sample_map_scale_factor': .7,
         'use_oil': True,
         'phase_neighbor_size': [2] * nb_epochs, #np.linspace(2, 7, num=nb_epochs)[::-1],
         'color_neighbor_size': [40] * 2 + [18] * 2 + [4] * nb_epochs,
@@ -443,7 +445,7 @@ def main(_=None):
             'angle_delta': 5,
             'pos_delta': 0.2,   # proportional to radius
             'radius_delta': 0.2,
-            'tryfor': 3,
+            'tryfor': 4,
             'mintry': 1,
         }
     }

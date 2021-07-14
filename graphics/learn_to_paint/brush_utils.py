@@ -122,17 +122,18 @@ def sigmoid_array(x):
 # the brush process
 def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
     # generate, scale and rotate the brush as needed
-    brush_image = rotated = rotate_brush(brush,rad,srad,angle) # as alpha
-    brush_image = np.reshape(brush_image,brush_image.shape+(1,)) # cast alpha into (h,w,1)
+    brush_image = rotate_brush(brush,rad,srad,angle) # as alpha
+    brush_image = np.reshape(brush_image, brush_image.shape+(1,)) # cast alpha into (h,w,1)
+    bh, bw = brush_image.shape[0:2]
 
     if useoil:
         # gradient based color mixing
         # generate a blend map `gbmix` that blend in the direction of the brush stroke
 
         # first, generate xslope and yslope
-        gby,gbx = np.mgrid[0:brush_image.shape[0],0:brush_image.shape[1]]
-        gbx = gbx / float(brush_image.shape[1]) -.5
-        gby = gby / float(brush_image.shape[0]) -.5
+        gby,gbx = np.mgrid[0:bh, 0:bw]
+        gbx = gbx / float(bw) -.5
+        gby = gby / float(bh) -.5
 
         dgx,dgy = rn()-.5,rn()-.5 # variation to angle
         # then mix the slopes according to angle
@@ -144,13 +145,6 @@ def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
         #strenthen the slope
         gbmix = sigmoid_array(gbmix*10)
         gbmix = np.reshape(gbmix,gbmix.shape+(1,)).astype('float32')
-
-        # cv2.imshow('gbmix',gbmix)
-        # cv2.waitKey(1)
-
-    # width and height of brush image
-    bh = brush_image.shape[0]
-    bw = brush_image.shape[1]
 
     y,x = int(y),int(x)
 
@@ -168,8 +162,6 @@ def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
     #crop the roi params if < 0
     ym,yp,xm,xp = lc(ym),lc(yp),lc(xm),lc(xp)
 
-    # print(alpha.shape,roi.shape)
-
     if alpha.shape[0]==0 or alpha.shape[1]==0: #or roi.shape[0]==0 or roi.shape[1]==0:
         # optimization: assume roi is valid
 
@@ -178,7 +170,7 @@ def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
     else:
 
         # to simulate oil painting mixing:
-        # color should blend in some fasion from given color to bg color
+        # color should blend in some fashion from given color to bg color
         if useoil:
             alpha = alpha.astype('float32')/255.
 
@@ -215,8 +207,6 @@ def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
 
             # apply motion blur on the mixed colormap
             kern = generate_motion_blur_kernel(dim=ldim,angle=angle)
-
-            # print(sdim,ldim,kern.shape,colormap.dtype,kern.dtype,mixing_ratio.dtype,roi.dtype,color.dtype)
 
             # sample randomly from roi
             # random is acturally bad idea
@@ -260,31 +250,22 @@ def compose(orig, brush, x, y, rad, srad, angle, color, useoil=False):
             # larger the mixing_ratio, stronger the (tip) color
             ia = (1 - mixing_ratio).astype('float32')
             ca = tipcolor * mixing_ratio
-            # print(roi.dtype,ia.dtype,ca.dtype)
             colormap = roi * ia + ca
-            # print(colormap.dtype,kern.dtype)
 
             #mblur
             colormap = cv2.filter2D(colormap,cv2.CV_32F,kern)
-
-            #final composition
-            ca = colormap*alpha
-            ia = 1-alpha
 
             #final loading of roi.
             roi=orig[ym:yp,xm:xp]
 
             roi = b2p(roi)
-            orig[ym:yp,xm:xp] = p2b(roi*ia+ca)
+            orig[ym:yp,xm:xp] = p2b((colormap * alpha) + (roi * (1-alpha)))
+
+        # no oil painting
         else:
-            # no oil painting
-            colormap = np.array(color).astype('float32') # don't blend with bg, just paint fg
-
             alpha = alpha.astype('float32')/255.
-            ia = 1-alpha
-            ca = colormap*alpha
-
             roi = orig[ym:yp,xm:xp]
 
-            # if original image is float
-            orig[ym:yp,xm:xp] = roi * ia + ca
+            # update origin area with sampled color for brush alpha
+            # and initial color for brush 1-alpha
+            orig[ym:yp,xm:xp] = (color * alpha) + (roi * (1-alpha))

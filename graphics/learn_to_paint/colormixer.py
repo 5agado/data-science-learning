@@ -1,12 +1,4 @@
 import numpy as np
-import cv2
-import math
-import random
-import time
-# import rotate_brush as rb
-# import gradient
-# from thready import amap
-import os
 
 color1 = np.array([19,163,255.])
 color2 = np.array([19,18,37.])
