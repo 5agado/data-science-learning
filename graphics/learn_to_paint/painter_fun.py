@@ -439,6 +439,9 @@ def main(_=None):
         'refine_edges': [False] * (nb_epochs - 1) + [False] * nb_epochs,
         'edge_min_hyst': 80,
         'edge_max_hyst': 150,
+        # If relying on salience map for edge detection
+        #'edge_min_hyst': 5,
+        #'edge_max_hyst': 20,
         'border_pct': 0.05,
         'gradient_config': {
             'color_delta': 0, #1e-4,

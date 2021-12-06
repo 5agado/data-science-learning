@@ -38,7 +38,7 @@
 * [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229) TOCHECK
 * [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (Beyond Euclidean spaces and matrices, focusing on abstract vector spaces and linear maps. Pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
 * [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
-* [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) TOCHECK
+* [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) (provides rich introduction to different main mathematical topics, with both examples and historical anecdotes. Tends more towards formal proofs and definitions than to intuitive overview and practical examples)
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
 * [Interpolation in Conformal Geometric Algebra](https://esc.fnwi.uva.nl/thesis/centraal/files/f2011008442.pdf) TOCHECK
 
@@ -113,6 +113,7 @@
 * [Machine Learning For Coders @ Fast.ai](http://course18.fast.ai/ml) TODO
 * [AWS Machine Learning Course](https://aws.amazon.com/training/learning-paths/machine-learning/) TODO
 * [TensorFlow Developer Certificate program](https://www.tensorflow.org/certificate) TOCHECK
+* [PyTorch Fundamentals](https://docs.microsoft.com/en-us/learn/paths/pytorch-fundamentals) TOCHECK
 
 ## Reinforcement Learning
 * [David Silver’s Reinforcement Learning Course](http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html) TOCHECK
@@ -131,6 +132,7 @@
 * [Berkeley Deep Unsupervised Learning Spring 2020](https://sites.google.com/view/berkeley-cs294-158-sp20/home)
 * [Generative Adversarial Networks (GANs) @ Coursera](https://www.coursera.org/specializations/generative-adversarial-networks-gans?utm_source=deeplearningai) TODO
 * [Deep Learning for Computer Vision - Michigan Online](https://www.youtube.com/playlist?list=PL5-TkQAfAZFbzxjBHtzdVCWE0Zbhomg7r) TOCHECK
+* [Yann LeCun’s Deep Learning Course at CDS](https://cds.nyu.edu/deep-learning/) TOCHECK
 
 ## Computer Vision
 * [Introduction to Computer Vision @ Udacity](https://classroom.udacity.com/courses/ud810) (detailed and entertaining presentation of the fundamentals of computer vision)
