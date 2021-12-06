@@ -40,7 +40,6 @@
 * [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
 * [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) (provides rich introduction to different main mathematical topics, with both examples and historical anecdotes. Tends more towards formal proofs and definitions than to intuitive overview and practical examples)
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
-* [Interpolation in Conformal Geometric Algebra](https://esc.fnwi.uva.nl/thesis/centraal/files/f2011008442.pdf) TOCHECK
 
 ## Statistics
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python, good intuitive explanation of basic concepts, often from a different POV compared to other more technical books about statistics)
