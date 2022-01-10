@@ -5,9 +5,6 @@ from math import sin, cos, pi
 import itertools
 from typing import List
 
-is_blender_28 = bpy.app.version[1] >= 80
-assert is_blender_28
-
 """
 # Blender import-system clutter
 import bpy
