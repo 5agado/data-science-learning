@@ -61,7 +61,8 @@ if frame == 0 or frame == (nb_epochs+1):
     for z in range(nb_epochs):
         alive = np.argwhere(mnca.grid == 1)
         #alive = np.argwhere(mnca.grid == 2)
-        grid.append([(g[0], g[1], 0) for g in alive])
+        grid.append([(g[0], g[1], z) for g in alive])
+        #grid.append([(g[0], g[1], 0) for g in alive])
         age.append([mnca.age[g[0], g[1]] for g in alive])
         #age.append([age_sum[g[0], g[1]] for g in alive])
         mnca.update()

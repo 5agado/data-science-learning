@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from math import pi, cos, sin
 
@@ -24,22 +26,22 @@ def get_circle_grid(h, w, radius_minmax, center=None):
     return grid.astype(int)
 
 
-def get_polygon_mask(h, w, segments: int, radius: int, center=None, outline=0, fill=1):
+def get_polygon_mask(h, w, segments: int, radius: int, center=None, fill=1):
     from PIL import Image, ImageDraw
 
     if center is None:  # use the middle of the image
-        center = (int(h // 2), int(w // 2))
+        center = (round(h / 2), round(w / 2))
 
     # build polygon
     angle = 2 * pi / segments  # angle in radians
     polygon = []
     for i in range(segments):
-        x = center[0] + radius * cos(angle * i)
-        y = center[1] + radius * sin(angle * i)
+        x = round(center[0] + radius * cos(angle * i))
+        y = round(center[1] + radius * sin(angle * i))
         polygon.append((x, y))
 
     img = Image.new('L', (h, w), 0)
-    ImageDraw.Draw(img).polygon(polygon, outline=outline, fill=fill)
+    ImageDraw.Draw(img).polygon(polygon, outline=1-fill, fill=fill)
     mask = np.array(img, dtype=int)
     return mask
 
