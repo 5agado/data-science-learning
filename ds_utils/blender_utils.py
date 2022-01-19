@@ -288,7 +288,7 @@ def draw_segment(gp_frame: GPencilFrame, points: List[tuple], draw_cyclic=False,
     # Init new stroke
     gp_stroke = gp_frame.strokes.new()
     gp_stroke.display_mode = '3DSPACE'   # allows for editing
-    gp_stroke.draw_cyclic = draw_cyclic  # closes the stroke
+    gp_stroke.use_cyclic = draw_cyclic  # closes the stroke
     gp_stroke.material_index = material_index
 
     # Define stroke geometry
@@ -302,7 +302,7 @@ def draw_square(gp_frame: GPencilFrame, center: tuple, size: int, material_index
     # Init new stroke
     gp_stroke = gp_frame.strokes.new()
     gp_stroke.display_mode = '3DSPACE'  # allows for editing
-    gp_stroke.draw_cyclic = True        # closes the stroke
+    gp_stroke.use_cyclic = True        # closes the stroke
     gp_stroke.material_index = material_index
 
     # Define stroke geometry
@@ -319,7 +319,7 @@ def draw_circle(gp_frame: GPencilFrame, center: tuple, radius: float, segments: 
     # Init new stroke
     gp_stroke = gp_frame.strokes.new()
     gp_stroke.display_mode = '3DSPACE'  # allows for editing
-    gp_stroke.draw_cyclic = True        # closes the stroke
+    gp_stroke.use_cyclic = True        # closes the stroke
     gp_stroke.material_index = material_index
 
     # Define stroke geometry
@@ -338,7 +338,7 @@ def draw_cube(gp_frame: GPencilFrame, center: tuple, size: float, material_index
     # Init new stroke
     gp_stroke = gp_frame.strokes.new()
     gp_stroke.display_mode = '3DSPACE'  # allows for editing
-    gp_stroke.draw_cyclic = True  # closes the stroke
+    gp_stroke.use_cyclic = True  # closes the stroke
     gp_stroke.material_index = material_index
 
     # Define stroke geometry
