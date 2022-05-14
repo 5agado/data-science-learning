@@ -19,6 +19,8 @@ def main(_=None):
     parser.add_argument('-c', '--cols', required=True, help="number of columns in the mosaic")
     parser.add_argument('--time-sort', action='store_true', help='Sort videos by created time')
     parser.set_defaults(time_srt=False)
+    parser.add_argument('--shortest', action='store_true', help='Cut at shortest, otherwise is repeat last frame')
+    parser.set_defaults(shortest=False)
 
     # Parse args
     args = parser.parse_args()
@@ -28,6 +30,7 @@ def main(_=None):
     nb_rows = int(args.rows)
     nb_cols = int(args.cols)
     time_sort = args.time_sort
+    shortest = args.shortest
 
     # Validate mosaic size against number of videos
     video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv'),
@@ -35,14 +38,16 @@ def main(_=None):
     nb_videos = len(video_paths)
     assert (nb_cols*nb_rows) <= nb_videos
 
+    overlay_option = 'shortest' if shortest else 'repeatlast'
+
     # Generate commands parts
     input_line = " ".join([f'-i "{path}"' for path in video_paths])
     entries_line = "; ".join([f"[{i}:v] setpts=PTS-STARTPTS, scale={width}x{height} [vid{i}]"
                               for i in range(nb_videos)])
     pos_line = "; ".join([f"[tmp{nb_cols*row+col}][vid{nb_cols*row+col}] "
-                          f"overlay=repeatlast=1:x={width*col}:y={height*row} [tmp{nb_cols*row+col+1}]"
+                          f"overlay={overlay_option}=1:x={width*col}:y={height*row} [tmp{nb_cols*row+col+1}]"
                           for col in range(nb_cols) for row in range(nb_rows)])[:-7]
-    pos_line = "[base][vid0] overlay=shortest=1:x=0:y=0 [tmp1]; " + pos_line.split(';', 1)[-1]
+    pos_line = f"[base][vid0] overlay={overlay_option}=1:x=0:y=0 [tmp1]; " + pos_line.split(';', 1)[-1]
 
     # Run command
     command = f'ffmpeg '\

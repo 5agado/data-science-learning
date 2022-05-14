@@ -15,8 +15,10 @@ sys.path.append(str(SRC_PATH))
 
 import Automaton
 import automata_blender_utils
+import mnca_utils
 import importlib
 importlib.reload(Automaton)
+importlib.reload(mnca_utils)
 importlib.reload(automata_blender_utils)
 from Automaton import AutomatonND
 
@@ -36,6 +38,9 @@ ca3d_rule = {'neighbours_count_born': neighbours_count_born,  # count required t
 
 grid_shape = (height, nb_rows, nb_cols)
 gol = AutomatonND(grid_shape, ca3d_rule, seed=seed)
+
+images_path = Path("D:/generative_output/cellular_automata/automaton_hexagonal/flat_hexa_logo")
+init_grid = mnca_utils.get_image_init_grid(images_path / '15' / 'run_24.png', shape=(nb_rows, nb_cols))
 
 # run full sim for nb_epoch and store results
 # load then the necessary layers based on current frame

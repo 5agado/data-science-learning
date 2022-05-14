@@ -3,9 +3,16 @@
 
 # proposed setup to ignore margins: https://ipython-books.github.io/124-simulating-a-partial-differential-equation-reaction-diffusion-systems-and-turing-patterns/
 
-import numpy as np
 from typing import Tuple
-from scipy import signal, ndimage
+
+use_cupy = True
+if use_cupy:
+    import cupy as np
+    from cupyx.scipy.ndimage.filters import laplace
+else:
+    import numpy as np
+    from scipy.ndimage.filters import laplace
+from scipy import signal
 
 # Some sample tested configs
 
@@ -56,8 +63,9 @@ class ReactionDiffusionSystem:
         if init_fun is None:
             init_fun = get_init_state
         A, B = init_fun(self.shape)
-        self.A = A
-        self.B = B
+        # conversion to np.float16 specifically needed when relying on Cupy
+        self.A = A.astype(np.float16)
+        self.B = B.astype(np.float16)
 
         self.validate_change_threshold = validate_change_threshold
 
@@ -68,9 +76,10 @@ class ReactionDiffusionSystem:
         :return:
         """
         new_A, new_B = gray_scott_update(self.A, self.B,
-                                           self.config['COEFF_A'], self.config['COEFF_B'],
-                                           f=self.config['FEED_RATE'], k=self.config['KILL_RATE'],
-                                           delta_t=delta_t)
+                                         self.config['COEFF_A'], self.config['COEFF_B'],
+                                         f=self.config['FEED_RATE'], k=self.config['KILL_RATE'],
+                                         delta_t=delta_t,
+                                         boundary=self.config['boundary'])
 
         if self.validate_change_threshold > 0.:
             abs_change = abs((self.B - new_B).sum())
@@ -90,6 +99,18 @@ class ReactionDiffusionSystem:
         """
         for step in range(steps):
             self.update(delta_t=delta_t)
+
+    def get_concentration(self, get_a=False):
+        """
+        Util method to handle conversion from Cupy, if used
+        :param get_a:
+        :return:
+        """
+        concentration = self.A if get_a else self.B
+        if use_cupy:
+            return np.asnumpy(concentration)  # convert from cupy to numpy
+        else:
+            return concentration.copy()
 
 
 def discrete_laplacian(M: np.ndarray, kernel: np.ndarray):
@@ -133,22 +154,24 @@ kernel_2d_2 = np.array([
     [.2, -1, .2],
     [.05, .2, .05]
 ])
-def discrete_laplacian_convolve(M: np.ndarray, kernel: np.ndarray):
+def discrete_laplacian_convolve(M: np.ndarray, kernel: np.ndarray, boundary: str):
     """Get the discrete Laplacian of matrix M via a 2D convolution operation
     Seems to perform way worse then the purely numpy implementation
     """
-    return signal.convolve2d(M, kernel, mode='same', boundary='wrap')
+    return signal.convolve2d(M, kernel, mode='same', boundary=boundary)
     #return ndimage.filters.convolve(M, kernel, mode='wrap')
 
 
-def discrete_laplacian_nd_convolve(M: np.ndarray):
+def discrete_laplacian_nd_convolve(M: np.ndarray, boundary: str):
     """Get the discrete Laplacian of matrix M
     """
     #return discrete_laplacian(M, None)
-    return ndimage.filters.laplace(M, mode='wrap')
+    return laplace(M, mode=boundary)
 
 
-def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delta_t):
+def gray_scott_update(A: np.ndarray, B: np.ndarray,
+                      coeff_A: float, coeff_B: float, f: float, k: float, delta_t: float,
+                      boundary: str):
     """
     Updates a concentration configuration according to a Gray-Scott model
     :param A: concentration configuration A
@@ -158,16 +181,17 @@ def gray_scott_update(A: np.ndarray, B: np.ndarray, coeff_A, coeff_B, f, k, delt
     :param f: feed rate (will be scaled by (1-A) so A doesn't exceed 1.0)
     :param k: kill rate
     :param delta_t: change in time for each iteration
+    :param boundary: how laplacian convolution handles boundary region (e.g. 'wrap', 'reflect')
     :return: new A and B values
     """
 
     # compute Laplacian of the two concentrations
     if len(A.shape) == 2:
-        lA = discrete_laplacian_convolve(A, kernel_2d)
-        lB = discrete_laplacian_convolve(B, kernel_2d)
+        lA = discrete_laplacian_convolve(A, kernel_2d, boundary=boundary)
+        lB = discrete_laplacian_convolve(B, kernel_2d, boundary=boundary)
     else:
-        lA = discrete_laplacian_nd_convolve(A)
-        lB = discrete_laplacian_nd_convolve(B)
+        lA = discrete_laplacian_nd_convolve(A, boundary=boundary)
+        lB = discrete_laplacian_nd_convolve(B, boundary=boundary)
 
     # apply the update formula
     AB_squared = A * B ** 2
@@ -229,9 +253,19 @@ def get_cube_mask(shape: tuple, side: int, center=(0,0,0)):
     assert len(shape) == 3, 'Mask should be 3D'
 
     mask = np.zeros(shape, dtype=np.int)
-    s = side//2
+    s = int(side//2)
     mask[max(0, center[0] - s):center[0] + s,
          max(0, center[1] - s):center[1] + s,
          max(0, center[2] - s):center[2] + s] = 1
 
     return mask
+
+
+def get_sphere_mask(shape: tuple, radius_minmax: int, center=(0,0,0)):
+    Y, X, Z = np.ogrid[:shape[0], :shape[1], :shape[2]]
+    dist_from_center = np.sqrt((X - center[0]) ** 2 + (Y - center[1]) ** 2 + (Z - center[2]) ** 2)
+
+    grid = np.zeros_like(dist_from_center)
+    mask = ((dist_from_center >= radius_minmax[0]) & (dist_from_center < radius_minmax[1]))
+    grid[mask] = 1
+    return grid.astype(int)
