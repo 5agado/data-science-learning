@@ -35,14 +35,14 @@ def load_mask_img(img_path, shape):
     return mask
 
 
-def prepare_mask(mask_path, mask_shape, mask_brightness_adjust=1.0, mask_contrast_adjust=1.0,
-                 invert_mask=False):
+def prepare_mask(mask_path, mask_shape, mask_brightness_adjust=1.0, mask_contrast_adjust=1.0, invert_mask=False):
     """
 
     :param mask_path: path to the mask image
     :param mask_shape: shape of the image to match, usually latent_image.shape
     :param mask_brightness_adjust: amount to adjust brightness of the iamge, 0 is black, 1 is no adjustment, >1 is brighter
     :param mask_contrast_adjust: amount to adjust contrast of the image, 0 is a flat grey image, 1 is no adjustment, >1 is more contrast
+    :param invert_mask:
     :return:
     """
 

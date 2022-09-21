@@ -25,7 +25,7 @@ def sampler_fn(c: torch.Tensor, uc: torch.Tensor, args,
     shape = [args.C, args.H // args.f, args.W // args.f]
     sigmas: torch.Tensor = model_wrap.get_sigmas(args.steps)
     sigmas = sigmas[len(sigmas) - t_enc - 1 :]
-    if args.use_init:
+    if args.init_img:
         if len(sigmas) > 0:
             x = (
                 init_latent

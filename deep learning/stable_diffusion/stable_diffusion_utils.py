@@ -60,8 +60,8 @@ def load_model_from_config(config, ckpt, verbose=False):
 
 class config():
     def __init__(self):
-        self.ckpt = 'D:/models/stable_diffusion/sd-v1-4.ckpt'
-        self.config = str(projects_dir / 'stable-diffusion/configs/stable-diffusion/v1-inference.yaml')
+        self.ckpt = ''
+        self.config = ''
         self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
         self.n_steps = 100
         self.fixed_code = True
@@ -85,6 +85,22 @@ class config():
         self.W = 512
         self.C = 4  # number of channels in the images
         self.f = 8  # image to latent space resolution reduction
+
+    def process_config(self):
+        if self.seed == -1:
+            self.seed = random.randint(0, 2 ** 32)
+
+        self.strength = max(0.0, min(1.0, 1.0 - self.strength))
+        self.W, self.H = map(lambda x: x - x % 64, (self.W, self.H))  # resize to integer multiple of 64
+
+        if self.strength >= 1 or self.init_img is None:
+            self.init_img = ""
+
+        # if self.init_img is not None and self.init_img != '':
+        #     self.sampler = 'ddim'
+        #
+        # if self.sampler != 'ddim':
+        #     self.ddim_eta = 0.0
 
 
 def make_callback(sampler_name, dynamic_threshold=None, static_threshold=None, mask=None, init_latent=None, sigmas=None,
@@ -184,12 +200,13 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
         mask = prepare_mask(opt.mask_path, init_latent.shape,
                             opt.mask_contrast_adjust, opt.mask_brightness_adjust)
 
-        mask = mask.to(device).repeat(mask, '1 ... -> b ...', b=batch_size)
+        mask = mask.to(device)
+        mask = repeat(mask, '1 ... -> b ...', b=batch_size)
     else:
         mask = None
 
     t_enc = int(opt.strength * opt.n_steps)
-    # t_enc = int((1.0 - args.strength) * args.steps)
+    #t_enc = int((1.0 - opt.strength) * opt.n_steps)
     # Noise schedule for the k-diffusion samplers (used for masking)
     k_sigmas = model_wrap.get_sigmas(opt.n_steps)
     k_sigmas = k_sigmas[len(k_sigmas) - t_enc - 1:]
@@ -245,7 +262,7 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
 
                             if opt.sampler == 'ddim':
                                 samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
-                                                         unconditional_conditioning=un_cond, img_callback=callback)
+                                                         unconditional_conditioning=un_cond)
                             elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
                                 shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
                                 samples, _ = sampler.sample(S=opt.n_steps,
@@ -267,7 +284,7 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
                         for x_sample in x_samples:
                             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                             images.append(Image.fromarray(x_sample.astype(np.uint8)))
-                            filepath = os.path.join(opt.outdir, f"{batch_name}({batch_idx})_{sample_idx:04}.png")
+                            filepath = os.path.join(opt.outdir, f"{batch_name}_{batch_idx}_{sample_idx:04}.png")
                             print(f"Saving to {filepath}")
                             Image.fromarray(x_sample.astype(np.uint8)).save(filepath)
                             sample_idx += 1
