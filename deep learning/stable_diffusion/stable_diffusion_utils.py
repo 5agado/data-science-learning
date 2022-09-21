@@ -1,4 +1,6 @@
-# adapted from https://colab.research.google.com/drive/1Jz9W_yxdEhImnw8qPxBP77mzArP1FNwE#scrollTo=wzmVAdZ1-5tE
+# adapted from the following resources:
+# https://colab.research.google.com/drive/1Jz9W_yxdEhImnw8qPxBP77mzArP1FNwE#scrollTo=wzmVAdZ1-5tE
+# https://github.com/deforum/stable-diffusion
 
 import argparse, gc, json, os, random, sys, time, glob, requests
 import torch
@@ -23,8 +25,10 @@ from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 
-from k_diffusion.sampling import sample_lms
 from k_diffusion.external import CompVisDenoiser
+
+from image_utils import load_img, prepare_mask
+from k_samplers import sampler_fn
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -54,27 +58,20 @@ def load_model_from_config(config, ckpt, verbose=False):
     return model
 
 
-class CFGDenoiser(nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.inner_model = model
-
-    def forward(self, x, sigma, uncond, cond, cond_scale):
-        x_in = torch.cat([x] * 2)
-        sigma_in = torch.cat([sigma] * 2)
-        cond_in = torch.cat([uncond, cond])
-        uncond, cond = self.inner_model(x_in, sigma_in, cond=cond_in).chunk(2)
-        return uncond + (cond - uncond) * cond_scale
-
-
 class config():
     def __init__(self):
         self.ckpt = 'D:/models/stable_diffusion/sd-v1-4.ckpt'
         self.config = str(projects_dir / 'stable-diffusion/configs/stable-diffusion/v1-inference.yaml')
-        self.ddim_eta = 0.0
-        self.ddim_steps = 100
+        self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
+        self.n_steps = 100
         self.fixed_code = True
         self.init_img = None
+        self.init_latent = None
+        self.mask_path = None
+        self.mask_contrast_adjust = 1.
+        self.mask_brightness_adjust = 1.
+        self.dynamic_threshold = None
+        self.static_threshold = None
         self.n_iter = 1
         self.n_samples = 1
         self.outdir = ""
@@ -86,24 +83,67 @@ class config():
         self.strength = 0.75  # strength for noising/unnoising. 1.0 corresponds to full destruction of information in init image
         self.H = 512
         self.W = 512
-        self.C = 4
-        self.f = 8
+        self.C = 4  # number of channels in the images
+        self.f = 8  # image to latent space resolution reduction
 
 
-def load_img(path, shape):
-    if path.startswith('http://') or path.startswith('https://'):
-        image = Image.open(requests.get(path, stream=True).raw).convert('RGB')
+def make_callback(sampler_name, dynamic_threshold=None, static_threshold=None, mask=None, init_latent=None, sigmas=None,
+                  sampler=None, masked_noise_modifier=1.0):
+    # Creates the callback function to be passed into the samplers
+    # The callback function is applied to the image at each step
+    def dynamic_thresholding_(img, threshold):
+        # Dynamic thresholding from Imagen paper (May 2022)
+        s = np.percentile(np.abs(img.cpu()), threshold, axis=tuple(range(1, img.ndim)))
+        s = np.max(np.append(s, 1.0))
+        torch.clamp_(img, -1 * s, s)
+        torch.FloatTensor.div_(img, s)
+
+    # Callback for samplers in the k-diffusion repo, called thus:
+    #   callback({'x': x, 'i': i, 'sigma': sigmas[i], 'sigma_hat': sigmas[i], 'denoised': denoised})
+    def k_callback_(args_dict):
+        if dynamic_threshold is not None:
+            dynamic_thresholding_(args_dict['x'], dynamic_threshold)
+        if static_threshold is not None:
+            torch.clamp_(args_dict['x'], -1 * static_threshold, static_threshold)
+        if mask is not None:
+            init_noise = init_latent + noise * args_dict['sigma']
+            is_masked = torch.logical_and(mask >= mask_schedule[args_dict['i']], mask != 0)
+            new_img = init_noise * torch.where(is_masked, 1, 0) + args_dict['x'] * torch.where(is_masked, 0, 1)
+            args_dict['x'].copy_(new_img)
+
+    # Function that is called on the image (img) and step (i) at each step
+    def img_callback_(img, i):
+        # Thresholding functions
+        if dynamic_threshold is not None:
+            dynamic_thresholding_(img, dynamic_threshold)
+        if static_threshold is not None:
+            torch.clamp_(img, -1 * static_threshold, static_threshold)
+        if mask is not None:
+            i_inv = len(sigmas) - i - 1
+            init_noise = sampler.stochastic_encode(init_latent, torch.tensor([i_inv] * batch_size).to(device),
+                                                   noise=noise)
+            is_masked = torch.logical_and(mask >= mask_schedule[i], mask != 0)
+            new_img = init_noise * torch.where(is_masked, 1, 0) + img * torch.where(is_masked, 0, 1)
+            img.copy_(new_img)
+
+    if init_latent is not None:
+        noise = torch.randn_like(init_latent, device=device) * masked_noise_modifier
+    if sigmas is not None and len(sigmas) > 0:
+        mask_schedule, _ = torch.sort(sigmas / torch.max(sigmas))
+    elif len(sigmas) == 0:
+        mask = None  # no mask needed if no steps (usually happens because strength==1.0)
+    if sampler_name in ["plms", "ddim"]:
+        # Callback function formated for compvis latent diffusion samplers
+        if mask is not None:
+            assert sampler is not None, "Callback function for stable-diffusion samplers requires sampler variable"
+            batch_size = init_latent.shape[0]
+
+        callback = img_callback_
     else:
-        if os.path.isdir(path):
-            files = [file for file in os.listdir(path) if file.endswith('.png') or file.endswith('.jpg')]
-            path = os.path.join(path, random.choice(files))
-            print(f"Chose random init image {path}")
-        image = Image.open(path).convert('RGB')
-    image = image.resize(shape, resample=PIL.Image.LANCZOS)
-    image = np.array(image).astype(np.float16) / 255.0
-    image = image[None].transpose(0, 3, 1, 2)
-    image = torch.from_numpy(image)
-    return 2. * image - 1.
+        # Default callback function uses k-diffusion sampler variables
+        callback = k_callback_
+
+    return callback
 
 
 def generate(opt, model, batch_name, batch_idx, sample_idx):
@@ -121,19 +161,53 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
     assert prompt is not None
     data = [batch_size * [prompt]]
 
-    init_latent = None
-    if opt.init_img is not None and opt.init_img != '':
+    # Get init latent code
+    # take the one provided directly, or extract from init-image by encoding it (find its latent representation)
+    # ??what if neither of those??
+    if opt.init_latent is not None:
+        init_latent = opt.init_latent
+    elif opt.init_img is not None and opt.init_img != '':
         init_image = load_img(opt.init_img, shape=(opt.W, opt.H)).to(device)
         init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
-        init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))  # move to latent space
+        init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))
+    else:
+        init_latent = None
 
-    sampler.make_schedule(ddim_num_steps=opt.ddim_steps, ddim_eta=opt.ddim_eta, verbose=False)
+    if not opt.init_img and opt.strength > 0:
+        print("\nNo init image, but strength > 0. This may give you some strange results.\n")
 
-    t_enc = int(opt.strength * opt.ddim_steps)
+    # Mask functions
+    if opt.mask_path:
+        assert opt.init_img, "init_img is required for a mask"
+        assert init_latent is not None, "A latent init image is required for a mask"
 
-    start_code = None
-    if opt.fixed_code and init_latent == None:
+        mask = prepare_mask(opt.mask_path, init_latent.shape,
+                            opt.mask_contrast_adjust, opt.mask_brightness_adjust)
+
+        mask = mask.to(device).repeat(mask, '1 ... -> b ...', b=batch_size)
+    else:
+        mask = None
+
+    t_enc = int(opt.strength * opt.n_steps)
+    # t_enc = int((1.0 - args.strength) * args.steps)
+    # Noise schedule for the k-diffusion samplers (used for masking)
+    k_sigmas = model_wrap.get_sigmas(opt.n_steps)
+    k_sigmas = k_sigmas[len(k_sigmas) - t_enc - 1:]
+
+    sampler.make_schedule(ddim_num_steps=opt.n_steps, ddim_eta=opt.ddim_eta, verbose=False)
+
+    callback = make_callback(sampler_name=opt.sampler,
+                             dynamic_threshold=opt.dynamic_threshold,
+                             static_threshold=opt.static_threshold,
+                             mask=mask,
+                             init_latent=init_latent,
+                             sigmas=k_sigmas,
+                             sampler=sampler)
+
+    if opt.fixed_code and init_latent is None:
         start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+    else:
+        start_code = None
 
     images = []
     precision_scope = autocast if opt.precision == "autocast" else nullcontext
@@ -142,39 +216,50 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
             with model.ema_scope():
                 for n in range(opt.n_iter):
                     for prompts in data:
-                        uc = None
+                        # In unconditional scaling is not 1 get the embeddings for empty prompts (no conditioning)
                         if opt.scale != 1.0:
-                            uc = model.get_learned_conditioning(batch_size * [""])
+                            un_cond = model.get_learned_conditioning(batch_size * [""])
+                        else:
+                            un_cond = None
                         if isinstance(prompts, tuple):
                             prompts = list(prompts)
-                        c = model.get_learned_conditioning(prompts)
+                        cond = model.get_learned_conditioning(prompts)
 
-                        if init_latent != None:
-                            z_enc = sampler.stochastic_encode(init_latent,
-                                                              torch.tensor([t_enc] * batch_size).to(device))
-                            samples = sampler.decode(z_enc, c, t_enc, unconditional_guidance_scale=opt.scale,
-                                                     unconditional_conditioning=uc, )
+                        if opt.sampler in ["klms", "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]:
+                            samples = sampler_fn(
+                                c=cond,
+                                uc=un_cond,
+                                args=opt,
+                                model_wrap=model_wrap,
+                                init_latent=init_latent,
+                                t_enc=t_enc,
+                                device=device,
+                                cb=callback)
                         else:
-
-                            if opt.sampler == 'klms':
-                                print("Using KLMS sampling")
-                                shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
-                                sigmas = model_wrap.get_sigmas(opt.ddim_steps)
-                                model_wrap_cfg = CFGDenoiser(model_wrap)
-                                x = torch.randn([opt.n_samples, *shape], device=device) * sigmas[0]
-                                extra_args = {'cond': c, 'uncond': uc, 'cond_scale': opt.scale}
-                                samples = sample_lms(model_wrap_cfg, x, sigmas, extra_args=extra_args, disable=False)
+                            if init_latent is not None:
+                                z_enc = sampler.stochastic_encode(init_latent,
+                                                                  torch.tensor([t_enc] * batch_size).to(device))
                             else:
+                                z_enc = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f],
+                                                    device=device)
+
+                            if opt.sampler == 'ddim':
+                                samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
+                                                         unconditional_conditioning=un_cond, img_callback=callback)
+                            elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
                                 shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
-                                samples, _ = sampler.sample(S=opt.ddim_steps,
-                                                            conditioning=c,
+                                samples, _ = sampler.sample(S=opt.n_steps,
+                                                            conditioning=cond,
                                                             batch_size=opt.n_samples,
                                                             shape=shape,
                                                             verbose=False,
                                                             unconditional_guidance_scale=opt.scale,
-                                                            unconditional_conditioning=uc,
+                                                            unconditional_conditioning=un_cond,
                                                             eta=opt.ddim_eta,
-                                                            x_T=start_code)
+                                                            x_T=start_code,
+                                                            img_callback=callback)
+                            else:
+                                raise Exception(f"Sampler {opt.sampler} not recognised.")
 
                         x_samples = model.decode_first_stage(samples)
                         x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
