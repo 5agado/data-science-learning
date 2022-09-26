@@ -22,7 +22,8 @@ sys.path.append(str(projects_dir / 'stable-diffusion'))
 sys.path.append(str(projects_dir / 'taming-transformers'))
 
 from ldm.util import instantiate_from_config
-from ldm.models.diffusion.ddim import DDIMSampler
+#from ldm.models.diffusion.ddim import DDIMSampler
+from ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 
 from k_diffusion.external import CompVisDenoiser
@@ -63,7 +64,7 @@ class config():
         self.ckpt = ''
         self.config = ''
         self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
-        self.n_steps = 100
+        self.n_steps = 100  # number of diffusion steps
         self.fixed_code = True
         self.init_img = None
         self.init_latent = None
@@ -73,14 +74,14 @@ class config():
         self.dynamic_threshold = None
         self.static_threshold = None
         self.n_iter = 1
-        self.n_samples = 1
+        self.n_samples = 1 # not exposed, you can do 2 or more based on GPU ram
         self.outdir = ""
         self.precision = 'autocast'
         self.prompt = ""
         self.sampler = 'klms'
         self.scale = 7.5
         self.seed = 42
-        self.strength = 0.75  # strength for noising/unnoising. 1.0 corresponds to full destruction of information in init image
+        self.strength = 0.75  # strength for noising/unnoising. how much the init image is used
         self.H = 512
         self.W = 512
         self.C = 4  # number of channels in the images
@@ -93,8 +94,11 @@ class config():
         self.strength = max(0.0, min(1.0, 1.0 - self.strength))
         self.W, self.H = map(lambda x: x - x % 64, (self.W, self.H))  # resize to integer multiple of 64
 
-        if self.strength >= 1 or self.init_img is None:
-            self.init_img = ""
+        if self.init_img is not None and self.init_img == '':
+            self.init_img = None
+
+        if self.mask_path is not None and self.mask_path == '':
+            self.mask_path = None
 
         # if self.init_img is not None and self.init_img != '':
         #     self.sampler = 'ddim'
@@ -182,15 +186,12 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
     # ??what if neither of those??
     if opt.init_latent is not None:
         init_latent = opt.init_latent
-    elif opt.init_img is not None and opt.init_img != '':
+    elif opt.init_img is not None:
         init_image = load_img(opt.init_img, shape=(opt.W, opt.H)).to(device)
         init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
         init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))
     else:
         init_latent = None
-
-    if not opt.init_img and opt.strength > 0:
-        print("\nNo init image, but strength > 0. This may give you some strange results.\n")
 
     # Mask functions
     if opt.mask_path:
@@ -220,11 +221,6 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
                              init_latent=init_latent,
                              sigmas=k_sigmas,
                              sampler=sampler)
-
-    if opt.fixed_code and init_latent is None:
-        start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
-    else:
-        start_code = None
 
     images = []
     precision_scope = autocast if opt.precision == "autocast" else nullcontext
@@ -262,7 +258,8 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
 
                             if opt.sampler == 'ddim':
                                 samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
-                                                         unconditional_conditioning=un_cond)
+                                                         unconditional_conditioning=un_cond, img_callback=callback,
+                                                         mask=mask, init_latent=init_latent)
                             elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
                                 shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
                                 samples, _ = sampler.sample(S=opt.n_steps,
@@ -273,7 +270,7 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
                                                             unconditional_guidance_scale=opt.scale,
                                                             unconditional_conditioning=un_cond,
                                                             eta=opt.ddim_eta,
-                                                            x_T=start_code,
+                                                            x_T=z_enc,
                                                             img_callback=callback)
                             else:
                                 raise Exception(f"Sampler {opt.sampler} not recognised.")

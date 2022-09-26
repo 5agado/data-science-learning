@@ -12,10 +12,13 @@ import torchvision.transforms.functional as TF
 
 
 def _load_img(img_path, shape):
-    if img_path.startswith('http://') or img_path.startswith('https://'):
-        image = Image.open(requests.get(img_path, stream=True).raw).convert('RGB')
+    if type(img_path) in [str, Path]:
+        if img_path.startswith('http://') or img_path.startswith('https://'):
+            image = Image.open(requests.get(img_path, stream=True).raw).convert('RGB')
+        else:
+            image = Image.open(img_path).convert('RGB')
     else:
-        image = Image.open(img_path).convert('RGB')
+        image = Image.fromarray(cv2.cvtColor(img_path, cv2.COLOR_BGR2RGB))
 
     image = image.resize(shape, resample=Image.LANCZOS)
     return image
@@ -29,8 +32,8 @@ def load_img(img_path, shape):
     return 2. * image - 1.
 
 
-def load_mask_img(img_path, shape):
-    mask = _load_img(img_path, (shape[-1], shape[-2]))
+def load_mask_img(image, shape):
+    mask = _load_img(image, (shape[-1], shape[-2]))
     mask = mask.convert("L")
     return mask
 

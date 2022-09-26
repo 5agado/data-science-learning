@@ -28,6 +28,5 @@ setup(
         'imageio-ffmpeg',
         'pillow',
         'ipywidgets',
-        'jupyter_contrib_nbextensions',
     ],
 )
