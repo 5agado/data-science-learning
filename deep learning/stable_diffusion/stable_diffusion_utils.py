@@ -2,14 +2,12 @@
 # https://colab.research.google.com/drive/1Jz9W_yxdEhImnw8qPxBP77mzArP1FNwE#scrollTo=wzmVAdZ1-5tE
 # https://github.com/deforum/stable-diffusion
 
-import argparse, gc, json, os, random, sys, time, glob, requests
+import os, random, sys
 import torch
 import torch.nn as nn
 import numpy as np
-import PIL
 from contextlib import contextmanager, nullcontext
 from einops import rearrange, repeat
-from itertools import islice
 from PIL import Image
 from pytorch_lightning import seed_everything
 from torch import autocast
@@ -33,28 +31,30 @@ from k_samplers import sampler_fn
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
-
-
 def load_model_from_config(config, ckpt, verbose=False):
-    print(f"Loading model from {ckpt}")
+    print(f">> Loading model from {ckpt}")
     pl_sd = torch.load(ckpt, map_location="cpu")
-    if "global_step" in pl_sd:
-        print(f"Global Step: {pl_sd['global_step']}")
+    # if "global_step" in pl_sd:
+    #     print(f"Global Step: {pl_sd['global_step']}")
     sd = pl_sd["state_dict"]
     model = instantiate_from_config(config.model)
     m, u = model.load_state_dict(sd, strict=False)
-    if len(m) > 0 and verbose:
-        print("missing keys:")
-        print(m)
-    if len(u) > 0 and verbose:
-        print("unexpected keys:")
-        print(u)
 
-    model = model.half().to(device)
+    if config.full_precision:
+        print('Using slower but more accurate full-precision math')
+    else:
+        print('Using half precision math')
+        model.half()
+
+    model = model.to(device)
     model.eval()
+
+    # allow for seamless generation if specified
+    for m in model.modules():
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+            m._orig_padding_mode = m.padding_mode
+            m.padding_mode = 'circular' if config.seamless else m._orig_padding_mode
+
     return model
 
 
@@ -64,7 +64,7 @@ class config():
         self.config = ''
         self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
         self.n_steps = 100
-        self.fixed_code = True
+        self.fixed_code = True # ???
         self.init_img = None
         self.init_latent = None
         self.mask_path = None
@@ -72,6 +72,7 @@ class config():
         self.mask_brightness_adjust = 1.
         self.dynamic_threshold = None
         self.static_threshold = None
+        self.seamless = False
         self.n_iter = 1
         self.n_samples = 1
         self.outdir = ""
@@ -85,6 +86,7 @@ class config():
         self.W = 512
         self.C = 4  # number of channels in the images
         self.f = 8  # image to latent space resolution reduction
+        self.full_precision = False
 
     def process_config(self):
         if self.seed == -1:
@@ -162,6 +164,16 @@ def make_callback(sampler_name, dynamic_threshold=None, static_threshold=None, m
     return callback
 
 
+def samples_to_images(model, samples):
+    images = []
+    x_samples = model.model.decode_first_stage(samples)
+    x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+    for x_sample in x_samples:
+        x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
+        images.append(Image.fromarray(x_sample.astype(np.uint8)))
+    return images
+
+
 def generate(opt, model, batch_name, batch_idx, sample_idx):
     seed_everything(opt.seed)
     os.makedirs(opt.outdir, exist_ok=True)
@@ -221,71 +233,60 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
                              sigmas=k_sigmas,
                              sampler=sampler)
 
-    if opt.fixed_code and init_latent is None:
-        start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
-    else:
-        start_code = None
-
-    images = []
     precision_scope = autocast if opt.precision == "autocast" else nullcontext
     with torch.no_grad():
-        with precision_scope("cuda"):
-            with model.ema_scope():
-                for n in range(opt.n_iter):
-                    for prompts in data:
-                        # In unconditional scaling is not 1 get the embeddings for empty prompts (no conditioning)
-                        if opt.scale != 1.0:
-                            un_cond = model.get_learned_conditioning(batch_size * [""])
+        with precision_scope("cuda"), model.ema_scope():
+            for n in range(opt.n_iter):
+                for prompts in data:
+                    # In unconditional scaling is not 1 get the embeddings for empty prompts (no conditioning)
+                    if opt.scale != 1.0:
+                        un_cond = model.get_learned_conditioning(batch_size * [""])
+                    else:
+                        un_cond = None
+                    if isinstance(prompts, tuple):
+                        prompts = list(prompts)
+                    cond = model.get_learned_conditioning(prompts)
+
+                    if opt.sampler in ["klms", "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]:
+                        samples = sampler_fn(
+                            c=cond,
+                            uc=un_cond,
+                            args=opt,
+                            model_wrap=model_wrap,
+                            init_latent=init_latent,
+                            t_enc=t_enc,
+                            device=device,
+                            cb=callback)
+                    else:
+                        if init_latent is not None:
+                            z_enc = sampler.stochastic_encode(init_latent,
+                                                              torch.tensor([t_enc] * batch_size).to(device))
                         else:
-                            un_cond = None
-                        if isinstance(prompts, tuple):
-                            prompts = list(prompts)
-                        cond = model.get_learned_conditioning(prompts)
+                            z_enc = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f],
+                                                device=device)
 
-                        if opt.sampler in ["klms", "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]:
-                            samples = sampler_fn(
-                                c=cond,
-                                uc=un_cond,
-                                args=opt,
-                                model_wrap=model_wrap,
-                                init_latent=init_latent,
-                                t_enc=t_enc,
-                                device=device,
-                                cb=callback)
+                        if opt.sampler == 'ddim':
+                            samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
+                                                     unconditional_conditioning=un_cond)
+                        elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
+                            shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
+                            samples, _ = sampler.sample(S=opt.n_steps,
+                                                        conditioning=cond,
+                                                        batch_size=opt.n_samples,
+                                                        shape=shape,
+                                                        verbose=False,
+                                                        unconditional_guidance_scale=opt.scale,
+                                                        unconditional_conditioning=un_cond,
+                                                        eta=opt.ddim_eta,
+                                                        x_T=z_enc,
+                                                        img_callback=callback)
                         else:
-                            if init_latent is not None:
-                                z_enc = sampler.stochastic_encode(init_latent,
-                                                                  torch.tensor([t_enc] * batch_size).to(device))
-                            else:
-                                z_enc = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f],
-                                                    device=device)
+                            raise Exception(f"Sampler {opt.sampler} not recognised.")
 
-                            if opt.sampler == 'ddim':
-                                samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
-                                                         unconditional_conditioning=un_cond)
-                            elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
-                                shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
-                                samples, _ = sampler.sample(S=opt.n_steps,
-                                                            conditioning=cond,
-                                                            batch_size=opt.n_samples,
-                                                            shape=shape,
-                                                            verbose=False,
-                                                            unconditional_guidance_scale=opt.scale,
-                                                            unconditional_conditioning=un_cond,
-                                                            eta=opt.ddim_eta,
-                                                            x_T=start_code,
-                                                            img_callback=callback)
-                            else:
-                                raise Exception(f"Sampler {opt.sampler} not recognised.")
-
-                        x_samples = model.decode_first_stage(samples)
-                        x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
-
-                        for x_sample in x_samples:
-                            x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-                            images.append(Image.fromarray(x_sample.astype(np.uint8)))
-                            filepath = os.path.join(opt.outdir, f"{batch_name}_{batch_idx}_{sample_idx:04}.png")
-                            print(f"Saving to {filepath}")
-                            Image.fromarray(x_sample.astype(np.uint8)).save(filepath)
-                            sample_idx += 1
-    return images
+                    images = samples_to_images(model, samples)
+                    for image in images:
+                        filepath = os.path.join(opt.outdir, f"{batch_name}_{batch_idx}_{sample_idx:04}.png")
+                        print(f"Saving to {filepath}")
+                        image.save(filepath)
+                        sample_idx += 1
+    return []
