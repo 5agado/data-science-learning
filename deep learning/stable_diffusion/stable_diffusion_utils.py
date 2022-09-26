@@ -166,7 +166,7 @@ def make_callback(sampler_name, dynamic_threshold=None, static_threshold=None, m
 
 def samples_to_images(model, samples):
     images = []
-    x_samples = model.model.decode_first_stage(samples)
+    x_samples = model.decode_first_stage(samples)
     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
     for x_sample in x_samples:
         x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
