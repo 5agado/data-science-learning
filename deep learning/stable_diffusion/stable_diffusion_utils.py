@@ -1,12 +1,11 @@
 # adapted from the following resources:
-# https://colab.research.google.com/drive/1Jz9W_yxdEhImnw8qPxBP77mzArP1FNwE#scrollTo=wzmVAdZ1-5tE
 # https://github.com/deforum/stable-diffusion
 
 import os, random, sys
 import torch
 import torch.nn as nn
 import numpy as np
-from contextlib import contextmanager, nullcontext
+from contextlib import nullcontext
 from einops import rearrange, repeat
 from PIL import Image
 from pytorch_lightning import seed_everything
@@ -14,22 +13,26 @@ from torch import autocast
 from pathlib import Path
 
 projects_dir = Path.home() / 'Documents/python_workspace'
-sys.path.append(str(projects_dir / "CLIP"))
+sys.path.append(str(projects_dir / 'data-science-learning'))
+sys.path.append(str(projects_dir / 'CLIP'))
 sys.path.append(str(projects_dir / 'k-diffusion'))
-sys.path.append(str(projects_dir / 'stable-diffusion'))
+sys.path.append(str(projects_dir / 'stable-diffusion'))  # https://github.com/CompVis/stable-diffusion
+#sys.path.append(str(projects_dir / 'InvokeAI'))          # https://github.com/invoke-ai/InvokeAI
 sys.path.append(str(projects_dir / 'taming-transformers'))
 
+# dependent repos utils
 from ldm.util import instantiate_from_config
 #from ldm.models.diffusion.ddim import DDIMSampler
-from ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 
 from k_diffusion.external import CompVisDenoiser
 
+# local utils
 from image_utils import load_img, prepare_mask
 from k_samplers import sampler_fn
+from ddim import DDIMSampler
 
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 def set_conv_padding_type(model, is_seamless):
     # allow for seamless generation if specified
@@ -38,16 +41,14 @@ def set_conv_padding_type(model, is_seamless):
             m.padding_mode = 'circular' if is_seamless else m._orig_padding_mode
 
 
-def load_model_from_config(config, ckpt, verbose=False):
-    print(f">> Loading model from {ckpt}")
-    pl_sd = torch.load(ckpt, map_location="cpu")
-    # if "global_step" in pl_sd:
-    #     print(f"Global Step: {pl_sd['global_step']}")
-    sd = pl_sd["state_dict"]
+def load_model_from_config(config, ckpt, full_precision= False):
+    print(f'>> Loading model from {ckpt}')
+    pl_sd = torch.load(ckpt, map_location='cpu')
+    sd = pl_sd['state_dict']
     model = instantiate_from_config(config.model)
     m, u = model.load_state_dict(sd, strict=False)
 
-    if config.full_precision:
+    if full_precision:
         print('Using slower but more accurate full-precision math')
     else:
         print('Using half precision math')
@@ -69,6 +70,11 @@ class config():
         self.config = ''
         self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
         self.n_steps = 100
+        self.sampler = 'klms'
+        self.scale = 7.5  # classifier-free guidance, how strongly to match the prompt (at the cost of image quality or diversity)
+        self.seed = 42
+        self.strength = 0.75  # strength for noising/unnoising. how much the init image is used
+        self.init_strength = None
         self.fixed_code = True # ???
         self.init_img = None
         self.init_latent = None
@@ -80,23 +86,20 @@ class config():
         self.seamless = False
         self.n_iter = 1
         self.n_samples = 1 # not exposed, you can do 2 or more based on GPU ram
-        self.outdir = ""
-        self.precision = 'autocast'
-        self.prompt = ""
-        self.sampler = 'klms'
-        self.scale = 7.5
-        self.seed = 42
-        self.strength = 0.75  # strength for noising/unnoising. how much the init image is used
+        self.outdir = ''
+        self.prompt = ''
         self.H = 512
         self.W = 512
         self.C = 4  # number of channels in the images
         self.f = 8  # image to latent space resolution reduction
+        self.precision = 'autocast'
         self.full_precision = False
 
     def process_config(self):
         if self.seed == -1:
             self.seed = random.randint(0, 2 ** 32)
 
+        self.init_strength = self.strength
         self.strength = max(0.0, min(1.0, 1.0 - self.strength))
         self.W, self.H = map(lambda x: x - x % 64, (self.W, self.H))  # resize to integer multiple of 64
 
@@ -158,6 +161,7 @@ def make_callback(sampler_name, dynamic_threshold=None, static_threshold=None, m
         mask_schedule, _ = torch.sort(sigmas / torch.max(sigmas))
     elif len(sigmas) == 0:
         mask = None  # no mask needed if no steps (usually happens because strength==1.0)
+
     if sampler_name in ["plms", "ddim"]:
         # Callback function formated for compvis latent diffusion samplers
         if mask is not None:
@@ -186,21 +190,20 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
     seed_everything(opt.seed)
     os.makedirs(opt.outdir, exist_ok=True)
 
+    set_conv_padding_type(model, opt.seamless)
+    model_wrap = CompVisDenoiser(model)
+    batch_size = opt.n_samples
+    data = [batch_size * [opt.prompt]]
+
     if opt.sampler == 'plms':
         sampler = PLMSSampler(model)
     else:
         sampler = DDIMSampler(model)
-
-    set_conv_padding_type(model, opt.seamless)
-    model_wrap = CompVisDenoiser(model)
-    batch_size = opt.n_samples
-    prompt = opt.prompt
-    assert prompt is not None
-    data = [batch_size * [prompt]]
+    sampler.make_schedule(ddim_num_steps=opt.n_steps, ddim_eta=opt.ddim_eta, verbose=False)
 
     # Get init latent code
     # take the one provided directly, or extract from init-image by encoding it (find its latent representation)
-    # ??what if neither of those??
+    # if neither it will be later initialized to random values
     if opt.init_latent is not None:
         init_latent = opt.init_latent
     elif opt.init_img is not None:
@@ -212,64 +215,41 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
 
     # Mask functions
     if opt.mask_path:
-        assert opt.init_img, "init_img is required for a mask"
-        assert init_latent is not None, "A latent init image is required for a mask"
-
-        mask = prepare_mask(opt.mask_path, init_latent.shape,
-                            opt.mask_contrast_adjust, opt.mask_brightness_adjust)
-
+        assert init_latent is not None, 'A latent init image is required for a mask'
+        mask = prepare_mask(opt.mask_path, init_latent.shape, opt.mask_contrast_adjust, opt.mask_brightness_adjust)
         mask = mask.to(device)
         mask = repeat(mask, '1 ... -> b ...', b=batch_size)
     else:
         mask = None
 
     t_enc = int(opt.strength * opt.n_steps)
-    #t_enc = int((1.0 - opt.strength) * opt.n_steps)
+    #t_enc = int((1.0 - opt.strength) * opt.n_steps)  # correct because we flip strength in config?
     # Noise schedule for the k-diffusion samplers (used for masking)
     k_sigmas = model_wrap.get_sigmas(opt.n_steps)
     k_sigmas = k_sigmas[len(k_sigmas) - t_enc - 1:]
 
-    sampler.make_schedule(ddim_num_steps=opt.n_steps, ddim_eta=opt.ddim_eta, verbose=False)
-
     callback = make_callback(sampler_name=opt.sampler,
-                             dynamic_threshold=opt.dynamic_threshold,
-                             static_threshold=opt.static_threshold,
-                             mask=mask,
-                             init_latent=init_latent,
-                             sigmas=k_sigmas,
-                             sampler=sampler)
+                             dynamic_threshold=opt.dynamic_threshold, static_threshold=opt.static_threshold,
+                             mask=mask, init_latent=init_latent, sigmas=k_sigmas, sampler=sampler)
 
-    precision_scope = autocast if opt.precision == "autocast" else nullcontext
+    precision_scope = autocast if opt.precision == 'autocast' else nullcontext
+    all_images = []
     with torch.no_grad():
-        with precision_scope("cuda"), model.ema_scope():
+        with precision_scope('cuda'), model.ema_scope():
             for n in range(opt.n_iter):
                 for prompts in data:
                     # In unconditional scaling is not 1 get the embeddings for empty prompts (no conditioning)
-                    if opt.scale != 1.0:
-                        un_cond = model.get_learned_conditioning(batch_size * [""])
-                    else:
-                        un_cond = None
-                    if isinstance(prompts, tuple):
-                        prompts = list(prompts)
+                    un_cond = None if opt.scale == 1 else model.get_learned_conditioning(batch_size * [''])
                     cond = model.get_learned_conditioning(prompts)
 
-                    if opt.sampler in ["klms", "dpm2", "dpm2_ancestral", "heun", "euler", "euler_ancestral"]:
-                        samples = sampler_fn(
-                            c=cond,
-                            uc=un_cond,
-                            args=opt,
-                            model_wrap=model_wrap,
-                            init_latent=init_latent,
-                            t_enc=t_enc,
-                            device=device,
-                            cb=callback)
+                    if opt.sampler in ['klms', 'dpm2', 'dpm2_ancestral', 'heun', 'euler', 'euler_ancestral']:
+                        samples = sampler_fn(c=cond, uc=un_cond, args=opt, model_wrap=model_wrap,
+                                             init_latent=init_latent, t_enc=t_enc, device=device, cb=callback)
                     else:
                         if init_latent is not None:
-                            z_enc = sampler.stochastic_encode(init_latent,
-                                                              torch.tensor([t_enc] * batch_size).to(device))
+                            z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc] * batch_size).to(device))
                         else:
-                            z_enc = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f],
-                                                device=device)
+                            z_enc = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
                         if opt.sampler == 'ddim':
                             samples = sampler.decode(z_enc, cond, t_enc, unconditional_guidance_scale=opt.scale,
@@ -277,23 +257,23 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
                                                      mask=mask, init_latent=init_latent)
                         elif opt.sampler == 'plms':  # no "decode" function in plms, so use "sample"
                             shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
-                            samples, _ = sampler.sample(S=opt.n_steps,
-                                                        conditioning=cond,
+                            samples, _ = sampler.sample(S=opt.n_steps, conditioning=cond,
                                                         batch_size=opt.n_samples,
-                                                        shape=shape,
-                                                        verbose=False,
+                                                        shape=shape, verbose=False,
                                                         unconditional_guidance_scale=opt.scale,
                                                         unconditional_conditioning=un_cond,
-                                                        eta=opt.ddim_eta,
-                                                        x_T=z_enc,
+                                                        eta=opt.ddim_eta, x_T=z_enc,
                                                         img_callback=callback)
                         else:
-                            raise Exception(f"Sampler {opt.sampler} not recognised.")
+                            raise Exception(f'Sampler {opt.sampler} not recognised.')
 
+                    # export samples to images
                     images = samples_to_images(model, samples)
+                    all_images.append(images)
                     for image in images:
-                        filepath = os.path.join(opt.outdir, f"{batch_name}_{batch_idx}_{sample_idx:04}.png")
-                        print(f"Saving to {filepath}")
+                        filepath = os.path.join(opt.outdir, f'{batch_name}_{batch_idx}_{sample_idx:04}.png')
+                        if sample_idx == 0:
+                            print(f'Saving to {filepath}')
                         image.save(filepath)
                         sample_idx += 1
-    return []
+    return all_images
