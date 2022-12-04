@@ -2,6 +2,7 @@ import bpy
 from mathutils import Vector
 import math
 import numpy as np
+from typing import Tuple
 
 #######################################
 #           GENERATORS                #
@@ -95,12 +96,10 @@ def update_grid(obj_grid, automaton, obj_updater):
 #            UTIL METHODS             #
 #######################################
 
-# convert a binary array into % RBG values
-# the idea is to adapt to any array size and allowing len(array)/3
-# bits per color (BPC). [R*BPC G*BPC B*BPC]
-# Color value is then computed as
-# binary code number divided by the max representable code number
 def bin_to_color(v):
+    """ convert a binary array into % RBG values
+    the idea is to adapt to any array size and allowing len(array)/3 bits per color (BPC). [R*BPC G*BPC B*BPC]
+    Color value is then computed as binary code number divided by the max representable code number"""
     if len(v)<3:
         return 0.5,0.5,0.5
     bpc = len(v)//3 #bit-per-color
@@ -112,8 +111,8 @@ def bin_to_color(v):
     return r,g,b
 
 
-# for all elements in the grid, create and set a new material
 def init_materials(obj_grid, init_color):
+    """for all elements in the grid, create and set a new material"""
     for index, obj in np.ndenumerate(obj_grid):
         mat = bpy.data.materials.new("mat_{}".format(index))
         mat.diffuse_color = init_color
@@ -136,8 +135,8 @@ def calculate_hexagonal_cell_position(row, col, nb_rows, nb_cols, size):
     return y, x
 
 
-# Dummy method to load some good configs from the exploratory generations
 def load_good_configs(dir):
+    """Dummy method to load some good configs from the exploratory generations"""
     imgs = dir.glob('*.png')
     good_runs = [int(img.stem.split('_')[1]) for img in imgs]
     confs = []
@@ -152,3 +151,16 @@ def load_good_configs(dir):
     print(len(confs))
     print(confs[0])
     return confs
+
+
+def get_init_grid_from_image(image_path, shape: Tuple[int], threshold=0.5, invert=False):
+    """Get binary grid from the given image and shape. Shape should match the automaton shape"""
+    if len(shape) != 2:
+        raise NotImplementedError('Can instantiate from image only for 2D automaton.')
+    from PIL import Image
+    init_image = Image.open(image_path).convert("L")
+    init_image = np.array(init_image.resize(shape))/255
+    if invert:
+        init_image = 1 - init_image
+    init_grid = np.array(init_image) > threshold
+    return init_grid
