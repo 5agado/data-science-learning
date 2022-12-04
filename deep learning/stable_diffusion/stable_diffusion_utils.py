@@ -1,7 +1,7 @@
 # adapted from the following resources:
 # https://github.com/deforum/stable-diffusion
 
-import os, random, sys
+import os, random, sys, gc
 import torch
 import torch.nn as nn
 import numpy as np
@@ -16,7 +16,8 @@ projects_dir = Path.home() / 'Documents/python_workspace'
 sys.path.append(str(projects_dir / 'data-science-learning'))
 sys.path.append(str(projects_dir / 'CLIP'))
 sys.path.append(str(projects_dir / 'k-diffusion'))
-sys.path.append(str(projects_dir / 'stable-diffusion'))  # https://github.com/CompVis/stable-diffusion
+#sys.path.append(str(projects_dir / 'stable-diffusion'))  # https://github.com/CompVis/stable-diffusion
+sys.path.append(str(projects_dir / 'stablediffusion'))    # https://github.com/Stability-AI/stablediffusion
 #sys.path.append(str(projects_dir / 'InvokeAI'))          # https://github.com/invoke-ai/InvokeAI
 sys.path.append(str(projects_dir / 'taming-transformers'))
 
@@ -33,6 +34,10 @@ from k_samplers import sampler_fn
 from ddim import DDIMSampler
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+def clean_cache():
+    gc.collect()
+    torch.cuda.empty_cache()
 
 def set_conv_padding_type(model, is_seamless):
     # allow for seamless generation if specified
@@ -81,6 +86,7 @@ class config():
         self.mask_path = None
         self.mask_contrast_adjust = 1.
         self.mask_brightness_adjust = 1.
+        self.invert_mask = False
         self.dynamic_threshold = None
         self.static_threshold = None
         self.seamless = False
@@ -214,9 +220,10 @@ def generate(opt, model, batch_name, batch_idx, sample_idx):
         init_latent = None
 
     # Mask functions
-    if opt.mask_path:
+    if opt.mask_path is not None:
         assert init_latent is not None, 'A latent init image is required for a mask'
-        mask = prepare_mask(opt.mask_path, init_latent.shape, opt.mask_contrast_adjust, opt.mask_brightness_adjust)
+        mask = prepare_mask(opt.mask_path, init_latent.shape, opt.mask_contrast_adjust, opt.mask_brightness_adjust,
+                            invert_mask=opt.invert_mask)
         mask = mask.to(device)
         mask = repeat(mask, '1 ... -> b ...', b=batch_size)
     else:
