@@ -36,6 +36,7 @@
 * [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) (provides rich introduction to different main mathematical topics, with both examples and historical anecdotes. Tends more towards formal proofs and definitions than to intuitive overview and practical examples)
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
 * [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
+* [Mathematical Notation: A Guide for Engineers and Scientists](https://www.goodreads.com/en/book/show/14407567) TOCHECK
 
 ### Linear Algebra
 * [No Bullshit Guide to Linear Algebra by Ivan Savov](https://minireference.com/static/excerpts/noBSLA_v2_preview.pdf) (good introduction also going into details. Provides practical examples from other disciplines)
@@ -58,9 +59,15 @@
 * [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
 * [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (highly technical)
+* [The Manga Guide to Statistics](https://www.goodreads.com/book/show/4286771-the-manga-guide-to-statistics)
 * [Bayesian Data AnalysisThird edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) TOCHECK
+* [Bayesian Statistics the Fun Way](https://www.goodreads.com/book/show/41392893-bayesian-statistics-the-fun-way) TOCHECK
+* [The Art Of Probability - For Scientists And Engineers](https://www.goodreads.com/book/show/4902639-the-art-of-probability---for-scientists-and-engineers) TOCHECK
+* [Statistics by Robert S. Witte](https://www.amazon.co.uk/Statistics-Robert-S-Witte/dp/1119254515) TOCHECK
+* [Naked Statistics: Stripping the Dread from the Data](https://www.goodreads.com/en/book/show/17986418) TOCHECK
+* [Statistical inference for data science - Online Book](https://leanpub.com/LittleInferenceBook/read) TOCHECK
 
-### Time-Series TOCHECK
+### Time-Series
 * [Time Series Analysis - Hamilton](https://www.amazon.com/gp/product/0691042896)
 * [Introductory Time Series with R (Use R!) - Cowpertwait and Metcalfe](https://www.amazon.com/gp/product/038788697)
 * [Time Series Analysis and Its Applications: With R Examples - Shumway and Stoffer](https://www.amazon.co.uk/d/Books/Time-Analysis-Its-Applications-Statistics/144197864X)
