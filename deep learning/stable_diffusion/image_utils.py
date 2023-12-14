@@ -34,7 +34,7 @@ def load_img(img_path, shape):
 
 def load_mask_img(image, shape):
     mask = _load_img(image, (shape[-1], shape[-2]))
-    mask = mask.convert("L")
+    #mask = mask.convert("L")
     return mask
 
 

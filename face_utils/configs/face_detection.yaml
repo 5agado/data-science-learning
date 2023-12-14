@@ -1,11 +1,9 @@
-mtcnn_model_path: /models/face_recognition/mtcnn_weights
-mtcnn_confidence_threshold: 0.8
-# way slower than built-in one. Not sure how much better
-#detector_path: /models/mmod_human_face_detector.dat
-shape_predictor_path: /models/face_recognition/shape_predictor_68_face_landmarks.dat
+confidence_threshold: 0.95
+detector_model_name: retinaface_resnet50
 extract:
     size: (1024, 1024)
-    border_expand: (.8, .8)
+    min_width: 0
+    border_expand: (2., 2.)
     align: True
     maintain_proportion: False
     masked: False

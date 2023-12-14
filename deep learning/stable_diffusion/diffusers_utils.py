@@ -4,7 +4,7 @@ import random
 import json, os, sys
 import cv2
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from pathlib import Path
 
 import diffusers
@@ -18,20 +18,18 @@ from diffusers import LMSDiscreteScheduler, DDIMScheduler, EulerDiscreteSchedule
 sys.path.append(str(Path(__file__).parents[2]))
 
 from ds_utils.video_utils import imageio_generate_video
-from image_utils import _load_img
+from image_utils import _load_img, load_mask_img
 
 
 class Config:
     def __init__(self):
         self.model_path = None
-        self.ddim_eta = 0.0  # The DDIM sampling eta constant. If equal to 0 makes the sampling process deterministic
         self.n_steps = 50
         self.scheduler = 'ddim'
         self.scale = 7.5  # classifier-free guidance, how strongly to match the prompt (at the cost of image quality or diversity)
         self.seed = 42
-        self.strength = 0.75  # strength for noising/unnoising. how much the init image is used
+        self.strength = 0.75  # from 0.0 to 1.0, strength of noise applied on the init image. 0 implies unchanged init image
         self.init_img = None
-        self.init_latent = None
         self.mask_path = None
         self.invert_mask = False
         self.seamless = False
@@ -39,6 +37,7 @@ class Config:
         self.num_batch_images = 1
         self.outdir = ''
         self.prompt = ''
+        self.negative_prompt = ''
         self.H = 512
         self.W = 512
         self.full_precision = False
@@ -55,6 +54,9 @@ class Config:
 
         if self.mask_path is not None and self.mask_path == '':
             self.mask_path = None
+
+        if self.init_img is None:
+            self.strength = 0.
 
 
 def save_config_to_file(opt: Config, batch_name, batch_idx):
@@ -119,13 +121,17 @@ def generate(opt: Config, pipe, batch_name, batch_idx, sample_idx):
         'num_inference_steps': opt.n_steps,
         'guidance_scale': opt.scale,
         'num_images_per_prompt': opt.num_images_per_prompt,
+        'negative_prompt': opt.negative_prompt
     }
 
     set_conv_padding_type([pipe.vae, pipe.text_encoder, pipe.unet], opt.seamless)
 
-    if opt.init_img is not None and opt.init_img:
+    if opt.init_img is not None:
         pipe_dict['image'] = _load_img(opt.init_img, (opt.W, opt.H))
-        pipe_dict['strength'] = opt.strength
+        if opt.mask_path is None:
+            pipe_dict['strength'] = opt.strength
+        else:
+            pipe_dict['mask_image'] = _load_img(opt.init_img, (opt.W, opt.H))
     else:
         pipe_dict['height'] = opt.H
         pipe_dict['width'] = opt.W

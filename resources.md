@@ -37,6 +37,7 @@
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
 * [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
 * [Mathematical Notation: A Guide for Engineers and Scientists](https://www.goodreads.com/en/book/show/14407567) TOCHECK
+* [Everything You Always Wanted To Know About Mathematics](https://www.math.cmu.edu/~jmackey/151_128/bws_book.pdf) TOCHECK
 
 ### Linear Algebra
 * [No Bullshit Guide to Linear Algebra by Ivan Savov](https://minireference.com/static/excerpts/noBSLA_v2_preview.pdf) (good introduction also going into details. Provides practical examples from other disciplines)
