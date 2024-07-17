@@ -1,6 +1,5 @@
 <!-- MarkdownTOC autolink="true" -->
 
-- [TO_TRY](#to_try)
 - [Jupyter Notebook Setup](#jupyter-notebook-setup)
 - [Basic libraries import](#basic-libraries-import)
 - [Arguments Parser](#arguments-parser)
@@ -13,16 +12,9 @@
 - [Debug](#debug)
 - [Data-Science Training Utils](#data-science-training-utils)
     - [Progress Meter](#progress-meter)
-    - [TensorBoard](#tensorboard)
-- [Kaggle-CLI](#kaggle-cli)
 - [Video Conversion](#video-conversion)
 
 <!-- /MarkdownTOC -->
-
-# TO_TRY
-pandas_profiling
-
-%config InlineBackend.figure_format = 'retina' # enable hi-res output
 
 # Jupyter Notebook Setup
 
@@ -30,7 +22,7 @@ Install [extensions](https://github.com/ipython-contrib/jupyter_contrib_nbextens
 
     conda install -c conda-forge jupyter_contrib_nbextensions
     # Better via Conda, otherwise just use pip
-    #pip install jupyter_contrib_nbextensions
+    pip install jupyter_contrib_nbextensions
 
 Install [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
 
@@ -39,7 +31,7 @@ Install [Jupyter Themes](https://github.com/dunovank/jupyter-themes)
 
 Current theme setup
 
-    jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 90%
+    jt -t grade3 -T -nfs 9 -fs 10 -tfs 10 -cellw 70%
     
 Manage kernels
 
@@ -59,8 +51,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-import os
-import sys
+import os, sys
 from pathlib import Path
 ```
 
@@ -171,22 +162,6 @@ logger.handlers[0].stream = sys.stdout
 import pdb
 pdb.set_trace()
 ```
-
-# Data-Science Training Utils
-## Progress Meter
-```
-# conda install tqdm
-from tqdm import tqdm
-for e in tqdm(range(nb_epochs))
-```
-
-## TensorBoard
-
-    $ tensorboard --logdir=/tmp/autoencoder
-
-# [Kaggle-CLI](https://github.com/floydwch/kaggle-cli)
-
-    "kg.exe" submit submission.csv -u -p  -c challenge-name -m "message"
 
 # Video Conversion
 

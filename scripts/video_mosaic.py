@@ -33,7 +33,7 @@ def main(_=None):
     shortest = args.shortest
 
     # Validate mosaic size against number of videos
-    video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv'),
+    video_paths = get_imgs_paths(input_dir, img_types=('*.mp4', '*.mkv', '*.gif'),
                                  sort_by=os.path.getmtime if time_sort else None)[:(nb_rows*nb_cols)]
     nb_videos = len(video_paths)
     assert (nb_cols*nb_rows) <= nb_videos

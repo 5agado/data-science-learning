@@ -3,6 +3,7 @@ import sys
 import subprocess
 from pathlib import Path
 import math
+import os
 
 from ds_utils.image_processing import get_imgs_paths
 
@@ -28,7 +29,7 @@ def main(_=None):
 
     # Validate mosaic size against number of videos
     import random
-    image_paths = get_imgs_paths(input_dir)
+    image_paths = get_imgs_paths(input_dir, sort_by=os.path.getmtime)
     #random.shuffle(image_paths)
     nb_images = len(image_paths)
     assert (nb_cols*nb_rows) <= nb_images
