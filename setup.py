@@ -28,5 +28,6 @@ setup(
         'imageio-ffmpeg',
         'pillow',
         'ipywidgets',
+        'scikit-learn',
     ],
 )

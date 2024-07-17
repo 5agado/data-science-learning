@@ -139,7 +139,7 @@ from os.path import abspath, join, dirname
 sys.path.append(join(os.getcwd(), *[os.pardir]*3, 'data'))
 sys.path.append(join(dirname(__file__)))
 
-sys.path.insert(0, abspath(dirname(__file__), 'src'))
+sys.path.insert(0, str(Path(__file__).parents[2]))
 
 # Get home directory (requires Python 3.5+)
 from pathlib import Path

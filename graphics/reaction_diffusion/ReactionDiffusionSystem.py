@@ -5,7 +5,7 @@
 
 from typing import Tuple
 
-use_cupy = True
+use_cupy = False
 if use_cupy:
     import cupy as np
     from cupyx.scipy.ndimage.filters import laplace

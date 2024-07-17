@@ -3,6 +3,7 @@
 - [Books](#books)
 	- [Artificial Intelligence](#artificial-intelligence)
 	- [Mathematics](#mathematics)
+		- [Linear Algebra](#linear-algebra)
 	- [Statistics](#statistics)
 		- [Time-Series TOCHECK](#time-series-tocheck)
 	- [Machine Learning](#machine-learning)
@@ -30,16 +31,26 @@
 
 ## Mathematics
 * [Concrete Mathematics: A Foundation for Computer Science](https://www.amazon.it/Concrete-Mathematics-Foundation-Computer-Science/dp/0201558025) (great generic initial approach)
-* [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
-* [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
 * [A Programmer's Introduction to Mathematics](https://jeremykun.com/2018/12/01/a-programmers-introduction-to-mathematics/) (good introduction to several topics, but I personally see too little relation with a programming approach and mindset)
-* [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf) TOCHECK
-* [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617) TOCHECK
 * [Numerical Methods](https://www.amazon.com/Numerical-Methods-Analysis-Implementation-Algorithms/dp/0691151229) TOCHECK
-* [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (Beyond Euclidean spaces and matrices, focusing on abstract vector spaces and linear maps. Pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
-* [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
 * [What Is Mathematics? An Elementary Approach to Ideas and Methods](https://www.amazon.com/Mathematics-Elementary-Approach-Ideas-Methods/dp/0195105192) (provides rich introduction to different main mathematical topics, with both examples and historical anecdotes. Tends more towards formal proofs and definitions than to intuitive overview and practical examples)
 * [Basic Mathematics](https://www.amazon.com/Basic-Mathematics-Serge-Lang/dp/0387967877) TOCHECK
+* [Calculus Made Easy - Silvanus P. Thompson](http://www.gutenberg.org/ebooks/33283)
+* [Mathematical Notation: A Guide for Engineers and Scientists](https://www.goodreads.com/en/book/show/14407567) TOCHECK
+* [Everything You Always Wanted To Know About Mathematics](https://www.math.cmu.edu/~jmackey/151_128/bws_book.pdf) TOCHECK
+
+### Linear Algebra
+* [No Bullshit Guide to Linear Algebra by Ivan Savov](https://minireference.com/static/excerpts/noBSLA_v2_preview.pdf) (good introduction also going into details. Provides practical examples from other disciplines)
+* [Practical Linear Algebra: A Geometry Toolbox](https://www.amazon.com/Practical-Linear-Algebra-Geometry-Toolbox/dp/1466579560) (linear algebra in a geometric and algorithmic way, through multiple practical and intuitive examples)
+* [The Manga Guide to Linear Algebra](http://web.math.ucsb.edu/~jerryluo8/teaching/Fall2018-4A/The%20Manga%20Guide%20to%20Linear%20Algebra.pdf) (lovely introductory book, covering the main basic aspects with examples and clear intuitions)
+* [Linear Algebra and Its Applications by David Lay](https://home.cs.colorado.edu/~alko5368/lecturesCSCI2820/mathbook.pdf) (well structured and rich, with proofs and plenty of examples)
+* [Linear Algebra Done Right](https://link.springer.com/book/10.1007/978-3-319-11080-6) (Beyond Euclidean spaces and matrices, focusing on abstract vector spaces and linear maps. Pure textbook style and mathematical formalization, very little practical examples and intuitive explanations)
+* [Introduction to Linear Algebra, Fifth Edition (2016)](http://math.mit.edu/~gs/linearalgebra/) (more formal approach)
+* [Linear Algebra and Its Applications by Gilbert Strang](https://www.goodreads.com/en/book/show/179699) (more introductory and accessible than the other book by the same author, though feels poorly structured)
+* [Linear Algebra: What You Need to Know](http://webéducation.com/wp-content/uploads/2021/03/H.-J.-Woerdeman-A-First-Course-in-Linear-Algebra-2021.pdf) (goes more into formal aspects and mathematical proofs)
+* [Linear Algebra Review and Reference - cs229 Stanford](http://cs229.stanford.edu/section/cs229-linalg.pdf) TOCHECK
+* [Numerical Linear Algebra](https://www.amazon.com/Numerical-Linear-Algebra-Lloyd-Trefethen/dp/0898713617) TOCHECK
+* [Practical Linear Algebra for Data Science](https://www.oreilly.com/library/view/practical-linear-algebra/9781098120603/) TOCHECK
 
 ## Statistics
 * [Think Stats 2e - Allen B. Downey](http://greenteapress.com/wp/think-stats-2e/) (Python, good intuitive explanation of basic concepts, often from a different POV compared to other more technical books about statistics)
@@ -49,9 +60,15 @@
 * [Probability Theory: The Logic of Science](https://www.goodreads.com/book/show/151848.Probability_Theory) (very technical and detailed. Probably good if you want to properly refine your knowledge, otherwise previous books provide more approachable and standard content)
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) (R)
 * [The Elements of Statistical Learning 2](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) (highly technical)
+* [The Manga Guide to Statistics](https://www.goodreads.com/book/show/4286771-the-manga-guide-to-statistics)
 * [Bayesian Data AnalysisThird edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) TOCHECK
+* [Bayesian Statistics the Fun Way](https://www.goodreads.com/book/show/41392893-bayesian-statistics-the-fun-way) TOCHECK
+* [The Art Of Probability - For Scientists And Engineers](https://www.goodreads.com/book/show/4902639-the-art-of-probability---for-scientists-and-engineers) TOCHECK
+* [Statistics by Robert S. Witte](https://www.amazon.co.uk/Statistics-Robert-S-Witte/dp/1119254515) TOCHECK
+* [Naked Statistics: Stripping the Dread from the Data](https://www.goodreads.com/en/book/show/17986418) TOCHECK
+* [Statistical inference for data science - Online Book](https://leanpub.com/LittleInferenceBook/read) TOCHECK
 
-### Time-Series TOCHECK
+### Time-Series
 * [Time Series Analysis - Hamilton](https://www.amazon.com/gp/product/0691042896)
 * [Introductory Time Series with R (Use R!) - Cowpertwait and Metcalfe](https://www.amazon.com/gp/product/038788697)
 * [Time Series Analysis and Its Applications: With R Examples - Shumway and Stoffer](https://www.amazon.co.uk/d/Books/Time-Analysis-Its-Applications-Statistics/144197864X)

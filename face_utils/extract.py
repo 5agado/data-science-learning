@@ -8,14 +8,12 @@ import numpy as np
 import cv2
 from ast import literal_eval
 
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
+sys.path.append("../")
 from ds_utils import image_processing
 from ds_utils import video_utils
 
 from face_utils import CONFIG_PATH
-from face_extract_utils import get_face_mask
+from face_utils.face_extract_utils import get_face_mask
 from face_utils.FaceDetector import FaceDetector, FaceExtractException
 
 
@@ -26,18 +24,23 @@ def face_mask_fun(frame, frame_count, face_detector: FaceDetector, output_path: 
         mask = np.zeros(frame.shape, np.uint8)
 
         for face in faces:
-            mask = get_face_mask(face, mask_type=mask_type, blur_size=15)
+            rect = face.rect
+            cv2.rectangle(mask, (rect.left, rect.top), (rect.right, rect.bottom), (255, 255, 255), -1)
+            #mask = get_face_mask(face, mask_type=mask_type, blur_size=15)
 
         cv2.imwrite(str(output_path), mask)
         frame_count += 1
     except FaceExtractException as e:
         logging.debug(f"Frame {frame_count}: {e}")
+        mask = np.ones(frame.shape, np.uint8)
+        cv2.imwrite(str(output_path), mask)
+        frame_count += 1
     except Exception as e:
         logging.error(e)
         raise
 
 
-def frame_extract_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path, step_mod: int):
+def frame_extract_fun(frame, frame_count, face_detector, output_path: Path, step_mod: int):
     try:
         faces = face_detector.detect_faces(frame, min_width=face_detector.config['extract']['min_width'])
         for face_count, face in enumerate(faces):
@@ -79,7 +82,7 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
             frame_count += 1
             img = cv2.imread(str(img_path))
             if mask_type is not None:
-                face_mask_fun(img, frame_count, face_detector, output_path / f"{img_path.stem}.jpg",
+                face_mask_fun(img, frame_count, face_detector, output_path / f"{img_path.stem}.png",
                               mask_type=mask_type)
             else:
                 frame_extract_fun(img, frame_count, face_detector, output_path, step_mod)
@@ -89,20 +92,23 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
         if input_path.is_dir():
             video_files = image_processing.get_imgs_paths(input_path, img_types=('*.gif', '*.webm', '*.mp4'),
                                                           as_str=True)
-            if not video_files:
-                logging.error(f"No valid video files in: {input_path}")
-                sys.exit(1)
-            # for now just pick first one
-            if not crop_video:
-                input_path = Path(video_files[0])
+        else:
+            video_files = [input_path]
 
-                logging.info("Running Face Extraction over video")
+        if not video_files:
+            logging.error(f"No valid video files in: {input_path}")
+            sys.exit(1)
+        # for now just pick first one
+        if not crop_video:
+            input_path = Path(video_files[0])
 
-                video_utils.process_video(str(input_path), lambda frame, frame_count:
-                                          frame_extract_fun(frame, frame_count, face_detector, output_path, step_mod))
-            else:
-                for input_video in video_files:
-                    crop_face_from_video(input_video, str(output_path / f"{Path(input_video).stem}.mp4"), face_detector)
+            logging.info("Running Face Extraction over video")
+
+            video_utils.process_video(str(input_path), lambda frame, frame_count:
+                                      frame_extract_fun(frame, frame_count, face_detector, output_path, step_mod))
+        else:
+            for input_video in video_files:
+                crop_face_from_video(input_video, str(output_path / f"{Path(input_video).stem}.mp4"), face_detector)
 
 
 def crop_face_from_video(video_path, out_path, face_detector, fps=None):
@@ -185,7 +191,7 @@ def main(_=None):
         logging.getLogger().setLevel(logging.DEBUG)
 
     extract_faces(input_path, output_path, config_path, process_images, step_mod, mask_type=mask_type,
-                  crop_video=True)
+                  crop_video=False)
 
 
 if __name__ == "__main__":
