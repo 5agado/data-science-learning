@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "face-utils"
+version = "0.2.0"
+authors = [{name = "Alex Martinelli"}]
+description="Collection of utilities for face-related image processing"
+license= {text = "Apache 2.0"}
+
+requires-python = ">= 3.9"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "pillow",
+    "insightface==0.7.3",
+    "tqdm",
+    "imageio",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+gpu = ["onnxruntime-gpu"]
+cpu = ["onnxruntime"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["notebooks"]
+namespaces = false
+
+[project.scripts]
+extract-faces = "face_utils.face_extract:main"

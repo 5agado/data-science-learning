@@ -14,30 +14,20 @@ from ds_utils import video_utils
 
 from face_utils import CONFIG_PATH
 from face_utils.face_extract_utils import get_face_mask
-from face_utils.FaceDetector import FaceDetector, FaceExtractException
+from face_utils.FaceDetector import FaceDetector
 
 
-def face_mask_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path,
-                  mask_type='hull'):
-    try:
-        faces = face_detector.detect_faces(frame, min_width=face_detector.config['extract']['min_width'])
-        mask = np.zeros(frame.shape, np.uint8)
+def face_mask_fun(frame, frame_count, face_detector: FaceDetector, output_path: Path, mask_type='hull'):
+    faces = face_detector.detect_faces(frame, min_res=face_detector.config['extract']['min_resolution'])
+    mask = np.zeros(frame.shape, np.uint8)
 
-        for face in faces:
-            rect = face.rect
-            cv2.rectangle(mask, (rect.left, rect.top), (rect.right, rect.bottom), (255, 255, 255), -1)
-            #mask = get_face_mask(face, mask_type=mask_type, blur_size=15)
+    for face in faces:
+        rect = face.rect
+        cv2.rectangle(mask, (rect.left, rect.top), (rect.right, rect.bottom), (255, 255, 255), -1)
+        #mask = get_face_mask(face, mask_type=mask_type, blur_size=15)
 
-        cv2.imwrite(str(output_path), mask)
-        frame_count += 1
-    except FaceExtractException as e:
-        logging.debug(f"Frame {frame_count}: {e}")
-        mask = np.ones(frame.shape, np.uint8)
-        cv2.imwrite(str(output_path), mask)
-        frame_count += 1
-    except Exception as e:
-        logging.error(e)
-        raise
+    cv2.imwrite(str(output_path), mask)
+    frame_count += 1
 
 
 def frame_extract_fun(frame, frame_count, face_detector, output_path: Path, step_mod: int):
@@ -66,10 +56,10 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
         logging.info(f"Creating output dir: {output_path}")
         output_path.mkdir()
 
-    with open(str(config_path), 'r') as ymlfile:
-        cfg = yaml.load(ymlfile, yaml.SafeLoader)
+    with open(str(config_path), 'r') as f:
+        cfg = yaml.load(f, yaml.SafeLoader)
 
-    face_detector = FaceDetector(cfg)
+    face_detector = FaceDetector(cfg, allowed_modules=['detection'])
     frame_count = 0
 
     if process_images:
@@ -101,9 +91,7 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
         # for now just pick first one
         if not crop_video:
             input_path = Path(video_files[0])
-
             logging.info("Running Face Extraction over video")
-
             video_utils.process_video(str(input_path), lambda frame, frame_count:
                                       frame_extract_fun(frame, frame_count, face_detector, output_path, step_mod))
         else:
@@ -161,11 +149,11 @@ def crop_face_from_video(video_path, out_path, face_detector, fps=None):
                                        codec='mp4v', is_color=True, fps=fps,
                                        new_size=cropped_frame.shape[:2][::-1])
 
+
 def main(_=None):
     logging.getLogger().setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser(description='Extract Faces')
-
     parser.add_argument('-i', '--input-path', required=True)
     parser.add_argument('-o', '--output-path', required=True)
     parser.add_argument('-c', '--config-path', default=CONFIG_PATH)
@@ -181,16 +169,11 @@ def main(_=None):
                         help="Save only face for frame where frame_num%step_mod == 0")
 
     args = parser.parse_args()
-    input_path = Path(args.input_path)
-    output_path = Path(args.output_path)
-    process_images = args.process_images
-    mask_type = args.mask_type
-    config_path = Path(args.config_path)
-    step_mod = int(args.step_mod)
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    extract_faces(input_path, output_path, config_path, process_images, step_mod, mask_type=mask_type,
+    extract_faces(Path(args.input_path), Path(args.output_path), Path(args.config_path),
+                  args.process_images, int(args.step_mod), mask_type=args.mask_type,
                   crop_video=False)
 
 

@@ -1,60 +1,35 @@
 import logging
 from ast import literal_eval
-
 import cv2
 import numpy as np
-import torch
 
-from facexlib.detection import init_detection_model
-from facexlib.visualization import visualize_detection
+from insightface.app import FaceAnalysis
 
 from face_utils import face_extract_utils as utils
 from face_utils.Face import Face
 
 
-class FaceExtractException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
 class FaceDetector:
-    def __init__(self, config):
+    def __init__(self, config, allowed_modules):
         self.config = config
-        self.detector = init_detection_model(config.get('detector_model_name', None), half=False)
+        # init insightface model
+        self.detector = FaceAnalysis(name=config['model_name'], root=config['model_dir'],
+                                     allowed_modules=allowed_modules)
+        self.detector.prepare(ctx_id=0, # ctx_id=-1 to use CPU
+                              det_thresh=config['detection_threshold'], det_size=(640, 640))
 
+    def detect_faces(self, img: np.array, min_res=0):
+        faces = [Face(img, Face.Rectangle(int(f.bbox[1]), int(f.bbox[2]), int(f.bbox[3]), int(f.bbox[0])),
+                      embedding=f.embedding) for f in self.detector.get(img)]
 
-    def detect_faces(self, img, min_width=0):
-        with torch.no_grad():
-            bboxes = self.detector.detect_faces(img, self.config.get('confidence_threshold', None))
-            # x0, y0, x1, y1, confidence_score, five points (x, y)
-
-            faces = [Face(img.copy(), Face.Rectangle(top=max(int(b[1]), 0), right=max(int(b[2]), 0),
-                                                     bottom=max(int(b[3]), 0), left=max(int(b[0]), 0))) for b in bboxes]
-
-
-        # if specified, skip faces smaller than the given size
-        if min_width:
-            # for now compare only face width
-            faces = [f for f in faces if f.get_face_size()[0] >= min_width]
-
-        # continue only if we detected at least one face
-        if len(faces) == 0:
-            logging.debug('No face detected')
-            raise FaceExtractException('No face detected')
-
-        # for face in faces:
-        #     face.landmarks = self.get_landmarks(face)
+        # if specified, keep only faces where both width and height are above min_res
+        if min_res:
+            faces = [f for f in faces if all(map(lambda x: x > min_res, f.get_face_size()))]
 
         return faces
 
-    def get_landmarks(self, face: Face, recompute=False):
-        raise NotImplementedError
-
     def extract_face(self, face: Face):
-        """
-        Utility method which uses directly the current detector configuration for the generic extraction operation
-        :param face:
-        :return:
+        """Utility method which uses directly the current detector configuration for the generic extraction operation
         """
         # size is a tuple, so need to eval from string representation in config
         size = literal_eval(self.config['extract']['size'])

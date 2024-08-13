@@ -1,8 +1,10 @@
-confidence_threshold: 0.95
-detector_model_name: retinaface_resnet50
+model_name: buffalo_l
+# default insightface dir. Library always appends /models to it
+model_dir: '~/.insightface'
+detection_threshold: 0.2
 extract:
     size: (1024, 1024)
-    min_width: 0
+    min_resolution: 0
     border_expand: (2., 2.)
     align: True
     maintain_proportion: False
