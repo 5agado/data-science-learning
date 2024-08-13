@@ -2,6 +2,11 @@ import numpy as np
 import math
 import itertools
 
+##############################################################
+############## Generators
+##############################################################
+
+
 def get_simplex(n, dist=1):
     """
     An N-simplex is the simplest possible polytope in N-dimensions (formed by N+1 points, all connected).
@@ -32,72 +37,12 @@ def get_simplex(n, dist=1):
 
     return np.array(points), np.array(edges), faces
 
-
-def imaging(obj, focal_distance, focal_length):
-    scale = focal_length/(focal_distance - obj[:,-1]) # TODO what when /0?
-    obj_projection = np.delete(obj, -1, 1) # drop last column. Move from N to N-1 dimensions
-    obj_projection = obj_projection * scale.reshape(len(obj_projection), -1)
-    return obj_projection
-
-
-def stereographic_projection(obj, dist=1):
-    last_coord = obj[:,-1]
-    scale = 1/((dist - last_coord) + 1.E-7)
-    obj_projection = np.delete(obj, -1, 1) # drop last column. Move from N to N-1 dimensions
-    obj_projection = obj_projection * scale.reshape(len(obj_projection), -1)
-    # normalized list coord between 0-1. This info can be used then for visualization purposes (e.g. scaling of points)
-    norm_last_coord = (last_coord - last_coord.min())/(last_coord - last_coord.min()).max()
-    return obj_projection, norm_last_coord
-
-def perspective_projection(obj, dist=1):
-    last_coord = obj[:,-1]
-    scale = 1 / ((dist - last_coord) + 1.E-7)
-    obj[:,-1] = 1.
-    obj_projection = obj / scale.reshape(len(obj), -1)
-    obj_projection = obj_projection/ obj[:,-1].reshape(len(obj_projection), -1)
-    obj_projection = np.delete(obj_projection, -1, 1)
-    # normalized list coord between 0-1. This info can be used then for visualization purposes (e.g. scaling of points)
-    norm_last_coord = (last_coord - last_coord.min())/(last_coord - last_coord.min()).max()
-    return obj_projection, norm_last_coord
-
 def get_hypercube(n, dist=1):
     points = list(itertools.product([-dist/2, dist/2], repeat=n))
     edges = list(itertools.combinations(np.arange(0, len(points)), 2))
     edges = [e for e in edges if np.isclose(np.linalg.norm(np.array(points[e[0]])-np.array(points[e[1]])), dist)]
-    faces = get_hypercube_faces(points, edges)
+    faces = _get_object_faces(points, edges)
     return np.array(points), np.array(edges), faces
-
-
-def get_hypercube_faces(points, edges, nb_vertices=4):
-    faces = []
-    for p_idx, p in enumerate(points):
-        get_hypercube_faces_rec(edges, [], p_idx, faces, nb_vertices)
-
-    # remove same faces
-    faces_set = []
-    unique_faces = []
-    for face in faces:
-        if set(face) not in faces_set:
-            unique_faces.append([int(idx) for idx in face])
-            faces_set.append(set(face))
-    return unique_faces
-
-
-def get_hypercube_faces_rec(edges, p_idxs, next_p_idx, faces, nb_vertices):
-    if len(p_idxs) >= nb_vertices:
-        if p_idxs[0] == next_p_idx:
-            if set(p_idxs) not in faces:
-                faces.append(p_idxs)
-    else:
-        if next_p_idx not in p_idxs:
-            cur_p_idx = next_p_idx
-            for e in edges:
-                if cur_p_idx in e:
-                    tmp_e = list(e)
-                    tmp_e.remove(cur_p_idx)
-                    next_p_idx = tmp_e[0]
-                    get_hypercube_faces_rec(edges, p_idxs + [cur_p_idx], next_p_idx, faces, nb_vertices)
-
 
 def get_hyperoctahedron(n, dist=1.):
     points = np.concatenate([np.identity(n), np.identity(n)*-1])
@@ -108,7 +53,7 @@ def get_hyperoctahedron(n, dist=1.):
     edges = list(itertools.combinations(np.arange(len(points)), 2))
     edges = [e for e in edges if np.isclose(np.linalg.norm(np.array(points[e[0]]) - np.array(points[e[1]])), dist)]
     # add face for each points triple
-    faces = get_hypercube_faces(points, edges, nb_vertices=3)
+    faces = _get_object_faces(points, edges, nb_vertices=3)
 
     return np.array(points), np.array(edges), faces
 
@@ -123,42 +68,72 @@ def get_24cell(n, dist=1.):
     edges = list(itertools.combinations(np.arange(len(points)), 2))
     edges = [e for e in edges if np.isclose(np.linalg.norm(np.array(points[e[0]]) - np.array(points[e[1]])), math.sqrt(2))]
     # add face for each points triple
-    faces = get_hypercube_faces(points, edges, nb_vertices=3)
+    faces = _get_object_faces(points, edges, nb_vertices=3)
 
     points = np.array(points) * dist
     return np.array(points), np.array(edges), faces
 
 
 def get_120cell(n, dist=1.):
-    points1 = np.array(list(set(itertools.permutations([1, -1]+[0]*(n-2), n))))
-    points2 = np.array(list(set(itertools.permutations([1, 1]+[0]*(n-2), n))))
-    points3 = np.array(list(set(itertools.permutations([-1, -1]+[0]*(n-2), n))))
-    points = np.concatenate([points1, points2, points3])
-
-    # add edge for each points pair
-    edges = list(itertools.combinations(np.arange(len(points)), 2))
-    edges = [e for e in edges if np.isclose(np.linalg.norm(np.array(points[e[0]]) - np.array(points[e[1]])), math.sqrt(2))]
-    # add face for each points triple
-    faces = get_hypercube_faces(points, edges, nb_vertices=3)
-
-    points = np.array(points) * dist
-    return np.array(points), np.array(edges), faces
+    raise NotImplementedError
 
 
 def get_600cell(n, dist=1.):
-    points1 = np.array(list(set(itertools.permutations([1, -1]+[0]*(n-2), n))))
-    points2 = np.array(list(set(itertools.permutations([1, 1]+[0]*(n-2), n))))
-    points3 = np.array(list(set(itertools.permutations([-1, -1]+[0]*(n-2), n))))
-    points = np.concatenate([points1, points2, points3])
+    raise NotImplementedError
 
-    # add edge for each points pair
-    edges = list(itertools.combinations(np.arange(len(points)), 2))
-    edges = [e for e in edges if np.isclose(np.linalg.norm(np.array(points[e[0]]) - np.array(points[e[1]])), math.sqrt(2))]
-    # add face for each points triple
-    faces = get_hypercube_faces(points, edges, nb_vertices=3)
 
-    points = np.array(points) * dist
-    return np.array(points), np.array(edges), faces
+def _get_object_faces(points, edges, nb_vertices=4):
+    faces = []
+    for p_idx, p in enumerate(points):
+        _get_object_faces_rec(edges, [], p_idx, faces, nb_vertices)
+
+    # remove same faces
+    faces_set = []
+    unique_faces = []
+    for face in faces:
+        if set(face) not in faces_set:
+            unique_faces.append([int(idx) for idx in face])
+            faces_set.append(set(face))
+    return unique_faces
+
+
+def _get_object_faces_rec(edges, p_idxs, next_p_idx, faces, nb_vertices):
+    if len(p_idxs) >= nb_vertices:
+        if p_idxs[0] == next_p_idx:
+            if set(p_idxs) not in faces:
+                faces.append(p_idxs)
+    else:
+        if next_p_idx not in p_idxs:
+            cur_p_idx = next_p_idx
+            for e in edges:
+                if cur_p_idx in e:
+                    tmp_e = list(e)
+                    tmp_e.remove(cur_p_idx)
+                    next_p_idx = tmp_e[0]
+                    _get_object_faces_rec(edges, p_idxs + [cur_p_idx], next_p_idx, faces, nb_vertices)
+
+
+##############################################################
+############## Projection
+##############################################################
+
+
+def perspective_projection(obj, focal_distance=1., focal_length=1.):
+    # TODO was named stereographic_projection when fixed focal-length to 1
+    #  while if both focal-distance and focal-length was imaging. What about stereographic projection?
+    last_coord = obj[:,-1].reshape(-1, 1) # take last coordinate for each point
+    scale = focal_length/((focal_distance - last_coord) + 1.E-7) # define scale based on last-coords and input params
+    obj_projection = np.delete(obj, -1, 1) # drop last column. Move from N to N-1 dimensions
+    # scale all other coordinates by the scale obtained for each point based on the last coordinate
+    obj_projection = obj_projection * scale
+    # normalized list coord between 0-1. This info can be used then for visualization purposes (e.g. scaling of points)
+    norm_last_coord = (last_coord - last_coord.min())/(last_coord.max() - last_coord.min())
+    return obj_projection, norm_last_coord
+
+
+##############################################################
+############## Utils
+##############################################################
 
 
 def rotate(points, angle, axis1, axis2):
