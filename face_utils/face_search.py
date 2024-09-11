@@ -5,6 +5,9 @@ import numpy as np
 from pathlib import Path
 import cv2
 import yaml
+import hashlib
+
+import chromadb
 
 from face_utils import CONFIG_PATH
 from face_utils.FaceDetector import FaceDetector
@@ -21,19 +24,10 @@ def run_face_search(query_face_image: Path, target_search_dir: Path, config_path
     :param output_dir: optional directory to save the matches
     """
     # init face model
-    with open(str(config_path), 'r') as f:
-        config = yaml.load(f, yaml.SafeLoader)
-    face_model = FaceDetector(config, allowed_modules=['detection', 'recognition'])
+    face_model = get_face_model(config_path)
 
     # get embedding for query face
-    query_image = cv2.imread(str(query_face_image))
-    query_faces = face_model.detect_faces(np.array(query_image), min_res=min_resolution)
-    if len(query_faces) == 0:
-        logging.warning("No face detected in the query image. Exiting")
-        return []
-    elif len(query_faces) > 1:
-        logging.info("Multiple faces detected in the query image. Picking the first one.")
-    query_emb = query_faces[0].embedding
+    query_emb = _get_query_embedding(face_model, query_face_image, min_resolution)
 
     # run face similarity on target images
     # currently computing similarity individually for each pair. We will optimize this process in future iterations
@@ -48,12 +42,92 @@ def run_face_search(query_face_image: Path, target_search_dir: Path, config_path
                 if similarity > similarity_threshold:
                     matches.append((img_path, similarity, face.rect))
                     if output_dir:
-                        out_file = output_dir / f'{similarity:.2f}_{img_path.name}'
+                        out_file = output_dir / f'{int(similarity*100)}.jpg'
                         # copy image to a new dir
                         # shutil.copy(img_path, out_file)
                         # copy face to a new dir
                         cv2.imwrite(str(out_file), face.get_face_img())
     return matches
+
+
+def populate_face_database(target_dir: Path, config_path: Path, db_path, collection: str, min_resolution: int):
+    # get database collection
+    collection = get_face_database_collection(db_path, collection)
+
+    # init face model
+    face_model = get_face_model(config_path)
+
+    # run face similarity on target images
+    # currently computing similarity individually for each pair. We will optimize this process in future iterations
+    for extension in ['*.jpg', '*.png']:
+        for img_path in target_dir.rglob(extension):
+            # get image hash
+            image = cv2.imread(str(img_path))
+            image_md5 = hashlib.md5(image).hexdigest()
+            # check if faces from this image are already present
+            if len(collection.get(ids=[f"{image_md5}_0"])['ids']) > 0:
+                print(f'Faces from {img_path} are already present in the database. Skipping...')
+            else:
+                # get all faces from current image
+                faces = face_model.detect_faces(image, min_res=min_resolution)
+                for face_idx, face in enumerate(faces):
+                    add_face_to_collection(collection, face.embedding.tolist(), img_path, face_idx, image_md5)
+
+    return collection
+
+
+def query_face_collection(query_face_image: Path, collection, nb_results: int, config_path: Path):
+    # init face model
+    face_model = get_face_model(config_path)
+
+    # get embedding for query face
+    query_emb = _get_query_embedding(face_model, query_face_image, 50)
+
+    # query db
+    results = collection.query(
+        query_embeddings=[query_emb.tolist()],
+        n_results=nb_results,
+    )
+
+    return results
+
+
+def get_face_model(config_path: Path):
+    with open(str(config_path), 'r') as f:
+        config = yaml.load(f, yaml.SafeLoader)
+    face_model = FaceDetector(config, allowed_modules=['detection', 'recognition'])
+    return face_model
+
+
+def _get_query_embedding(face_model, query_face_image: Path, min_resolution: int):
+    # get embedding for query face
+    query_image = cv2.imread(str(query_face_image))
+    query_faces = face_model.detect_faces(np.array(query_image), min_res=min_resolution)
+    if len(query_faces) == 0:
+        logging.warning("No face detected in the query image. Exiting")
+        return []
+    elif len(query_faces) > 1:
+        logging.info("Multiple faces detected in the query image. Picking the first one.")
+    query_emb = query_faces[0].embedding
+    return query_emb
+
+
+def get_face_database_collection(db_path, collection_name):
+    client = chromadb.PersistentClient(path=db_path)
+    collection = client.get_or_create_collection(
+        collection_name,
+        metadata={"hnsw:space": "cosine"}  # l2 is the default
+    )
+    print(f'db loaded from {db_path}. {collection.count()} entries found for collection {collection_name}.')
+    return collection
+
+
+def add_face_to_collection(collection, embedding, img_path, face_idx, image_md5):
+    collection.add(
+        embeddings=[embedding],
+        metadatas=[{'img_path': str(img_path)}],
+        ids=[f"{image_md5}_{face_idx}"]
+    )
 
 
 def cosine_distance(v1, v2):
@@ -66,6 +140,7 @@ def euclidean_distance(v1, v2):
 
 
 def main(_=None):
+    # TODO: support face search in videos
     parser = argparse.ArgumentParser(description='Local Face Search')
     parser.add_argument('-q', '--query', required=True, help="path to the image containing the query face")
     parser.add_argument('-t', '--target', required=True, help="path to the directory with target images to search from")
