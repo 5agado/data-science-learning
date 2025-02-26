@@ -2,6 +2,7 @@ model_name: buffalo_l
 # default insightface dir. Library always appends /models to it
 model_dir: '~/.insightface'
 detection_threshold: 0.2
+device: cpu
 extract:
     size: (1024, 1024)
     min_resolution: 0

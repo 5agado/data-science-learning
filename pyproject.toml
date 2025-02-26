@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data-science-learning"
+version = "0.2.0"
+authors = [{name = "Alex Martinelli"}]
+description="Collection of utilities for data-science related projects"
+license= {text = "Apache 2.0"}
+
+requires-python = ">= 3.12"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "requests",
+    "pandas",
+    "seaborn",
+    "pillow",
+    "tqdm",
+    "imageio",
+    "pyyaml",
+    "scipy",
+    "plotly",
+    "cufflinks",
+    "imageio-ffmpeg",
+    "ipywidgets",
+    "scikit-learn",
+]
+
+[tool.setuptools.packages.find]
+where = ["ds_utils", "scripts", "face_utils"]
+exclude = []
+namespaces = false
+
+[project.scripts]
+extract-faces = "face_utils.face_extract:main"
+convert-video = "scripts.convert_video:main"
+video-mosaic = "scripts.video_mosaic:main"
+image-montage = "scripts.image_montage:main"

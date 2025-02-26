@@ -15,7 +15,7 @@ class FaceDetector:
         # init insightface model
         self.detector = FaceAnalysis(name=config['model_name'], root=config['model_dir'],
                                      allowed_modules=allowed_modules)
-        self.detector.prepare(ctx_id=0, # ctx_id=-1 to use CPU
+        self.detector.prepare(ctx_id=0 if config['device'] == 'cuda' else -1,
                               det_thresh=config['detection_threshold'], det_size=(640, 640))
 
     def detect_faces(self, img: np.array, min_res=0):

@@ -1,5 +1,4 @@
 import argparse
-import logging
 import sys
 import numpy as np
 from pathlib import Path
@@ -9,7 +8,7 @@ import hashlib
 
 import chromadb
 
-from face_utils import CONFIG_PATH
+from face_utils import CONFIG_PATH, logger
 from face_utils.FaceDetector import FaceDetector
 
 
@@ -27,7 +26,7 @@ def run_face_search(query_face_image: Path, target_search_dir: Path, config_path
     face_model = get_face_model(config_path)
 
     # get embedding for query face
-    query_emb = _get_query_embedding(face_model, query_face_image, min_resolution)
+    query_emb = _get_faces_embeddings(face_model, query_face_image, min_resolution, 1)
 
     # run face similarity on target images
     # currently computing similarity individually for each pair. We will optimize this process in future iterations
@@ -66,7 +65,7 @@ def populate_face_database(target_dir: Path, config_path: Path, db_path, collect
             image_md5 = hashlib.md5(image).hexdigest()
             # check if faces from this image are already present
             if len(collection.get(ids=[f"{image_md5}_0"])['ids']) > 0:
-                print(f'Faces from {img_path} are already present in the database. Skipping...')
+                logger.info(f'Faces from {img_path} are already present in the database. Skipping...')
             else:
                 # get all faces from current image
                 faces = face_model.detect_faces(image, min_res=min_resolution)
@@ -81,7 +80,7 @@ def query_face_collection(query_face_image: Path, collection, nb_results: int, c
     face_model = get_face_model(config_path)
 
     # get embedding for query face
-    query_emb = _get_query_embedding(face_model, query_face_image, 50)
+    query_emb = _get_faces_embeddings(face_model, query_face_image, 50, 1)
 
     # query db
     results = collection.query(
@@ -99,17 +98,17 @@ def get_face_model(config_path: Path):
     return face_model
 
 
-def _get_query_embedding(face_model, query_face_image: Path, min_resolution: int):
+def _get_faces_embeddings(face_model, image_path: Path, min_resolution: int, max_faces: int = 0) -> list:
     # get embedding for query face
-    query_image = cv2.imread(str(query_face_image))
-    query_faces = face_model.detect_faces(np.array(query_image), min_res=min_resolution)
-    if len(query_faces) == 0:
-        logging.warning("No face detected in the query image. Exiting")
+    image = cv2.imread(str(image_path))
+    faces = face_model.detect_faces(np.array(image), min_res=min_resolution)
+    if len(faces) == 0:
+        logger.warning("No face detected in the query image.")
         return []
-    elif len(query_faces) > 1:
-        logging.info("Multiple faces detected in the query image. Picking the first one.")
-    query_emb = query_faces[0].embedding
-    return query_emb
+    if max_faces and len(faces) > max_faces:
+        logger.info(f"Multiple faces detected in the query image. Picking the first {max_faces}.")
+        faces = faces[:max_faces]
+    return [f.embedding for f in faces]
 
 
 def get_face_database_collection(db_path, collection_name):
@@ -118,7 +117,7 @@ def get_face_database_collection(db_path, collection_name):
         collection_name,
         metadata={"hnsw:space": "cosine"}  # l2 is the default
     )
-    print(f'db loaded from {db_path}. {collection.count()} entries found for collection {collection_name}.')
+    logger.info(f'db loaded from {db_path}. {collection.count()} entries found for collection {collection_name}.')
     return collection
 
 

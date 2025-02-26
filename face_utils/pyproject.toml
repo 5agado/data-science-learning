@@ -9,7 +9,7 @@ authors = [{name = "Alex Martinelli"}]
 description="Collection of utilities for face-related image processing"
 license= {text = "Apache 2.0"}
 
-requires-python = ">= 3.9"
+requires-python = ">= 3.12"
 dependencies = [
     "numpy",
     "opencv-python",
