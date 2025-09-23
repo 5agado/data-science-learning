@@ -97,3 +97,6 @@ ENV/
 src/test/devTesting.ipynb
 
 .DS_Store
+
+# personal
+notebooks/
