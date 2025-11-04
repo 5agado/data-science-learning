@@ -19,8 +19,14 @@ class FaceDetector:
                               det_thresh=config['detection_threshold'], det_size=(640, 640))
 
     def detect_faces(self, img: np.array, min_res=0):
+        detected_face = self.detector.get(img)
         faces = [Face(img, Face.Rectangle(int(f.bbox[1]), int(f.bbox[2]), int(f.bbox[3]), int(f.bbox[0])),
-                      embedding=f.embedding) for f in self.detector.get(img)]
+                      embedding=f.embedding) for f in detected_face]
+        # check if face object has attribute
+        if detected_face and hasattr(detected_face[0], 'kps'):
+            # if landmarks are available, set them
+            for f_idx, d_face in enumerate(detected_face):
+                faces[f_idx].landmarks = d_face.kps
 
         # if specified, keep only faces where both width and height are above min_res
         if min_res:
@@ -50,7 +56,6 @@ class FaceDetector:
         if not out_size:
             out_size = face_size
 
-        face.landmarks = self.get_landmarks(face)
         if masked:
             mask = utils.get_face_mask(face, 'hull',
                                        erosion_size=literal_eval(self.config['extract'].get('dilation_kernel', 'None')),

@@ -32,7 +32,7 @@ def face_mask_fun(frame, frame_count, face_detector: FaceDetector, output_path: 
 
 def frame_extract_fun(frame, frame_count, face_detector, output_path: Path, step_mod: int):
     try:
-        faces = face_detector.detect_faces(frame, min_width=face_detector.config['extract']['min_width'])
+        faces = face_detector.detect_faces(frame, min_res=face_detector.config['extract']['min_resolution'])
         for face_count, face in enumerate(faces):
             extracted_face = face_detector.extract_face(face)
 
@@ -40,8 +40,6 @@ def frame_extract_fun(frame, frame_count, face_detector, output_path: Path, step
                 cv2.imwrite(str(output_path / "face_{:04d}_{:04d}.jpg".format(frame_count, face_count)),
                             extracted_face)
                 frame_count += 1
-    except FaceExtractException as e:
-        logging.debug(f"Frame {frame_count}: {e}")
     except Exception as e:
         logging.error(e)
         raise
@@ -59,7 +57,7 @@ def extract_faces(input_path: Path, output_path: Path, config_path: Path, proces
     with open(str(config_path), 'r') as f:
         cfg = yaml.load(f, yaml.SafeLoader)
 
-    face_detector = FaceDetector(cfg, allowed_modules=['detection'])
+    face_detector = FaceDetector(cfg, allowed_modules=['detection', 'landmark_2d_106'])
     frame_count = 0
 
     if process_images:

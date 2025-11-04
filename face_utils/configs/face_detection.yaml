@@ -6,7 +6,7 @@ device: cpu
 extract:
     size: (1024, 1024)
     min_resolution: 0
-    border_expand: (2., 2.)
+    border_expand: (0., 0.)
     align: True
     maintain_proportion: False
     masked: False

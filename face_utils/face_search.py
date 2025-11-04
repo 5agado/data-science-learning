@@ -7,6 +7,7 @@ import yaml
 import hashlib
 
 import chromadb
+import shutil
 
 from face_utils import CONFIG_PATH, logger
 from face_utils.FaceDetector import FaceDetector
@@ -32,24 +33,38 @@ def run_face_search(query_face_image: Path, target_search_dir: Path, config_path
     # currently computing similarity individually for each pair. We will optimize this process in future iterations
     matches = []
     for extension in ['*.jpg', '*.png']:
-        for img_path in target_search_dir.glob(extension):
+        for i, img_path in enumerate(target_search_dir.glob(extension)):
+            if (i % 1000) == 0:
+                logger.info(f'Run {i} images')
             # get all faces from current image
-            faces = face_model.detect_faces(cv2.imread(str(img_path)), min_res=min_resolution)
+            img = cv2.imread(str(img_path))
+            if img is None:
+                logger.warning(f'Got None when loading {img_path}')
+                continue
+            faces = face_model.detect_faces(img, min_res=min_resolution)
             for face in faces:
                 # compute similarity and add match if above threshold
                 similarity = cosine_distance(query_emb, face.embedding)
                 if similarity > similarity_threshold:
                     matches.append((img_path, similarity, face.rect))
                     if output_dir:
-                        out_file = output_dir / f'{int(similarity*100)}.jpg'
-                        # copy image to a new dir
-                        # shutil.copy(img_path, out_file)
-                        # copy face to a new dir
-                        cv2.imwrite(str(out_file), face.get_face_img())
+                        out_file = output_dir / img_path.name
+                        # move image to new dir
+                        shutil.move(img_path, out_file)
     return matches
 
 
 def populate_face_database(target_dir: Path, config_path: Path, db_path, collection: str, min_resolution: int):
+    """
+    Populate face database with faces from target images. For each image, all detected faces are added to the database.
+    :param target_dir:
+    :param config_path:
+    :param db_path:
+    :param collection:
+    :param min_resolution:
+    :return:
+    """
+
     # get database collection
     collection = get_face_database_collection(db_path, collection)
 
@@ -59,9 +74,14 @@ def populate_face_database(target_dir: Path, config_path: Path, db_path, collect
     # run face similarity on target images
     # currently computing similarity individually for each pair. We will optimize this process in future iterations
     for extension in ['*.jpg', '*.png']:
-        for img_path in target_dir.rglob(extension):
+        for i, img_path in enumerate(target_dir.glob(extension)):
+            if (i % 500) == 0:
+                logger.info(f'Run {i} images')
             # get image hash
             image = cv2.imread(str(img_path))
+            if image is None:
+                logger.warning(f'Got None when loading {img_path}')
+                continue
             image_md5 = hashlib.md5(image).hexdigest()
             # check if faces from this image are already present
             if len(collection.get(ids=[f"{image_md5}_0"])['ids']) > 0:
@@ -76,11 +96,25 @@ def populate_face_database(target_dir: Path, config_path: Path, db_path, collect
 
 
 def query_face_collection(query_face_image: Path, collection, nb_results: int, config_path: Path):
+    """
+    Query face database collection with the given query face image and return top nb_results matches.
+    :param query_face_image:
+    :param collection:
+    :param nb_results:
+    :param config_path:
+    :return:
+    """
+
     # init face model
     face_model = get_face_model(config_path)
 
     # get embedding for query face
-    query_emb = _get_faces_embeddings(face_model, query_face_image, 50, 1)
+    query_embs = _get_faces_embeddings(face_model, query_face_image, 50, 1)
+    if not query_embs:
+        logger.warning("No face detected in the query image.")
+        return {}
+    else:
+        query_emb = query_embs[0]
 
     # query db
     results = collection.query(
