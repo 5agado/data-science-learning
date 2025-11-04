@@ -8,12 +8,11 @@ import numpy as np
 import cv2
 from ast import literal_eval
 
-sys.path.append("../")
+sys.path.append("../../")
 from ds_utils import image_processing
 from ds_utils import video_utils
 
-from face_utils import CONFIG_PATH
-from face_utils.face_extract_utils import get_face_mask
+from face_utls import CONFIG_PATH
 from face_utils.FaceDetector import FaceDetector
 
 

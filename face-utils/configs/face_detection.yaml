@@ -3,6 +3,7 @@ model_name: buffalo_l
 model_dir: '~/.insightface'
 detection_threshold: 0.2
 device: cpu
+execution_provider: CoreMLExecutionProvider
 extract:
     size: (1024, 1024)
     min_resolution: 0

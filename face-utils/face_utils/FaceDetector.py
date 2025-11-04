@@ -1,4 +1,3 @@
-import logging
 from ast import literal_eval
 import cv2
 import numpy as np
@@ -13,9 +12,11 @@ class FaceDetector:
     def __init__(self, config, allowed_modules):
         self.config = config
         # init insightface model
+        execution_provider = config.get('execution_provider', 'CPUExecutionProvider')
         self.detector = FaceAnalysis(name=config['model_name'], root=config['model_dir'],
-                                     allowed_modules=allowed_modules)
-        self.detector.prepare(ctx_id=0 if config['device'] == 'cuda' else -1,
+                                     allowed_modules=allowed_modules,
+                                     providers=[execution_provider])
+        self.detector.prepare(ctx_id=0 if execution_provider != 'CPUExecutionProvider' else -1,
                               det_thresh=config['detection_threshold'], det_size=(640, 640))
 
     def detect_faces(self, img: np.array, min_res=0):
