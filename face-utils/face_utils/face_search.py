@@ -172,6 +172,14 @@ def euclidean_distance(v1, v2):
     return np.linalg.norm(v1 - v2)
 
 
+def cluster_faces(faces: dict, num_clusters: int, seed=42):
+    from sklearn.cluster import KMeans
+    kmeans = KMeans(n_clusters=num_clusters, random_state=seed)
+    kmeans.fit(list(faces.values()))
+    clustered_faces = dict(zip(faces.keys(), [int(l) for l in kmeans.labels_]))
+    return clustered_faces
+
+
 def main(_=None):
     # TODO: support face search in videos
     parser = argparse.ArgumentParser(description='Local Face Search')
