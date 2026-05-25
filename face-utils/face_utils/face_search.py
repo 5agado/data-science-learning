@@ -172,11 +172,20 @@ def euclidean_distance(v1, v2):
     return np.linalg.norm(v1 - v2)
 
 
-def cluster_faces(faces: dict, num_clusters: int, seed=42):
+def cluster_faces(faces: dict, num_clusters: int = None, seed=42, eps: float = 0.1, min_samples = 3) -> dict:
     from sklearn.cluster import KMeans
-    kmeans = KMeans(n_clusters=num_clusters, random_state=seed)
-    kmeans.fit(list(faces.values()))
-    clustered_faces = dict(zip(faces.keys(), [int(l) for l in kmeans.labels_]))
+    from sklearn.cluster import DBSCAN
+    # if num_clusters is None, use DBSCAN
+    if num_clusters is None:
+        # lower eps = tighter clusters = higher within-cluster similarity
+        dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine')
+        dbscan.fit(list(faces.values()))
+        clustered_faces = dict(zip(faces.keys(), [int(l) for l in dbscan.labels_]))
+        return clustered_faces
+    else:
+        kmeans = KMeans(n_clusters=num_clusters, random_state=seed)
+        kmeans.fit(list(faces.values()))
+        clustered_faces = dict(zip(faces.keys(), [int(l) for l in kmeans.labels_]))
     return clustered_faces
 
 
